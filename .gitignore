@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+legal-consult-backend/.venv/
+legal-consult-backend/venv/
+legal-consult-backend/env/
+
+# Environment variables
+.env
+.env.local
+legal-consult-backend/.env
+
+# Database
+*.db
+*.sqlite3
+legal-consult-backend/*.db
+
+# Node modules (for my-app frontend)
+legal-consult-backend/my-app/node_modules/
+legal-consult-backend/my-app/.next/
+legal-consult-backend/my-app/build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Alembic versions (keep structure, ignore auto-generated)
+legal-consult-backend/alembic/versions/*.py
+!legal-consult-backend/alembic/versions/.gitkeep
