@@ -49,3 +49,6 @@ legal-consult-backend/my-app/.expo/
 legal-consult-backend/my-app/android/
 legal-consult-backend/my-app/ios/
 legal-consult-backend/my-app/dist/
+
+# guard against accidental nesting
+legal-consult-backend/my-app/my-app/
