@@ -1,0 +1,6 @@
+my-app/node_modules/
+my-app/.expo/
+my-app/android/
+my-app/ios/
+my-app/dist/
+my-app/.cache/
