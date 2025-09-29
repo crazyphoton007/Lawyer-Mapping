@@ -40,3 +40,12 @@ logs/
 # Alembic versions (keep structure, ignore auto-generated)
 legal-consult-backend/alembic/versions/*.py
 !legal-consult-backend/alembic/versions/.gitkeep
+# backups
+my-app.backup.tmp/
+legal-consult-backend/my-app.backup/
+# Expo/React Native heavy dirs
+legal-consult-backend/my-app/node_modules/
+legal-consult-backend/my-app/.expo/
+legal-consult-backend/my-app/android/
+legal-consult-backend/my-app/ios/
+legal-consult-backend/my-app/dist/
