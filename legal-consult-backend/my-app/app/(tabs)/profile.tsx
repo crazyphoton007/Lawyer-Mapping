@@ -29,10 +29,9 @@ const MUTED = "#6B7280";
 const BORDER = "#E5E7EB";
 const ACCENT = "#1F2937";
 
-const PROFILE_ENDPOINTS = {
-  get: [`${API_BASE}/users/me`, `${API_BASE}/me`],   // will try in order
-  patch: [`${API_BASE}/users/me`, `${API_BASE}/me`],
-};
+// ✅ Use ONLY these two
+const PROFILE_GET = `${API_BASE}/auth/me`;
+const PROFILE_PATCH = `${API_BASE}/auth/me`;
 
 export default function ProfileScreen() {
   const { user, token, setAuth, logout } = useAuth();
@@ -52,46 +51,46 @@ export default function ProfileScreen() {
       const parts = n.split(/\s+/);
       return (parts[0][0] + (parts[1]?.[0] || "")).toUpperCase();
     }
-    // fallback: last 2 digits of phone
     const p = (user?.phone || "").toString();
     return p ? p.slice(-2) : "U";
   }, [form.name, user?.phone]);
 
-  // Small helpers
   const setField = (k: keyof ProfileData, v: any) =>
     setForm((f) => ({ ...f, [k]: v }));
 
-  async function tryJsonFetch(url: string, init?: RequestInit) {
+  async function getJson(url: string) {
     const res = await fetch(url, {
-      ...(init || {}),
       headers: {
         "content-type": "application/json",
-        ...(init?.headers || {}),
         ...(token ? { authorization: `Bearer ${token}` } : {}),
       },
     });
     const txt = await res.text();
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${txt || res.statusText}`);
+    if (!res.ok) throw new Error(txt || res.statusText);
     return txt ? JSON.parse(txt) : {};
   }
 
-  // Load current profile from backend (tries /users/me then /me)
+  async function patchJson(url: string, body: any) {
+    const res = await fetch(url, {
+      method: "PATCH",
+      headers: {
+        "content-type": "application/json",
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(body),
+    });
+    const txt = await res.text();
+    if (!res.ok) throw new Error(txt || res.statusText);
+    return txt ? JSON.parse(txt) : {};
+  }
+
+  // ---- Load profile from /auth/me ----
   useEffect(() => {
     if (!token) return;
     (async () => {
       setLoading(true);
       try {
-        let data: any = null;
-        for (const u of PROFILE_ENDPOINTS.get) {
-          try {
-            data = await tryJsonFetch(u);
-            break;
-          } catch {
-            // try next endpoint
-          }
-        }
-        if (!data) throw new Error("Profile endpoint not found");
-
+        const data = await getJson(PROFILE_GET);
         const next: ProfileData = {
           id: data.id ?? user?.id,
           phone: data.phone ?? user?.phone,
@@ -100,10 +99,9 @@ export default function ProfileScreen() {
           age: data.age ?? "",
           area: data.area ?? "",
         };
-
         setForm(next);
 
-        // keep global auth.user in sync (without changing token)
+        // keep global context in sync (don’t change token)
         await setAuth(token!, {
           id: String(next.id ?? user?.id ?? ""),
           phone: String(next.phone ?? user?.phone ?? ""),
@@ -112,13 +110,9 @@ export default function ProfileScreen() {
           age: next.age || "",
           area: next.area || "",
         } as any);
-      } catch (e: any) {
-        // Don’t block the UI if profile fetch fails; show form with phone at least
-        setForm((f) => ({
-          ...f,
-          phone: user?.phone,
-          id: user?.id,
-        }));
+      } catch {
+        // show minimal info; user can still fill the form
+        setForm((f) => ({ ...f, phone: user?.phone, id: user?.id }));
       } finally {
         setLoading(false);
       }
@@ -137,12 +131,11 @@ export default function ProfileScreen() {
     return null;
   }
 
+  // ---- Save to /auth/me (PATCH) ----
   async function saveProfile() {
     const err = validate();
-    if (err) {
-      Alert.alert("Invalid", err);
-      return;
-    }
+    if (err) return Alert.alert("Invalid", err);
+
     setSaving(true);
     try {
       const payload = {
@@ -152,30 +145,16 @@ export default function ProfileScreen() {
         area: form.area?.trim() || undefined,
       };
 
-      let updated: any = null;
-      for (const u of PROFILE_ENDPOINTS.patch) {
-        try {
-          updated = await tryJsonFetch(u, {
-            method: "PATCH",
-            body: JSON.stringify(payload),
-          });
-          break;
-        } catch {
-          // try next
-        }
-      }
-      if (!updated) throw new Error("Profile update failed");
+      const updated = await patchJson(PROFILE_PATCH, payload);
 
-      // Merge what backend returned with local state
-      const merged = {
+      const merged: ProfileData = {
         ...form,
         ...updated,
         id: updated.id ?? form.id,
         phone: updated.phone ?? form.phone,
-      } as ProfileData;
+      };
       setForm(merged);
 
-      // Update global auth user too
       await setAuth(token!, {
         id: String(merged.id ?? user?.id ?? ""),
         phone: String(merged.phone ?? user?.phone ?? ""),
@@ -193,7 +172,7 @@ export default function ProfileScreen() {
     }
   }
 
-  // ------------- UI -------------
+  // -------- UI --------
   if (!token) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>

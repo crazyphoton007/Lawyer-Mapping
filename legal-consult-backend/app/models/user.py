@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 from typing import Optional, List
 
-from sqlalchemy import String, DateTime
+from sqlalchemy import String, DateTime, Integer   # <-- add Integer
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -16,11 +16,18 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID_PK, primary_key=True, default=uuid.uuid4)
-    name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    phone: Mapped[Optional[str]] = mapped_column(String, unique=True, nullable=True)
-    email: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    role: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # 'user' | 'lawyer' | 'admin'
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    # Profile fields
+    name: Mapped[Optional[str]]   = mapped_column(String(120), nullable=True)
+    gender: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)   # "Male" | "Female" | "Other"
+    age: Mapped[Optional[int]]    = mapped_column(Integer, nullable=True)
+    area: Mapped[Optional[str]]   = mapped_column(String(120), nullable=True)
+
+    # Auth / general
+    phone: Mapped[Optional[str]]  = mapped_column(String, unique=True, nullable=True)
+    email: Mapped[Optional[str]]  = mapped_column(String, nullable=True)
+    role:  Mapped[Optional[str]]  = mapped_column(String, nullable=True)  # 'user' | 'lawyer' | 'admin'
+    created_at: Mapped[datetime]  = mapped_column(DateTime, default=datetime.utcnow)
 
     # Relationships
     lawyer_profile: Mapped["Lawyer"] = relationship(
