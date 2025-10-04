@@ -1,96 +1,152 @@
 import { useState } from "react";
-import { View, Text, TextInput, Button, Alert, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import { API_BASE } from "../constants/config";
 import { useAuth } from "../context/auth";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { setAuth } = useAuth();
+  const { setAuth } = useAuth(); // << use context setter
 
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
-  const [step, setStep] = useState<"phone" | "code">("phone");
+  const [step, setStep] = useState<"request" | "verify">("request");
   const [loading, setLoading] = useState(false);
 
+  const normalizePhone = (s: string) => s.replace(/\D/g, "").slice(-12);
+
   async function requestCode() {
-    if (!phone.trim()) return Alert.alert("Enter phone", "Please enter your phone number.");
+    const ph = normalizePhone(phone);
+    if (ph.length < 10) {
+      Alert.alert("Invalid number", "Enter a valid mobile number.");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/auth/request-code`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ phone: ph }),
       });
-      const text = await res.text();
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
-      Alert.alert("Code sent", "Check your backend console for the OTP.");
-      setStep("code");
+      const txt = await res.text();
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${txt}`);
+      setStep("verify");
+      Alert.alert("OTP sent", "Enter the code you received.");
     } catch (e: any) {
-      Alert.alert("Error", e?.message || "Failed to send code");
+      Alert.alert("Error", e?.message || "Failed to request code");
     } finally {
       setLoading(false);
     }
   }
 
   async function verifyCode() {
-    if (!code.trim()) return Alert.alert("Enter code", "Please enter the 6-digit code.");
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/auth/verify`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ phone, code }),
-      });
-      const text = await res.text();
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
-      const data = JSON.parse(text);
-      await setAuth(data.token, data.user);
-      Alert.alert("Logged in!");
-      // 🚀 Go somewhere useful after login (pick one)
-      router.replace("/articles"); // or "/requests" or "/profile"
-    } catch (e: any) {
-      Alert.alert("Error", e?.message || "Failed to verify code");
-    } finally {
-      setLoading(false);
-    }
+  const ph = normalizePhone(phone);
+  if (ph.length < 10 || code.trim().length === 0) {
+    Alert.alert("Missing info", "Enter your mobile and the OTP code.");
+    return;
   }
+  setLoading(true);
+  try {
+    const res = await fetch(`${API_BASE}/auth/verify`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ phone: ph, code: code.trim() }),
+    });
+    const txt = await res.text();
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${txt}`);
+    const data = JSON.parse(txt);
+
+    const jwt = data.token || data.access_token || data.jwt;
+    if (!jwt) throw new Error("No token returned");
+
+    const userFromApi = data.user ?? {};
+    const userPayload = {
+      id: String(userFromApi.id ?? ph),
+      phone: String(userFromApi.phone ?? ph),
+    };
+
+    await setAuth(jwt, userPayload);                 // update context + persist
+    await SecureStore.setItemAsync("user_mobile", ph); // remember phone
+
+    // ✅ add this block
+    try { await SecureStore.deleteItemAsync("my_requests__local__"); } catch {}
+
+    Alert.alert("Logged in", "You’re signed in.");
+    router.replace("/(tabs)/requests");
+  } catch (e: any) {
+    Alert.alert("Error", e?.message || "Failed to verify code");
+  } finally {
+    setLoading(false);
+  }
+}
 
   return (
-    <View style={{ flex: 1, padding: 16, alignItems: "center", justifyContent: "center", gap: 12 }}>
-      {step === "phone" ? (
-        <>
-          <Text style={{ fontSize: 20, fontWeight: "700" }}>Login</Text>
-          <TextInput
-            value={phone}
-            onChangeText={setPhone}
-            placeholder="000-000-0000"
-            keyboardType="phone-pad"
-            autoComplete="tel"
-            style={{ borderWidth: 1, borderColor: "#ccc", padding: 10, width: "85%", borderRadius: 8 }}
-          />
-          {loading ? <ActivityIndicator /> : <Button title="Send Code" onPress={requestCode} />}
-        </>
-      ) : (
-        <>
-          <Text style={{ fontSize: 18, fontWeight: "700" }}>Verify Code</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#F7F8FA" }}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+          <Text style={{ fontSize: 24, fontWeight: "700", marginBottom: 12 }}>Login</Text>
 
-          {/* Show phone + allow editing */}
-          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-            <Text style={{ opacity: 0.8 }}>{phone}</Text>
-            <Button title="Edit number" onPress={() => setStep("phone")} />
+          {/* PHONE */}
+          <View style={{ backgroundColor: "#fff", borderRadius: 16, padding: 16, gap: 12,
+                         shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 2 }}>
+            <Text style={{ fontSize: 14, fontWeight: "600" }}>Mobile Number</Text>
+            <TextInput
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+              placeholder="Enter mobile number"
+              style={{ borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 12, padding: 12, backgroundColor: "#FAFAFA" }}
+            />
+
+            {step === "request" ? (
+              <TouchableOpacity
+                onPress={requestCode}
+                disabled={loading}
+                style={{ backgroundColor: loading ? "#93C5FD" : "#2563EB", paddingVertical: 14, borderRadius: 12, alignItems: "center" }}
+              >
+                <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>
+                  {loading ? "Sending…" : "Send OTP"}
+                </Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
 
-          <TextInput
-            value={code}
-            onChangeText={setCode}
-            placeholder="123456"
-            keyboardType="number-pad"
-            style={{ borderWidth: 1, borderColor: "#ccc", padding: 10, width: "85%", borderRadius: 8 }}
-          />
-          {loading ? <ActivityIndicator /> : <Button title="Verify" onPress={verifyCode} />}
-        </>
-      )}
-    </View>
+          {/* CODE */}
+          {step === "verify" ? (
+            <View style={{ marginTop: 14, backgroundColor: "#fff", borderRadius: 16, padding: 16, gap: 12,
+                           shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 2 }}>
+              <Text style={{ fontSize: 14, fontWeight: "600" }}>OTP Code</Text>
+              <TextInput
+                value={code}
+                onChangeText={setCode}
+                keyboardType="number-pad"
+                placeholder="Enter OTP"
+                style={{ borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 12, padding: 12, backgroundColor: "#FAFAFA" }}
+              />
+              <TouchableOpacity
+                onPress={verifyCode}
+                disabled={loading}
+                style={{ backgroundColor: loading ? "#93C5FD" : "#2563EB", paddingVertical: 14, borderRadius: 12, alignItems: "center" }}
+              >
+                <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>
+                  {loading ? "Verifying…" : "Verify & Continue"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
