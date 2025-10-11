@@ -16,7 +16,6 @@ import { Stack, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { API_BASE } from "../constants/config";
 import { useAuth } from "../context/auth";
-import HeaderBack from "../components/HeaderBack";
 
 const BG = "#F5F7FB";
 const CARD = "#FFFFFF";
@@ -132,7 +131,7 @@ export default function LoginScreen() {
                     height: 46,
                     alignItems: "center",
                     justifyContent: "center",
-                    marginLeft: -20,  // ← pushes arrow to the extreme left
+                    marginLeft: -24,  // ← pushes arrow to the extreme left
                   }}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >

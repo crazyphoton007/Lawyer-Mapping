@@ -9,7 +9,7 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Link } from "expo-router";
+import { useRouter } from "expo-router";            // 🔧 ADDED
 import { useAuth } from "../../context/auth";
 import { API_BASE } from "../../constants/config";
 
@@ -34,6 +34,7 @@ const PROFILE_GET = `${API_BASE}/auth/me`;
 const PROFILE_PATCH = `${API_BASE}/auth/me`;
 
 export default function ProfileScreen() {
+  const router = useRouter();                          // 🔧 ADDED
   const { user, token, setAuth, logout } = useAuth();
 
   const [loading, setLoading] = useState<boolean>(!!token);
@@ -44,6 +45,13 @@ export default function ProfileScreen() {
     age: "",
     area: "",
   });
+
+  // 🔧 NEW: redirect to /login if not authenticated
+  useEffect(() => {
+    if (!token) {
+      router.replace("/login");
+    }
+  }, [token, router]);
 
   const initials = useMemo(() => {
     const n = (form.name || "").trim();
@@ -86,7 +94,7 @@ export default function ProfileScreen() {
 
   // ---- Load profile from /auth/me ----
   useEffect(() => {
-    if (!token) return;
+    if (!token) return; // redirect handled above
     (async () => {
       setLoading(true);
       try {
@@ -172,21 +180,9 @@ export default function ProfileScreen() {
     }
   }
 
-  // -------- UI --------
+  // While redirecting, render nothing if unauthenticated
   if (!token) {
-    return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 16, gap: 12 }}>
-          <Text style={{ fontSize: 20, fontWeight: "700" }}>Not logged in</Text>
-          <Text style={{ opacity: 0.7, textAlign: "center" }}>
-            Please log in to view your profile.
-          </Text>
-          <Link href="/login">
-            <Text style={{ color: "#2563EB", fontWeight: "700", marginTop: 8 }}>Go to Login</Text>
-          </Link>
-        </View>
-      </SafeAreaView>
-    );
+    return null;
   }
 
   if (loading) {
