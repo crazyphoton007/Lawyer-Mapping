@@ -1,17 +1,955 @@
-import { useEffect, useMemo, useState } from "react";
+// // // my-app/app/(tabs)/profile.tsx
+// // import { useEffect, useMemo, useState } from "react";
+// // import {
+// //   View,
+// //   Text,
+// //   TouchableOpacity,
+// //   ActivityIndicator,
+// //   Alert,
+// //   ScrollView,
+// //   Switch,
+// //   Pressable,
+// // } from "react-native";
+// // import { SafeAreaView } from "react-native-safe-area-context";
+// // import { useRouter } from "expo-router";
+// // import { useAuth } from "../../context/auth";
+// // import { API_BASE } from "../../constants/config";
+// // import CaseFitHeader from "../../components/CaseFitHeader";
+// // import { Feather } from "@expo/vector-icons";
+
+// // type ProfileData = {
+// //   id?: string | number;
+// //   phone?: string;
+// //   name?: string;
+// //   gender?: "Male" | "Female" | "Other" | "";
+// //   age?: number | string;
+// //   area?: string;
+// // };
+
+// // const BG = "#F5F7FB";
+// // const CARD = "#FFFFFF";
+// // const INK = "#000000";        // brand black
+// // const MUTED = "#6B7280";
+// // const BORDER = "#E5E7EB";
+
+// // // ✅ Use ONLY these two
+// // const PROFILE_GET = `${API_BASE}/auth/me`;
+// // const PROFILE_PATCH = `${API_BASE}/auth/me`;
+
+// // // ---------- Small UI primitives ----------
+// // function Section({ title, children }: { title?: string; children: React.ReactNode }) {
+// //   return (
+// //     <View
+// //       style={{
+// //         backgroundColor: CARD,
+// //         borderRadius: 18,
+// //         paddingHorizontal: 16,
+// //         paddingVertical: 4,
+// //         borderWidth: 1,
+// //         borderColor: BORDER,
+// //         shadowColor: "#000",
+// //         shadowOpacity: 0.06,
+// //         shadowRadius: 10,
+// //         elevation: 2,
+// //       }}
+// //     >
+// //       {title ? (
+// //         <Text style={{ fontSize: 18, fontWeight: "700", color: INK, marginBottom: 8 }}>{title}</Text>
+// //       ) : null}
+// //       {children}
+// //     </View>
+// //   );
+// // }
+
+// // function Divider() {
+// //   return <View style={{ height: 1, backgroundColor: BORDER, marginLeft: 40 }} />;
+// // }
+
+// // function Row({
+// //   icon,
+// //   label,
+// //   subtitle,
+// //   onPress,
+// //   right,
+// //   disabled,
+// // }: {
+// //   icon: React.ReactNode;
+// //   label: string;
+// //   subtitle?: string;
+// //   onPress?: () => void;
+// //   right?: React.ReactNode;
+// //   disabled?: boolean;
+// // }) {
+// //   return (
+// //     <Pressable
+// //       disabled={disabled}
+// //       onPress={onPress}
+// //       style={({ pressed }) => [
+// //         {
+// //           paddingVertical: 16,
+// //           flexDirection: "row",
+// //           alignItems: "center",
+// //           opacity: pressed ? 0.7 : 1,
+// //         },
+// //       ]}
+// //     >
+// //       <View style={{ width: 28, marginRight: 12, alignItems: "center" }}>{icon}</View>
+// //       <View style={{ flex: 1 }}>
+// //         <Text style={{ fontSize: 16, fontWeight: "600", color: INK }}>{label}</Text>
+// //         {subtitle ? <Text style={{ fontSize: 13, color: MUTED, marginTop: 2 }}>{subtitle}</Text> : null}
+// //       </View>
+// //       {right ?? <Feather name="chevron-right" size={20} color="#9CA3AF" />}
+// //     </Pressable>
+// //   );
+// // }
+// // // ----------------------------------------
+
+// // export default function ProfileScreen() {
+// //   const router = useRouter();
+// //   const { user, token, setAuth, logout } = useAuth();
+
+// //   const [loading, setLoading] = useState<boolean>(!!token);
+// //   const [saving, setSaving] = useState(false); // kept for PATCH flow
+// //   const [form, setForm] = useState<ProfileData>({
+// //     name: "",
+// //     gender: "",
+// //     age: "",
+// //     area: "",
+// //   });
+// //   const [notif, setNotif] = useState(true); // UI only for now
+
+// //   // 🔒 Redirect to /login if not authenticated
+// //   useEffect(() => {
+// //     if (!token) {
+// //       router.replace("/login");
+// //     }
+// //   }, [token, router]);
+
+// //   const initials = useMemo(() => {
+// //     const n = (form.name || "").trim();
+// //     if (n.length > 0) {
+// //       const parts = n.split(/\s+/);
+// //       return (parts[0][0] + (parts[1]?.[0] || "")).toUpperCase();
+// //     }
+// //     const p = (user?.phone || "").toString();
+// //     return p ? p.slice(-2) : "•";
+// //   }, [form.name, user?.phone]);
+
+// //   async function getJson(url: string) {
+// //     const res = await fetch(url, {
+// //       headers: {
+// //         "content-type": "application/json",
+// //         ...(token ? { authorization: `Bearer ${token}` } : {}),
+// //       },
+// //     });
+// //     const txt = await res.text();
+// //     if (!res.ok) throw new Error(txt || res.statusText);
+// //     return txt ? JSON.parse(txt) : {};
+// //   }
+
+// //   async function patchJson(url: string, body: any) {
+// //     const res = await fetch(url, {
+// //       method: "PATCH",
+// //       headers: {
+// //         "content-type": "application/json",
+// //         ...(token ? { authorization: `Bearer ${token}` } : {}),
+// //       },
+// //       body: JSON.stringify(body),
+// //     });
+// //     const txt = await res.text();
+// //     if (!res.ok) throw new Error(txt || res.statusText);
+// //     return txt ? JSON.parse(txt) : {};
+// //   }
+
+// //   // ---- Load profile from /auth/me ----
+// //   useEffect(() => {
+// //     if (!token) return;
+// //     (async () => {
+// //       setLoading(true);
+// //       try {
+// //         const data = await getJson(PROFILE_GET);
+// //         const next: ProfileData = {
+// //           id: data.id ?? user?.id,
+// //           phone: data.phone ?? user?.phone,
+// //           name: data.name ?? "",
+// //           gender: (data.gender as any) ?? "",
+// //           age: data.age ?? "",
+// //           area: data.area ?? "",
+// //         };
+// //         setForm(next);
+
+// //         // keep global context in sync (don’t change token)
+// //         await setAuth(token!, {
+// //           id: String(next.id ?? user?.id ?? ""),
+// //           phone: String(next.phone ?? user?.phone ?? ""),
+// //           name: next.name || "",
+// //           gender: next.gender || "",
+// //           age: next.age || "",
+// //           area: next.area || "",
+// //         } as any);
+// //       } catch {
+// //         setForm((f) => ({ ...f, phone: user?.phone, id: user?.id }));
+// //       } finally {
+// //         setLoading(false);
+// //       }
+// //     })();
+// //     // eslint-disable-next-line react-hooks/exhaustive-deps
+// //   }, [token]);
+
+// //   function validate(): string | null {
+// //     if (!form.name || form.name.trim().length < 2) return "Please enter your full name.";
+// //     if (form.gender && !["Male", "Female", "Other"].includes(String(form.gender)))
+// //       return "Select a valid gender.";
+// //     if (String(form.age || "").trim()) {
+// //       const n = Number(form.age);
+// //       if (!Number.isFinite(n) || n < 1 || n > 120) return "Enter a valid age (1–120).";
+// //     }
+// //     return null;
+// //   }
+
+// //   // ---- Save to /auth/me (PATCH) ----
+// //   // (not exposed in UI here; call from Edit screen or keep for future)
+// //   async function saveProfile() {
+// //     const err = validate();
+// //     if (err) return Alert.alert("Invalid", err);
+
+// //     setSaving(true);
+// //     try {
+// //       const payload = {
+// //         name: form.name?.trim() || undefined,
+// //         gender: form.gender || undefined,
+// //         age: String(form.age || "").trim() ? Number(form.age) : undefined,
+// //         area: form.area?.trim() || undefined,
+// //       };
+
+// //       const updated = await patchJson(PROFILE_PATCH, payload);
+
+// //       const merged: ProfileData = {
+// //         ...form,
+// //         ...updated,
+// //         id: updated.id ?? form.id,
+// //         phone: updated.phone ?? form.phone,
+// //       };
+// //       setForm(merged);
+
+// //       await setAuth(token!, {
+// //         id: String(merged.id ?? user?.id ?? ""),
+// //         phone: String(merged.phone ?? user?.phone ?? ""),
+// //         name: merged.name || "",
+// //         gender: merged.gender || "",
+// //         age: merged.age || "",
+// //         area: merged.area || "",
+// //       } as any);
+
+// //       Alert.alert("Saved", "Your profile has been updated.");
+// //     } catch (e: any) {
+// //       Alert.alert("Error", e?.message || "Could not save profile");
+// //     } finally {
+// //       setSaving(false);
+// //     }
+// //   }
+
+// //   // While redirecting, render nothing if unauthenticated
+// //   if (!token) return null;
+
+// //   if (loading) {
+// //     return (
+// //       <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
+// //         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+// //           <ActivityIndicator />
+// //         </View>
+// //       </SafeAreaView>
+// //     );
+// //   }
+
+// //   const profileIncomplete = !form.name || !form.gender || !form.age || !form.area;
+
+// //   return (
+// //     <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
+// //       {/* Black header with white CaseFit wordmark */}
+// //       <CaseFitHeader title="caseFit" />
+
+// //       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
+// //         {/* Profile summary card */}
+// //         <View
+// //           style={{
+// //             backgroundColor: CARD,
+// //             borderRadius: 20,
+// //             padding: 16,
+// //             flexDirection: "row",
+// //             alignItems: "center",
+// //             gap: 16,
+// //             borderWidth: 1,
+// //             borderColor: BORDER,
+// //             shadowColor: "#000",
+// //             shadowOpacity: 0.06,
+// //             shadowRadius: 10,
+// //             elevation: 2,
+// //           }}
+// //         >
+// //           <View
+// //             style={{
+// //               width: 56,
+// //               height: 56,
+// //               borderRadius: 28,
+// //               backgroundColor: INK,
+// //               alignItems: "center",
+// //               justifyContent: "center",
+// //             }}
+// //           >
+// //             <Text style={{ color: "#fff", fontSize: 18, fontWeight: "800" }}>{initials}</Text>
+// //           </View>
+
+// //           <View style={{ flex: 1 }}>
+// //             <Text style={{ fontSize: 18, fontWeight: "800", color: INK }}>
+// //               {form.name || "Add your name"}
+// //             </Text>
+// //             <Text style={{ color: MUTED, marginTop: 2 }}>
+// //               {form.phone ? `+${form.phone}` : "Phone not available"}
+// //             </Text>
+// //             {profileIncomplete ? (
+// //               <Text style={{ marginTop: 6, color: "#92400E", fontWeight: "600" }}>
+// //                 Complete your profile to help us serve you better.
+// //               </Text>
+// //             ) : null}
+// //           </View>
+
+// //           <TouchableOpacity
+// //             onPress={() => {
+// //               // Route to an edit screen if you have it, else we can convert this page later.
+// //               // router.push("/profile/edit");
+// //               Alert.alert("Edit Profile", "Hook this to your edit screen or form.");
+// //             }}
+// //             style={{ backgroundColor: INK, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12 }}
+// //           >
+// //             <Text style={{ color: "#fff", fontWeight: "700" }}>Edit profile</Text>
+// //           </TouchableOpacity>
+// //         </View>
+
+// //         {/* Your Information */}
+// //         <Section title="Your Information">
+// //           <Row
+// //             icon={<Feather name="user" size={22} color={INK} />}
+// //             label="Personal Information"
+// //             onPress={() => {
+// //               // router.push("/profile/edit");
+// //             }}
+// //           />
+// //         </Section>
+
+// //         {/* Community */}
+// //         <Section title="Community">
+// //           <Row icon={<Feather name="gift" size={22} color={INK} />} label="Refer a Friend" onPress={() => {}} />
+// //           <Divider />
+// //           <Row icon={<Feather name="message-square" size={22} color={INK} />} label="Leave Feedback" onPress={() => {}} />
+// //           <Divider />
+// //           <Row icon={<Feather name="star" size={22} color={INK} />} label="Rate this App" onPress={() => {}} />
+// //         </Section>
+
+// //         {/* Notifications & Help */}
+// //         <Section title="Notifications & Help">
+// //           <Row
+// //             icon={<Feather name="bell" size={22} color={INK} />}
+// //             label="Notifications"
+// //             right={<Switch value={notif} onValueChange={setNotif} />}
+// //           />
+// //           <Divider />
+// //           <Row icon={<Feather name="help-circle" size={22} color={INK} />} label="Help & Support" onPress={() => {}} />
+// //         </Section>
+
+// //         {/* Donate */}
+// //         <Section title="Donate">
+// //           <Row
+// //             icon={<Feather name="heart" size={22} color={INK} />}
+// //             label="Support caseFit"
+// //             subtitle="Help us serve more people"
+// //             onPress={() => {}}
+// //           />
+// //         </Section>
+
+// //         {/* Logout */}
+// //         <Pressable
+// //           onPress={logout}
+// //           style={({ pressed }) => [{ alignSelf: "center", paddingVertical: 16, opacity: pressed ? 0.7 : 1 }]}
+// //         >
+// //           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+// //             <Feather name="log-out" size={18} color={INK} />
+// //             <Text style={{ color: INK, fontWeight: "800", textDecorationLine: "underline" }}>LOGOUT</Text>
+// //           </View>
+// //         </Pressable>
+
+// //         <Text style={{ textAlign: "center", color: "#9CA3AF", fontSize: 12, marginBottom: 24 }}>
+// //           v0.1 • caseFit
+// //         </Text>
+// //       </ScrollView>
+// //     </SafeAreaView>
+// //   );
+// // }
+
+// // my-app/app/(tabs)/profile.tsx
+// import { useEffect, useMemo, useRef, useState } from "react";
+// import {
+//   View,
+//   Text,
+//   TouchableOpacity,
+//   ActivityIndicator,
+//   Alert,
+//   ScrollView,
+//   Switch,
+//   Pressable,
+//   TextInput,
+//   Share,
+//   Linking,
+// } from "react-native";
+// import { SafeAreaView } from "react-native-safe-area-context";
+// import { useRouter } from "expo-router";
+// import { useAuth } from "../../context/auth";
+// import { API_BASE } from "../../constants/config";
+// import { Feather } from "@expo/vector-icons";
+
+// type ProfileData = {
+//   id?: string | number;
+//   phone?: string;
+//   name?: string;
+//   gender?: "Male" | "Female" | "Other" | "";
+//   age?: number | string;
+//   area?: string;
+// };
+
+// const BG = "#F5F7FB";
+// const CARD = "#FFFFFF";
+// const INK = "#000000";
+// const MUTED = "#6B7280";
+// const BORDER = "#E5E7EB";
+
+// // ✅ Only these
+// const PROFILE_GET = `${API_BASE}/auth/me`;
+// const PROFILE_PATCH = `${API_BASE}/auth/me`;
+
+// // ----- Small UI primitives -----
+// function Section({ title, children }: { title?: string; children: React.ReactNode }) {
+//   return (
+//     <View
+//       style={{
+//         backgroundColor: CARD,
+//         borderRadius: 18,
+//         paddingHorizontal: 16,
+//         paddingVertical: 4,
+//         borderWidth: 1,
+//         borderColor: BORDER,
+//         shadowColor: "#000",
+//         shadowOpacity: 0.06,
+//         shadowRadius: 10,
+//         elevation: 2,
+//       }}
+//     >
+//       {title ? (
+//         <Text style={{ fontSize: 18, fontWeight: "700", color: INK, marginBottom: 8 }}>{title}</Text>
+//       ) : null}
+//       {children}
+//     </View>
+//   );
+// }
+
+// function Divider() {
+//   return <View style={{ height: 1, backgroundColor: BORDER, marginLeft: 40 }} />;
+// }
+
+// function Row({
+//   icon,
+//   label,
+//   subtitle,
+//   onPress,
+//   right,
+//   disabled,
+// }: {
+//   icon: React.ReactNode;
+//   label: string;
+//   subtitle?: string;
+//   onPress?: () => void;
+//   right?: React.ReactNode;
+//   disabled?: boolean;
+// }) {
+//   return (
+//     <Pressable
+//       disabled={disabled}
+//       onPress={onPress}
+//       style={({ pressed }) => [
+//         {
+//           paddingVertical: 16,
+//           flexDirection: "row",
+//           alignItems: "center",
+//           opacity: pressed ? 0.7 : 1,
+//         },
+//       ]}
+//     >
+//       <View style={{ width: 28, marginRight: 12, alignItems: "center" }}>{icon}</View>
+//       <View style={{ flex: 1 }}>
+//         <Text style={{ fontSize: 16, fontWeight: "600", color: INK }}>{label}</Text>
+//         {subtitle ? <Text style={{ fontSize: 13, color: MUTED, marginTop: 2 }}>{subtitle}</Text> : null}
+//       </View>
+//       {right ?? <Feather name="chevron-right" size={20} color="#9CA3AF" />}
+//     </Pressable>
+//   );
+// }
+// // -------------------------------
+
+// export default function ProfileScreen() {
+//   const router = useRouter();
+//   const { user, token, setAuth, logout } = useAuth();
+
+//   const [loading, setLoading] = useState<boolean>(!!token);
+//   const [saving, setSaving] = useState(false);
+//   const [form, setForm] = useState<ProfileData>({ name: "", gender: "", age: "", area: "" });
+//   const [notif, setNotif] = useState(true);   // UI only
+//   const [editing, setEditing] = useState(false); // 👈 enable inline edit
+
+//   const scrollRef = useRef<ScrollView>(null);
+
+//   // 🔒 redirect if unauthenticated
+//   useEffect(() => {
+//     if (!token) router.replace("/login");
+//   }, [token, router]);
+
+//   const initials = useMemo(() => {
+//     const n = (form.name || "").trim();
+//     if (n.length > 0) {
+//       const parts = n.split(/\s+/);
+//       return (parts[0][0] + (parts[1]?.[0] || "")).toUpperCase();
+//     }
+//     const p = (user?.phone || "").toString();
+//     return p ? p.slice(-2) : "•";
+//   }, [form.name, user?.phone]);
+
+//   async function getJson(url: string) {
+//     const res = await fetch(url, {
+//       headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
+//     });
+//     const txt = await res.text();
+//     if (!res.ok) throw new Error(txt || res.statusText);
+//     return txt ? JSON.parse(txt) : {};
+//   }
+
+//   async function patchJson(url: string, body: any) {
+//     const res = await fetch(url, {
+//       method: "PATCH",
+//       headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
+//       body: JSON.stringify(body),
+//     });
+//     const txt = await res.text();
+//     if (!res.ok) throw new Error(txt || res.statusText);
+//     return txt ? JSON.parse(txt) : {};
+//   }
+
+//   // Load profile
+//   useEffect(() => {
+//     if (!token) return;
+//     (async () => {
+//       setLoading(true);
+//       try {
+//         const data = await getJson(PROFILE_GET);
+//         const next: ProfileData = {
+//           id: data.id ?? user?.id,
+//           phone: data.phone ?? user?.phone,
+//           name: data.name ?? "",
+//           gender: (data.gender as any) ?? "",
+//           age: data.age ?? "",
+//           area: data.area ?? "",
+//         };
+//         setForm(next);
+//         await setAuth(token!, {
+//           id: String(next.id ?? user?.id ?? ""),
+//           phone: String(next.phone ?? user?.phone ?? ""),
+//           name: next.name || "",
+//           gender: next.gender || "",
+//           age: next.age || "",
+//           area: next.area || "",
+//         } as any);
+//       } catch {
+//         setForm((f) => ({ ...f, phone: user?.phone, id: user?.id }));
+//       } finally {
+//         setLoading(false);
+//       }
+//     })();
+//     // eslint-disable-next-line react-hooks/exhaustive-deps
+//   }, [token]);
+
+//   function validate(): string | null {
+//     if (!form.name || form.name.trim().length < 2) return "Please enter your full name.";
+//     if (form.gender && !["Male", "Female", "Other"].includes(String(form.gender)))
+//       return "Select a valid gender.";
+//     if (String(form.age || "").trim()) {
+//       const n = Number(form.age);
+//       if (!Number.isFinite(n) || n < 1 || n > 120) return "Enter a valid age (1–120).";
+//     }
+//     return null;
+//   }
+
+//   async function saveProfile() {
+//     const err = validate();
+//     if (err) return Alert.alert("Invalid", err);
+
+//     setSaving(true);
+//     try {
+//       const payload = {
+//         name: form.name?.trim() || undefined,
+//         gender: form.gender || undefined,
+//         age: String(form.age || "").trim() ? Number(form.age) : undefined,
+//         area: form.area?.trim() || undefined,
+//       };
+//       const updated = await patchJson(PROFILE_PATCH, payload);
+//       const merged: ProfileData = {
+//         ...form,
+//         ...updated,
+//         id: updated.id ?? form.id,
+//         phone: updated.phone ?? form.phone,
+//       };
+//       setForm(merged);
+//       await setAuth(token!, {
+//         id: String(merged.id ?? user?.id ?? ""),
+//         phone: String(merged.phone ?? user?.phone ?? ""),
+//         name: merged.name || "",
+//         gender: merged.gender || "",
+//         age: merged.age || "",
+//         area: merged.area || "",
+//       } as any);
+//       setEditing(false);
+//       Alert.alert("Saved", "Your profile has been updated.");
+//     } catch (e: any) {
+//       Alert.alert("Error", e?.message || "Could not save profile");
+//     } finally {
+//       setSaving(false);
+//     }
+//   }
+
+//   if (!token) return null;
+
+//   if (loading) {
+//     return (
+//       <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
+//         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+//           <ActivityIndicator />
+//         </View>
+//       </SafeAreaView>
+//     );
+//   }
+
+//   const profileIncomplete = !form.name || !form.gender || !form.age || !form.area;
+
+//   return (
+//     <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
+//       {/* 🔧 FIX DOUBLE-HEADER:
+//           We REMOVED CaseFitHeader here.
+//           Keep using the navigator/tab header (which already shows your black CaseFit bar). */}
+//       <ScrollView ref={scrollRef} contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
+//         {/* Profile summary */}
+//         <View
+//           style={{
+//             backgroundColor: CARD,
+//             borderRadius: 20,
+//             padding: 16,
+//             flexDirection: "row",
+//             alignItems: "center",
+//             gap: 16,
+//             borderWidth: 1,
+//             borderColor: BORDER,
+//             shadowColor: "#000",
+//             shadowOpacity: 0.06,
+//             shadowRadius: 10,
+//             elevation: 2,
+//           }}
+//         >
+//           <View
+//             style={{
+//               width: 56,
+//               height: 56,
+//               borderRadius: 28,
+//               backgroundColor: INK,
+//               alignItems: "center",
+//               justifyContent: "center",
+//             }}
+//           >
+//             <Text style={{ color: "#fff", fontSize: 18, fontWeight: "800" }}>{initials}</Text>
+//           </View>
+
+//           <View style={{ flex: 1 }}>
+//             <Text style={{ fontSize: 18, fontWeight: "800", color: INK }}>
+//               {form.name || "Add your name"}
+//             </Text>
+//             <Text style={{ color: MUTED, marginTop: 2 }}>
+//               {form.phone ? `+${form.phone}` : "Phone not available"}
+//             </Text>
+//             {profileIncomplete ? (
+//               <Text style={{ marginTop: 6, color: "#92400E", fontWeight: "600" }}>
+//                 Complete your profile to help us serve you better.
+//               </Text>
+//             ) : null}
+//           </View>
+
+//           <TouchableOpacity
+//             onPress={() => {
+//               setEditing(true);
+//               setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 0);
+//             }}
+//             style={{ backgroundColor: INK, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12 }}
+//           >
+//             <Text style={{ color: "#fff", fontWeight: "700" }}>Edit profile</Text>
+//           </TouchableOpacity>
+//         </View>
+
+//         {/* Your Information */}
+//         <Section title="Your Information">
+//           <Row
+//             icon={<Feather name="user" size={22} color={INK} />}
+//             label="Personal Information"
+//             onPress={() => {
+//               setEditing(true);
+//               setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 0);
+//             }}
+//           />
+//         </Section>
+
+//         {/* Community */}
+//         <Section title="Community">
+//           <Row
+//             icon={<Feather name="gift" size={22} color={INK} />}
+//             label="Refer a Friend"
+//             onPress={async () => {
+//               try {
+//                 await Share.share({
+//                   message:
+//                     "Try caseFit for quick, reliable legal help. Download the app and use my referral: CASEFIT",
+//                 });
+//               } catch {}
+//             }}
+//           />
+//           <Divider />
+//           <Row
+//             icon={<Feather name="message-square" size={22} color={INK} />}
+//             label="Leave Feedback"
+//             onPress={() =>
+//               Linking.openURL("mailto:support@thecasefit.com?subject=Feedback%20for%20caseFit").catch(() =>
+//                 Alert.alert("Info", "Feedback: support@thecasefit.com")
+//               )
+//             }
+//           />
+//           <Divider />
+//           <Row
+//             icon={<Feather name="star" size={22} color={INK} />}
+//             label="Rate this App"
+//             onPress={() =>
+//               Alert.alert("Coming soon", "Store listing link will be added for ratings.")
+//             }
+//           />
+//         </Section>
+
+//         {/* Notifications & Help */}
+//         <Section title="Notifications & Help">
+//           <Row
+//             icon={<Feather name="bell" size={22} color={INK} />}
+//             label="Notifications"
+//             right={<Switch value={notif} onValueChange={setNotif} />}
+//           />
+//           <Divider />
+//           <Row
+//             icon={<Feather name="help-circle" size={22} color={INK} />}
+//             label="Help & Support"
+//             onPress={() =>
+//               Linking.openURL("mailto:support@thecasefit.com?subject=Help%20Request").catch(() =>
+//                 Alert.alert("Info", "Write to support@thecasefit.com")
+//               )
+//             }
+//           />
+//         </Section>
+
+//         {/* Donate */}
+//         <Section title="Donate">
+//           <Row
+//             icon={<Feather name="heart" size={22} color={INK} />}
+//             label="Support caseFit"
+//             subtitle="Help us serve more people"
+//             onPress={() => Alert.alert("Coming soon", "Donation flow will be added.")}
+//           />
+//         </Section>
+
+//         {/* Inline EDIT FORM (appears when Edit profile / Personal Information tapped) */}
+//         {editing && (
+//           <View
+//             style={{
+//               marginTop: 14,
+//               backgroundColor: CARD,
+//               borderRadius: 20,
+//               padding: 16,
+//               gap: 14,
+//               borderWidth: 1,
+//               borderColor: BORDER,
+//               shadowColor: "#000",
+//               shadowOpacity: 0.05,
+//               shadowRadius: 8,
+//               shadowOffset: { width: 0, height: 4 },
+//               elevation: 2,
+//             }}
+//           >
+//             <Text style={{ fontSize: 18, fontWeight: "700", color: INK, marginBottom: 4 }}>
+//               Edit Personal Information
+//             </Text>
+
+//             {/* Name */}
+//             <View>
+//               <Text style={{ fontSize: 12, color: MUTED, marginBottom: 6 }}>Full Name</Text>
+//               <TextInput
+//                 value={String(form.name || "")}
+//                 onChangeText={(t) => setForm((f) => ({ ...f, name: t }))}
+//                 placeholder="e.g., Rakesh Sharma"
+//                 style={{
+//                   borderWidth: 1,
+//                   borderColor: BORDER,
+//                   borderRadius: 12,
+//                   padding: 12,
+//                   backgroundColor: "#FAFAFA",
+//                 }}
+//               />
+//             </View>
+
+//             {/* Gender */}
+//             <View>
+//               <Text style={{ fontSize: 12, color: MUTED, marginBottom: 6 }}>Gender</Text>
+//               <View style={{ flexDirection: "row", gap: 8 }}>
+//                 {(["Male", "Female", "Other"] as const).map((g) => {
+//                   const selected = form.gender === g;
+//                   return (
+//                     <TouchableOpacity
+//                       key={g}
+//                       onPress={() => setForm((f) => ({ ...f, gender: g }))}
+//                       style={{
+//                         paddingVertical: 8,
+//                         paddingHorizontal: 14,
+//                         borderRadius: 999,
+//                         borderWidth: selected ? 0 : 1,
+//                         borderColor: BORDER,
+//                         backgroundColor: selected ? INK : "#fff",
+//                       }}
+//                     >
+//                       <Text style={{ color: selected ? "#fff" : INK, fontWeight: "700" }}>{g}</Text>
+//                     </TouchableOpacity>
+//                   );
+//                 })}
+//               </View>
+//             </View>
+
+//             {/* Age */}
+//             <View>
+//               <Text style={{ fontSize: 12, color: MUTED, marginBottom: 6 }}>Age</Text>
+//               <TextInput
+//                 value={String(form.age || "")}
+//                 onChangeText={(t) =>
+//                   setForm((f) => ({ ...f, age: t.replace(/\D/g, "") }))
+//                 }
+//                 keyboardType="number-pad"
+//                 placeholder="e.g., 28"
+//                 style={{
+//                   borderWidth: 1,
+//                   borderColor: BORDER,
+//                   borderRadius: 12,
+//                   padding: 12,
+//                   backgroundColor: "#FAFAFA",
+//                 }}
+//               />
+//             </View>
+
+//             {/* Area */}
+//             <View>
+//               <Text style={{ fontSize: 12, color: MUTED, marginBottom: 6 }}>Area / City</Text>
+//               <TextInput
+//                 value={String(form.area || "")}
+//                 onChangeText={(t) => setForm((f) => ({ ...f, area: t }))}
+//                 placeholder="e.g., Andheri West, Mumbai"
+//                 style={{
+//                   borderWidth: 1,
+//                   borderColor: BORDER,
+//                   borderRadius: 12,
+//                   padding: 12,
+//                   backgroundColor: "#FAFAFA",
+//                 }}
+//               />
+//             </View>
+
+//             {/* Save / Cancel */}
+//             <View style={{ flexDirection: "row", gap: 10, marginTop: 6 }}>
+//               <TouchableOpacity
+//                 onPress={saveProfile}
+//                 disabled={saving}
+//                 style={{
+//                   flex: 1,
+//                   backgroundColor: saving ? "#93C5FD" : INK,
+//                   paddingVertical: 14,
+//                   borderRadius: 12,
+//                   alignItems: "center",
+//                 }}
+//               >
+//                 <Text style={{ color: "#fff", fontWeight: "700" }}>
+//                   {saving ? "Saving…" : "Save Changes"}
+//                 </Text>
+//               </TouchableOpacity>
+
+//               <TouchableOpacity
+//                 onPress={() => setEditing(false)}
+//                 style={{
+//                   paddingVertical: 14,
+//                   paddingHorizontal: 16,
+//                   borderRadius: 12,
+//                   borderColor: BORDER,
+//                   borderWidth: 1,
+//                   backgroundColor: "#fff",
+//                 }}
+//               >
+//                 <Text style={{ color: INK, fontWeight: "700" }}>Cancel</Text>
+//               </TouchableOpacity>
+//             </View>
+//           </View>
+//         )}
+
+//         {/* Logout */}
+//         <Pressable
+//           onPress={logout}
+//           style={({ pressed }) => [{ alignSelf: "center", paddingVertical: 16, opacity: pressed ? 0.7 : 1 }]}
+//         >
+//           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+//             <Feather name="log-out" size={18} color={INK} />
+//             <Text style={{ color: INK, fontWeight: "800", textDecorationLine: "underline" }}>LOGOUT</Text>
+//           </View>
+//         </Pressable>
+
+//         <Text style={{ textAlign: "center", color: "#9CA3AF", fontSize: 12, marginBottom: 24 }}>
+//           v0.1 • caseFit
+//         </Text>
+//       </ScrollView>
+//     </SafeAreaView>
+//   );
+// }
+
+
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
   ScrollView,
+  Switch,
+  Pressable,
+  TextInput,
+  Share,
+  Linking,
+  Modal,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";            // 🔧 ADDED
+import { useRouter } from "expo-router";
 import { useAuth } from "../../context/auth";
 import { API_BASE } from "../../constants/config";
+import { Feather } from "@expo/vector-icons";
 
 type ProfileData = {
   id?: string | number;
@@ -24,33 +962,105 @@ type ProfileData = {
 
 const BG = "#F5F7FB";
 const CARD = "#FFFFFF";
-const INK = "#0B1220";
+const INK = "#000000";
 const MUTED = "#6B7280";
 const BORDER = "#E5E7EB";
-const ACCENT = "#1F2937";
 
-// ✅ Use ONLY these two
+// 🔗 Share / Support (edit as you like)
+const APP_SHARE_URL = "https://thecasefit.com/app"; // <-- update when you have the real store link
+const SUPPORT_EMAIL = "support@casefit.com";
+const WHATSAPP_E164 = "919807863007"; // country code + number (e.g., +91 9807863007)
+
+// API
 const PROFILE_GET = `${API_BASE}/auth/me`;
 const PROFILE_PATCH = `${API_BASE}/auth/me`;
+const FEEDBACK_POST = `${API_BASE}/feedback/`; // optional backend you can add
+
+function Section({ title, children }: { title?: string; children: React.ReactNode }) {
+  return (
+    <View
+      style={{
+        backgroundColor: CARD,
+        borderRadius: 18,
+        paddingHorizontal: 16,
+        paddingVertical: 4,
+        borderWidth: 1,
+        borderColor: BORDER,
+        shadowColor: "#000",
+        shadowOpacity: 0.06,
+        shadowRadius: 10,
+        elevation: 2,
+      }}
+    >
+      {title ? (
+        <Text style={{ fontSize: 18, fontWeight: "700", color: INK, marginBottom: 8 }}>{title}</Text>
+      ) : null}
+      {children}
+    </View>
+  );
+}
+
+function Divider() {
+  return <View style={{ height: 1, backgroundColor: BORDER, marginLeft: 40 }} />;
+}
+
+function Row({
+  icon,
+  label,
+  subtitle,
+  onPress,
+  right,
+  disabled,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  subtitle?: string;
+  onPress?: () => void;
+  right?: React.ReactNode;
+  disabled?: boolean;
+}) {
+  return (
+    <Pressable
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [
+        {
+          paddingVertical: 16,
+          flexDirection: "row",
+          alignItems: "center",
+          opacity: pressed ? 0.7 : 1,
+        },
+      ]}
+    >
+      <View style={{ width: 28, marginRight: 12, alignItems: "center" }}>{icon}</View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 16, fontWeight: "600", color: INK }}>{label}</Text>
+        {subtitle ? <Text style={{ fontSize: 13, color: MUTED, marginTop: 2 }}>{subtitle}</Text> : null}
+      </View>
+      {right ?? <Feather name="chevron-right" size={20} color="#9CA3AF" />}
+    </Pressable>
+  );
+}
 
 export default function ProfileScreen() {
-  const router = useRouter();                          // 🔧 ADDED
+  const router = useRouter();
   const { user, token, setAuth, logout } = useAuth();
 
   const [loading, setLoading] = useState<boolean>(!!token);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState<ProfileData>({
-    name: "",
-    gender: "",
-    age: "",
-    area: "",
-  });
+  const [form, setForm] = useState<ProfileData>({ name: "", gender: "", age: "", area: "" });
+  const [notif, setNotif] = useState(true);
+  const [editing, setEditing] = useState(false);
 
-  // 🔧 NEW: redirect to /login if not authenticated
+  // Feedback modal
+  const [fbOpen, setFbOpen] = useState(false);
+  const [fbText, setFbText] = useState("");
+
+  const scrollRef = useRef<ScrollView>(null);
+
+  // single header: we rely on navigator header; do NOT render custom header here
   useEffect(() => {
-    if (!token) {
-      router.replace("/login");
-    }
+    if (!token) router.replace("/login");
   }, [token, router]);
 
   const initials = useMemo(() => {
@@ -60,18 +1070,12 @@ export default function ProfileScreen() {
       return (parts[0][0] + (parts[1]?.[0] || "")).toUpperCase();
     }
     const p = (user?.phone || "").toString();
-    return p ? p.slice(-2) : "U";
+    return p ? p.slice(-2) : "•";
   }, [form.name, user?.phone]);
-
-  const setField = (k: keyof ProfileData, v: any) =>
-    setForm((f) => ({ ...f, [k]: v }));
 
   async function getJson(url: string) {
     const res = await fetch(url, {
-      headers: {
-        "content-type": "application/json",
-        ...(token ? { authorization: `Bearer ${token}` } : {}),
-      },
+      headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
     });
     const txt = await res.text();
     if (!res.ok) throw new Error(txt || res.statusText);
@@ -81,10 +1085,7 @@ export default function ProfileScreen() {
   async function patchJson(url: string, body: any) {
     const res = await fetch(url, {
       method: "PATCH",
-      headers: {
-        "content-type": "application/json",
-        ...(token ? { authorization: `Bearer ${token}` } : {}),
-      },
+      headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
       body: JSON.stringify(body),
     });
     const txt = await res.text();
@@ -92,9 +1093,24 @@ export default function ProfileScreen() {
     return txt ? JSON.parse(txt) : {};
   }
 
-  // ---- Load profile from /auth/me ----
+  // optional feedback POST
+  async function postFeedback(body: any) {
+    try {
+      const res = await fetch(FEEDBACK_POST, {
+        method: "POST",
+        headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return true;
+    } catch {
+      return false; // silently fall back to email
+    }
+  }
+
+  // Load profile
   useEffect(() => {
-    if (!token) return; // redirect handled above
+    if (!token) return;
     (async () => {
       setLoading(true);
       try {
@@ -108,8 +1124,6 @@ export default function ProfileScreen() {
           area: data.area ?? "",
         };
         setForm(next);
-
-        // keep global context in sync (don’t change token)
         await setAuth(token!, {
           id: String(next.id ?? user?.id ?? ""),
           phone: String(next.phone ?? user?.phone ?? ""),
@@ -119,7 +1133,6 @@ export default function ProfileScreen() {
           area: next.area || "",
         } as any);
       } catch {
-        // show minimal info; user can still fill the form
         setForm((f) => ({ ...f, phone: user?.phone, id: user?.id }));
       } finally {
         setLoading(false);
@@ -139,7 +1152,6 @@ export default function ProfileScreen() {
     return null;
   }
 
-  // ---- Save to /auth/me (PATCH) ----
   async function saveProfile() {
     const err = validate();
     if (err) return Alert.alert("Invalid", err);
@@ -152,9 +1164,7 @@ export default function ProfileScreen() {
         age: String(form.age || "").trim() ? Number(form.age) : undefined,
         area: form.area?.trim() || undefined,
       };
-
       const updated = await patchJson(PROFILE_PATCH, payload);
-
       const merged: ProfileData = {
         ...form,
         ...updated,
@@ -162,7 +1172,6 @@ export default function ProfileScreen() {
         phone: updated.phone ?? form.phone,
       };
       setForm(merged);
-
       await setAuth(token!, {
         id: String(merged.id ?? user?.id ?? ""),
         phone: String(merged.phone ?? user?.phone ?? ""),
@@ -171,7 +1180,7 @@ export default function ProfileScreen() {
         age: merged.age || "",
         area: merged.area || "",
       } as any);
-
+      setEditing(false);
       Alert.alert("Saved", "Your profile has been updated.");
     } catch (e: any) {
       Alert.alert("Error", e?.message || "Could not save profile");
@@ -180,10 +1189,53 @@ export default function ProfileScreen() {
     }
   }
 
-  // While redirecting, render nothing if unauthenticated
-  if (!token) {
-    return null;
+  // Share link with referral text
+  async function handleShare() {
+    try {
+      await Share.share({
+        message: `Try caseFit for quick, reliable legal help. Download here: ${APP_SHARE_URL}`,
+        url: APP_SHARE_URL, // iOS prefers 'url' too
+        title: "caseFit",
+      });
+    } catch {}
   }
+
+  // Help & Support chooser
+  function openSupportChooser() {
+    Alert.alert(
+      "Contact caseFit",
+      "Choose how you want to reach us.",
+      [
+        {
+          text: "Email",
+          onPress: () =>
+            Linking.openURL(
+              `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
+                "Help Request"
+              )}&body=${encodeURIComponent(
+                `Hi caseFit team,\n\nI need help with...\n\n— ${form.name || "User"} (${form.phone || "phone unknown"})`
+              )}`
+            ).catch(() => Alert.alert("Info", `Write to ${SUPPORT_EMAIL}`)),
+        },
+        {
+          text: "WhatsApp",
+          onPress: () => {
+            const deep = `whatsapp://send?phone=${WHATSAPP_E164}&text=${encodeURIComponent(
+              "Hi caseFit support, I need help."
+            )}`;
+            const web = `https://wa.me/${WHATSAPP_E164}?text=${encodeURIComponent(
+              "Hi caseFit support, I need help."
+            )}`;
+            Linking.openURL(deep).catch(() => Linking.openURL(web));
+          },
+        },
+        { text: "Cancel", style: "cancel" },
+      ],
+      { cancelable: true }
+    );
+  }
+
+  if (!token) return null;
 
   if (loading) {
     return (
@@ -199,8 +1251,8 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
-        {/* Header Card */}
+      <ScrollView ref={scrollRef} contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
+        {/* Profile summary */}
         <View
           style={{
             backgroundColor: CARD,
@@ -212,168 +1264,334 @@ export default function ProfileScreen() {
             borderWidth: 1,
             borderColor: BORDER,
             shadowColor: "#000",
-            shadowOpacity: 0.05,
-            shadowRadius: 8,
-            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.06,
+            shadowRadius: 10,
             elevation: 2,
           }}
         >
           <View
             style={{
-              width: 64,
-              height: 64,
-              borderRadius: 999,
-              backgroundColor: ACCENT,
+              width: 56,
+              height: 56,
+              borderRadius: 28,
+              backgroundColor: INK,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Text style={{ color: "#fff", fontSize: 22, fontWeight: "700" }}>{initials}</Text>
+            <Text style={{ color: "#fff", fontSize: 18, fontWeight: "800" }}>{initials}</Text>
           </View>
+
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 18, fontWeight: "700", color: INK }}>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: INK }}>
               {form.name || "Add your name"}
             </Text>
-            <Text style={{ color: MUTED }}>
+            <Text style={{ color: MUTED, marginTop: 2 }}>
               {form.phone ? `+${form.phone}` : "Phone not available"}
             </Text>
             {profileIncomplete ? (
-              <Text style={{ marginTop: 6, color: "#B45309", fontWeight: "600" }}>
-                Complete your profile to help us serve you better.
+              <Text style={{ marginTop: 6, color: "#92400E", fontWeight: "600" }}>
+                
               </Text>
             ) : null}
           </View>
+
+          <TouchableOpacity
+            onPress={() => {
+              setEditing(true);
+              setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 0);
+            }}
+            style={{ backgroundColor: INK, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12 }}
+          >
+            <Text style={{ color: "#fff", fontWeight: "700" }}>Edit profile</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Edit Form */}
-        <View
-          style={{
-            marginTop: 14,
-            backgroundColor: CARD,
-            borderRadius: 20,
-            padding: 16,
-            gap: 14,
-            borderWidth: 1,
-            borderColor: BORDER,
-            shadowColor: "#000",
-            shadowOpacity: 0.05,
-            shadowRadius: 8,
-            shadowOffset: { width: 0, height: 4 },
-            elevation: 2,
-          }}
-        >
-          {/* Name */}
-          <View>
-            <Text style={{ fontSize: 12, color: MUTED, marginBottom: 6 }}>Full Name</Text>
-            <TextInput
-              value={String(form.name || "")}
-              onChangeText={(t) => setField("name", t)}
-              placeholder="e.g., Rakesh Sharma"
-              style={{
-                borderWidth: 1,
-                borderColor: BORDER,
-                borderRadius: 12,
-                padding: 12,
-                backgroundColor: "#FAFAFA",
-              }}
-            />
-          </View>
+        {/* Your Information */}
+        <Section title="Your Information">
+          <Row
+            icon={<Feather name="user" size={22} color={INK} />}
+            label="Personal Information"
+            onPress={() => {
+              setEditing(true);
+              setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 0);
+            }}
+          />
+        </Section>
 
-          {/* Gender */}
-          <View>
-            <Text style={{ fontSize: 12, color: MUTED, marginBottom: 6 }}>Gender</Text>
-            <View style={{ flexDirection: "row", gap: 8 }}>
-              {(["Male", "Female", "Other"] as const).map((g) => {
-                const selected = form.gender === g;
-                return (
-                  <TouchableOpacity
-                    key={g}
-                    onPress={() => setField("gender", g)}
-                    style={{
-                      paddingVertical: 8,
-                      paddingHorizontal: 14,
-                      borderRadius: 999,
-                      borderWidth: selected ? 0 : 1,
-                      borderColor: BORDER,
-                      backgroundColor: selected ? ACCENT : "#fff",
-                    }}
-                  >
-                    <Text style={{ color: selected ? "#fff" : INK, fontWeight: "700" }}>{g}</Text>
-                  </TouchableOpacity>
-                );
-              })}
+        {/* Community */}
+        <Section title="Community">
+          <Row icon={<Feather name="gift" size={22} color={INK} />} label="Refer a Friend" onPress={handleShare} />
+          <Divider />
+          <Row
+            icon={<Feather name="message-square" size={22} color={INK} />}
+            label="Leave Feedback"
+            onPress={() => setFbOpen(true)}
+          />
+          <Divider />
+          <Row
+            icon={<Feather name="star" size={22} color={INK} />}
+            label="Rate this App"
+            onPress={() => Alert.alert("Coming soon", "Store link will be added for ratings.")}
+          />
+        </Section>
+
+        {/* Notifications & Help */}
+        <Section title="Notifications & Help">
+          <Row
+            icon={<Feather name="bell" size={22} color={INK} />}
+            label="Notifications"
+            right={<Switch value={notif} onValueChange={setNotif} />}
+          />
+          <Divider />
+          <Row icon={<Feather name="help-circle" size={22} color={INK} />} label="Help & Support" onPress={openSupportChooser} />
+        </Section>
+
+        {/* Donate */}
+        <Section title="Donate">
+          <Row
+            icon={<Feather name="heart" size={22} color={INK} />}
+            label="Support caseFit"
+            subtitle="Help us serve more people"
+            onPress={() => Alert.alert("Coming soon", "Donation flow will be added.")}
+          />
+        </Section>
+
+        {/* Inline EDIT FORM */}
+        {editing && (
+          <View
+            style={{
+              marginTop: 14,
+              backgroundColor: CARD,
+              borderRadius: 20,
+              padding: 16,
+              gap: 14,
+              borderWidth: 1,
+              borderColor: BORDER,
+              shadowColor: "#000",
+              shadowOpacity: 0.05,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 4 },
+              elevation: 2,
+            }}
+          >
+            <Text style={{ fontSize: 18, fontWeight: "700", color: INK, marginBottom: 4 }}>
+              Edit Personal Information
+            </Text>
+
+            {/* Name */}
+            <View>
+              <Text style={{ fontSize: 12, color: MUTED, marginBottom: 6 }}>Full Name</Text>
+              <TextInput
+                value={String(form.name || "")}
+                onChangeText={(t) => setForm((f) => ({ ...f, name: t }))}
+                placeholder="e.g., Rakesh Sharma"
+                style={{
+                  borderWidth: 1,
+                  borderColor: BORDER,
+                  borderRadius: 12,
+                  padding: 12,
+                  backgroundColor: "#FAFAFA",
+                }}
+              />
+            </View>
+
+            {/* Gender */}
+            <View>
+              <Text style={{ fontSize: 12, color: MUTED, marginBottom: 6 }}>Gender</Text>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                {(["Male", "Female", "Other"] as const).map((g) => {
+                  const selected = form.gender === g;
+                  return (
+                    <TouchableOpacity
+                      key={g}
+                      onPress={() => setForm((f) => ({ ...f, gender: g }))}
+                      style={{
+                        paddingVertical: 8,
+                        paddingHorizontal: 14,
+                        borderRadius: 999,
+                        borderWidth: selected ? 0 : 1,
+                        borderColor: BORDER,
+                        backgroundColor: selected ? INK : "#fff",
+                      }}
+                    >
+                      <Text style={{ color: selected ? "#fff" : INK, fontWeight: "700" }}>{g}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Age */}
+            <View>
+              <Text style={{ fontSize: 12, color: MUTED, marginBottom: 6 }}>Age</Text>
+              <TextInput
+                value={String(form.age || "")}
+                onChangeText={(t) => setForm((f) => ({ ...f, age: t.replace(/\D/g, "") }))}
+                keyboardType="number-pad"
+                placeholder="e.g., 28"
+                style={{
+                  borderWidth: 1,
+                  borderColor: BORDER,
+                  borderRadius: 12,
+                  padding: 12,
+                  backgroundColor: "#FAFAFA",
+                }}
+              />
+            </View>
+
+            {/* Area */}
+            <View>
+              <Text style={{ fontSize: 12, color: MUTED, marginBottom: 6 }}>Area / City</Text>
+              <TextInput
+                value={String(form.area || "")}
+                onChangeText={(t) => setForm((f) => ({ ...f, area: t }))}
+                placeholder="e.g., Andheri West, Mumbai"
+                style={{
+                  borderWidth: 1,
+                  borderColor: BORDER,
+                  borderRadius: 12,
+                  padding: 12,
+                  backgroundColor: "#FAFAFA",
+                }}
+              />
+            </View>
+
+            {/* Save / Cancel */}
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 6 }}>
+              <TouchableOpacity
+                onPress={saveProfile}
+                disabled={saving}
+                style={{
+                  flex: 1,
+                  backgroundColor: saving ? "#93C5FD" : INK,
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ color: "#fff", fontWeight: "700" }}>
+                  {saving ? "Saving…" : "Save Changes"}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setEditing(false)}
+                style={{
+                  paddingVertical: 14,
+                  paddingHorizontal: 16,
+                  borderRadius: 12,
+                  borderColor: BORDER,
+                  borderWidth: 1,
+                  backgroundColor: "#fff",
+                }}
+              >
+                <Text style={{ color: INK, fontWeight: "700" }}>Cancel</Text>
+              </TouchableOpacity>
             </View>
           </View>
+        )}
 
-          {/* Age */}
-          <View>
-            <Text style={{ fontSize: 12, color: MUTED, marginBottom: 6 }}>Age</Text>
+        {/* Logout */}
+        <Pressable
+          onPress={logout}
+          style={({ pressed }) => [{ alignSelf: "center", paddingVertical: 16, opacity: pressed ? 0.7 : 1 }]}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Feather name="log-out" size={18} color={INK} />
+            <Text style={{ color: INK, fontWeight: "800", textDecorationLine: "underline" }}>LOGOUT</Text>
+          </View>
+        </Pressable>
+
+        <Text style={{ textAlign: "center", color: "#9CA3AF", fontSize: 12, marginBottom: 24 }}>
+          v0.1 • caseFit
+        </Text>
+      </ScrollView>
+
+      {/* Feedback modal */}
+      <Modal visible={fbOpen} transparent animationType="slide" onRequestClose={() => setFbOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" }}>
+          <View
+            style={{
+              backgroundColor: "#fff",
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              padding: 16,
+              gap: 12,
+            }}
+          >
+            <Text style={{ fontSize: 18, fontWeight: "700", color: INK }}>Leave Feedback</Text>
             <TextInput
-              value={String(form.age || "")}
-              onChangeText={(t) => setField("age", t.replace(/\D/g, ""))}
-              keyboardType="number-pad"
-              placeholder="e.g., 28"
+              value={fbText}
+              onChangeText={setFbText}
+              placeholder="Tell us what went well or what we should improve…"
+              multiline
               style={{
+                minHeight: 120,
                 borderWidth: 1,
                 borderColor: BORDER,
                 borderRadius: 12,
                 padding: 12,
+                textAlignVertical: "top",
                 backgroundColor: "#FAFAFA",
               }}
             />
-          </View>
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <TouchableOpacity
+                onPress={async () => {
+                  const payload = {
+                    message: fbText.trim(),
+                    user_id: form.id ?? user?.id ?? null,
+                    phone: form.phone ?? user?.phone ?? null,
+                    platform: Platform.OS,
+                    at: new Date().toISOString(),
+                  };
 
-          {/* Area */}
-          <View>
-            <Text style={{ fontSize: 12, color: MUTED, marginBottom: 6 }}>Area / City</Text>
-            <TextInput
-              value={String(form.area || "")}
-              onChangeText={(t) => setField("area", t)}
-              placeholder="e.g., Andheri West, Mumbai"
-              style={{
-                borderWidth: 1,
-                borderColor: BORDER,
-                borderRadius: 12,
-                padding: 12,
-                backgroundColor: "#FAFAFA",
-              }}
-            />
-          </View>
+                  if (!payload.message) return Alert.alert("Please add feedback text.");
 
-          {/* Save + Logout */}
-          <View style={{ flexDirection: "row", gap: 10, marginTop: 6 }}>
-            <TouchableOpacity
-              onPress={saveProfile}
-              disabled={saving}
-              style={{
-                flex: 1,
-                backgroundColor: saving ? "#93C5FD" : "#2563EB",
-                paddingVertical: 14,
-                borderRadius: 12,
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ color: "#fff", fontWeight: "700" }}>
-                {saving ? "Saving…" : "Save Profile"}
-              </Text>
-            </TouchableOpacity>
+                  // Try POST to backend if you implement /feedback/
+                  const posted = await postFeedback(payload);
 
-            <TouchableOpacity
-              onPress={logout}
-              style={{
-                paddingVertical: 14,
-                paddingHorizontal: 16,
-                borderRadius: 12,
-                borderColor: BORDER,
-                borderWidth: 1,
-                backgroundColor: "#fff",
-              }}
-            >
-              <Text style={{ color: INK, fontWeight: "700" }}>Log out</Text>
-            </TouchableOpacity>
+                  // Also email to support (guaranteed receipt)
+                  const mailBody = `Feedback from ${form.name || "user"} (${form.phone || "phone unknown"})\n\n${payload.message}\n\nDevice: ${payload.platform}\nWhen: ${payload.at}`;
+                  await Linking.openURL(
+                    `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("App Feedback")}&body=${encodeURIComponent(
+                      mailBody
+                    )}`
+                  ).catch(() => {});
+
+                  setFbOpen(false);
+                  setFbText("");
+                  Alert.alert(posted ? "Thanks!" : "Thanks!", "Your feedback has been sent.");
+                }}
+                style={{
+                  flex: 1,
+                  backgroundColor: INK,
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ color: "#fff", fontWeight: "700" }}>Send</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setFbOpen(false)}
+                style={{
+                  paddingVertical: 14,
+                  paddingHorizontal: 16,
+                  borderRadius: 12,
+                  borderColor: BORDER,
+                  borderWidth: 1,
+                  backgroundColor: "#fff",
+                }}
+              >
+                <Text style={{ color: INK, fontWeight: "700" }}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </ScrollView>
+      </Modal>
     </SafeAreaView>
   );
 }

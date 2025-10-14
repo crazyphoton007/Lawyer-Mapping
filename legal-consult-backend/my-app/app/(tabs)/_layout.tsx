@@ -1,50 +1,76 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+// my-app/app/(tabs)/_layout.tsx
+import React from "react";
+import { Tabs } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Feather } from "@expo/vector-icons";
+import CaseFitHeader from "@/components/CaseFitHeader";
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import CaseFitHeader from '@/components/CaseFitHeader'; // 
+const INK = "#000000";
+const MUTED = "#9CA3AF";
+const CARD = "#FFFFFF";
+const BORDER = "#E5E7EB";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const insets = useSafeAreaInsets();
+  const BASE_HEIGHT = 58;
 
   return (
     <Tabs
+      // Anchored, non-floating bar — like Robinhood/Amazon
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        tabBarButton: HapticTab,
-        headerShown: true,                  // 
-        header: () => <CaseFitHeader />,    // 
+        headerShown: true,
+        header: () => <CaseFitHeader />,
+        tabBarActiveTintColor: INK,
+        tabBarInactiveTintColor: MUTED,
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "700",
+          marginTop: 2,
+        },
+        tabBarStyle: {
+          backgroundColor: CARD,
+          borderTopWidth: 1,
+          borderTopColor: BORDER,
+          height: BASE_HEIGHT + insets.bottom,        // ← safe-area aware
+          paddingBottom: Math.max(insets.bottom, 6),  // ← no overlap with home indicator
+          paddingTop: 6,
+        },
       }}
     >
       <Tabs.Screen
         name="articles"
         options={{
-          title: 'Articles',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="book.fill" color={color} />,
+          title: "Articles",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="book-open" size={size ?? 22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="consult"
         options={{
-          title: 'Consult',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.2.fill" color={color} />,
+          title: "Consult",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="users" size={size ?? 22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="requests"
         options={{
-          title: 'My Requests',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="doc.text.fill" color={color} />,
+          title: "My Requests",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="file-text" size={size ?? 22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.crop.circle" color={color} />,
+          title: "Profile",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="user" size={size ?? 22} color={color} />
+          ),
         }}
       />
     </Tabs>
