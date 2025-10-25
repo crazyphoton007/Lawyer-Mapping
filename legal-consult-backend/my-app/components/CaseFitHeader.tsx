@@ -10,7 +10,7 @@ const WHITE = "#FFFFFF";
 
 /** Tweak these to taste */
 const HEADER_HEIGHT = 60;            // header bar height (excluding safe area)
-const LOGO_SCREEN_FRACTION = 0.45;   // desired width ~78% of screen
+const LOGO_SCREEN_FRACTION = 0.45;   // desired width fraction of screen
 const LOGO_MAX_W = 520;              // absolute cap for very wide phones
 
 /** Your SVG aspect (width / height): 805 × 227 → ~3.547 */
@@ -24,16 +24,12 @@ export default function CaseFitHeader({ showBack, showHelp }: Props) {
 
   const screenW = Dimensions.get("window").width;
 
-  // 1) Desired size from screen width
+  // Size logo based on screen width, clamped by header height
   const desiredW = Math.min(screenW * LOGO_SCREEN_FRACTION, LOGO_MAX_W);
-
-
-
   const desiredH = desiredW / LOGO_ASPECT;
 
-  // 2) Clamp by header height so it never overflows vertically
-  const verticalPadding = 12;                   // small breathing room inside the bar
-  const maxLogoH = Math.max(HEADER_HEIGHT - verticalPadding, 24); // floor to avoid 0
+  const verticalPadding = 12; // breathing room inside the bar
+  const maxLogoH = Math.max(HEADER_HEIGHT - verticalPadding, 24);
   const logoH = Math.min(desiredH, maxLogoH);
   const logoW = logoH * LOGO_ASPECT;
 
@@ -53,7 +49,7 @@ export default function CaseFitHeader({ showBack, showHelp }: Props) {
           paddingHorizontal: 8,
         }}
       >
-        {/* Left gutter (kept wider so the center truly centers) */}
+        {/* Left gutter (optional back) */}
         <View style={{ width: 56, alignItems: "flex-start" }}>
           {showBack ? (
             <TouchableOpacity
@@ -66,12 +62,12 @@ export default function CaseFitHeader({ showBack, showHelp }: Props) {
           ) : null}
         </View>
 
-        {/* Center: logo (auto-clamped to header height) */}
+        {/* Center: brand/logo (non-pressable) */}
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <Logo width={logoW} height={logoH} color={WHITE} />
         </View>
 
-        {/* Right gutter */}
+        {/* Right gutter: (no language toggle in header) optional help only */}
         <View style={{ width: 56, alignItems: "flex-end" }}>
           {showHelp ? (
             <TouchableOpacity

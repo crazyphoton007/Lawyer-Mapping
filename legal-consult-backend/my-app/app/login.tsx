@@ -10,7 +10,6 @@ import {
   ScrollView,
   Linking,
   Image,
-  Pressable,
   Modal,
   ActivityIndicator,
 } from "react-native";
@@ -52,7 +51,7 @@ export default function LoginScreen() {
   const [showInfo, setShowInfo] = useState(false);
   const [infoLoading, setInfoLoading] = useState(false);
   const [tipIndex, setTipIndex] = useState(0);
-  const [language, setLanguage] = useState<"en" | "hi">("en"); // default English
+  const [language, setLanguage] = useState<"en" | "hi">("en"); // default English (used only in modal)
 
   // India-only: accept any input, strip non-digits
   const normalizePhone = (s: string) => s.replace(/\D/g, "").slice(-12);
@@ -61,17 +60,6 @@ export default function LoginScreen() {
 
   function pickRandomTip() {
     return Math.floor(Math.random() * INFO_TOPICS.length);
-  }
-
-  function handleLogoPress() {
-    setShowInfo(true);
-    setInfoLoading(true);
-    setTimeout(() => {
-      let i = pickRandomTip();
-      while (i === tipIndex && INFO_TOPICS.length > 1) i = pickRandomTip();
-      setTipIndex(i);
-      setInfoLoading(false);
-    }, 2200); // 2.2s spinner
   }
 
   async function requestCode() {
@@ -148,7 +136,7 @@ export default function LoginScreen() {
     });
   }
 
-  // current topic content (selected language)
+  // current topic content (selected language) — used only inside the modal
   const content = INFO_TOPICS[tipIndex][language];
 
   return (
@@ -167,26 +155,11 @@ export default function LoginScreen() {
           {/* 🔥 Top brand bar */}
           <CaseFitHero tagline="Legal help, done right." />
 
-          {/* Optional language toggle (top-right of content) */}
-          <View style={{ paddingHorizontal: 16, marginTop: 8, alignItems: "flex-end" }}>
-            <TouchableOpacity
-              onPress={() => setLanguage(language === "en" ? "hi" : "en")}
-              style={{
-                paddingHorizontal: 10,
-                paddingVertical: 6,
-                backgroundColor: "#E5E7EB",
-                borderRadius: 8,
-              }}
-            >
-              <Text style={{ color: "#111827", fontWeight: "600" }}>
-                {language === "en" ? "हिन्दी" : "English"}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          {/* NOTE: The top-right Hindi/English toggle was intentionally removed on Login. */}
 
           {/* Main content wrapper */}
           <View style={{ paddingHorizontal: 16, marginTop: HERO_PULLUP }}>
-            {/* LOGO: left-aligned, placed closer to the login title */}
+            {/* LOGO area */}
             <View
               style={{
                 alignItems: "flex-start",
@@ -194,15 +167,13 @@ export default function LoginScreen() {
                 marginBottom: LOGO_BOTTOM_MARGIN,
                 marginLeft: 10,
               }}
-            >
-            </View>
-             
+            />
             <View pointerEvents="none">
-            <Image
+              <Image
                 source={require("../assets/images/only_logoo.png")}
                 style={{ width: LOGO_SIZE, height: LOGO_SIZE }}
                 resizeMode="contain"
-            />
+              />
             </View>
 
             {/* Title + subtitle */}
@@ -441,7 +412,7 @@ export default function LoginScreen() {
                       justifyContent: "space-between",
                     }}
                   >
-                    {/* Inline language toggle inside modal as well */}
+                    {/* Inline language toggle inside modal (kept) */}
                     <TouchableOpacity
                       onPress={() => setLanguage(language === "en" ? "hi" : "en")}
                       style={{
@@ -462,8 +433,7 @@ export default function LoginScreen() {
                           setInfoLoading(true);
                           setTimeout(() => {
                             let i = pickRandomTip();
-                            while (i === tipIndex && INFO_TOPICS.length > 1)
-                              i = pickRandomTip();
+                            while (i === tipIndex && INFO_TOPICS.length > 1) i = pickRandomTip();
                             setTipIndex(i);
                             setInfoLoading(false);
                           }, 900);
