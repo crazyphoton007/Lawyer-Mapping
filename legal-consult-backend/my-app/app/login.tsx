@@ -1,4 +1,5 @@
-﻿import { useState } from "react";
+﻿// app/login.tsx
+import { useState } from "react";
 import {
   View,
   Text,
@@ -13,17 +14,15 @@ import {
   Modal,
   ActivityIndicator,
 } from "react-native";
-
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useRouter, Link } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { API_BASE } from "../constants/config";
 import { useAuth } from "../context/auth";
 
-// 🔥 Top brand bar (black header)
+// Top brand bar
 import CaseFitHero from "../components/CaseFitHero";
-
-// 📚 Bilingual topics (50 items)
+// Bilingual topics (50 items)
 import { INFO_TOPICS } from "../constants/legal_tips";
 
 const BG = "#F5F7FB";
@@ -32,11 +31,11 @@ const INK = "#0B1220";
 const MUTED = "#6B7280";
 const BORDER = "#E5E7EB";
 
-// ✅ Adjust these for look & spacing
-const LOGO_SIZE = 38; // logo image size
-const HERO_PULLUP = 0; // keep zero so we don’t touch the header
-const LOGO_TOP_MARGIN = 65; // space below the black header before logo
-const LOGO_BOTTOM_MARGIN = 3; // tighter gap below logo
+// Visual tweaks
+const LOGO_SIZE = 38;
+const HERO_PULLUP = 0;
+const LOGO_TOP_MARGIN = 65;
+const LOGO_BOTTOM_MARGIN = 3;
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -47,11 +46,11 @@ export default function LoginScreen() {
   const [step, setStep] = useState<"request" | "verify">("request");
   const [loading, setLoading] = useState(false);
 
-  // 👉 Info modal state
+  // Info modal state
   const [showInfo, setShowInfo] = useState(false);
   const [infoLoading, setInfoLoading] = useState(false);
   const [tipIndex, setTipIndex] = useState(0);
-  const [language, setLanguage] = useState<"en" | "hi">("en"); // default English (used only in modal)
+  const [language, setLanguage] = useState<"en" | "hi">("en");
 
   // India-only: accept any input, strip non-digits
   const normalizePhone = (s: string) => s.replace(/\D/g, "").slice(-12);
@@ -70,13 +69,22 @@ export default function LoginScreen() {
     }
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/auth/request-code`, {
+      const e164 = `+91${ph}`;
+      const url = `${API_BASE}/auth/request-code`;
+      console.log("OTP request URL:", url);
+
+      const res = await fetch(url, {
         method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ phone: ph }),
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+        body: JSON.stringify({ phone: e164 }),
       });
+
       const txt = await res.text();
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${txt}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${txt.slice(0, 200)}`);
       setStep("verify");
       Alert.alert("OTP sent", "Enter the code you received.");
     } catch (e: any) {
@@ -94,13 +102,22 @@ export default function LoginScreen() {
     }
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/auth/verify`, {
+      const e164 = `+91${ph}`;
+      const url = `${API_BASE}/auth/verify`;
+      console.log("OTP verify URL:", url);
+
+      const res = await fetch(url, {
         method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ phone: ph, code: code.trim() }),
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+        body: JSON.stringify({ phone: e164, code: code.trim() }),
       });
+
       const txt = await res.text();
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${txt}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${txt.slice(0, 200)}`);
       const data = JSON.parse(txt);
 
       const jwt = data.token || data.access_token || data.jwt;
@@ -141,7 +158,7 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
-      {/* ⬇️ Hide the native header on this screen */}
+      {/* Hide the native header on this screen */}
       <Stack.Screen options={{ headerShown: false }} />
 
       <KeyboardAvoidingView
@@ -152,10 +169,8 @@ export default function LoginScreen() {
           contentContainerStyle={{ padding: 0, paddingBottom: 32 }}
           keyboardShouldPersistTaps="handled"
         >
-          {/* 🔥 Top brand bar */}
+          {/* Brand bar */}
           <CaseFitHero tagline="Legal help, done right." />
-
-          {/* NOTE: The top-right Hindi/English toggle was intentionally removed on Login. */}
 
           {/* Main content wrapper */}
           <View style={{ paddingHorizontal: 16, marginTop: HERO_PULLUP }}>
@@ -196,7 +211,7 @@ export default function LoginScreen() {
                 textAlign: "left",
               }}
             >
-              No passwords - just a quick OTP!
+              No passwords — just a quick OTP!
             </Text>
 
             {/* PHONE card */}
@@ -278,7 +293,11 @@ export default function LoginScreen() {
                   }}
                 >
                   <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>
-                    {!isValidIndian ? "Enter 10-digit number" : loading ? "Sending…" : "PROCEED"}
+                    {!isValidIndian
+                      ? "Enter 10-digit number"
+                      : loading
+                      ? "Sending…"
+                      : "PROCEED"}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -339,16 +358,35 @@ export default function LoginScreen() {
               </View>
             )}
 
-            {/* Footer note */}
+            {/* AGREEMENTS + SUPPORT (must be inside <Text>) */}
             <Text
-              style={{ fontSize: 12, color: MUTED, marginTop: 16, textAlign: "center" }}
-              onPress={openHelp}
+              style={{
+                marginTop: 16,
+                color: "#6b7280",
+                lineHeight: 20,
+                textAlign: "center",
+              }}
             >
-              By proceeding, you agree to caseFit’s Privacy Policy and Terms & Conditions.
+              By proceeding, you agree to caseFit’s{" "}
+              <Link href="/legal/privacy" asChild>
+                <Text style={{ textDecorationLine: "underline" }}>Privacy Policy</Text>
+              </Link>{" "}
+              &{" "}
+              <Link href="/legal/terms" asChild>
+                <Text style={{ textDecorationLine: "underline" }}>Terms &amp; Conditions</Text>
+              </Link>
+              .
+              {"\n\n"}
+              Need help?{" "}
+              <Link href="mailto:support@thecasefit.com" asChild>
+                <Text style={{ textDecorationLine: "underline" }}>Tap here</Text>
+              </Link>{" "}
+              to email support.
             </Text>
           </View>
+          {/* END: main content wrapper */}
 
-          {/* ℹ️ RANDOM INFO MODAL */}
+          {/* RANDOM INFO MODAL */}
           <Modal
             visible={showInfo}
             transparent
@@ -397,7 +435,7 @@ export default function LoginScreen() {
                     <Text style={{ fontWeight: "700", color: INK }}>
                       {language === "en" ? "Things to consider" : "ध्यान रखने योग्य बातें"}
                     </Text>
-                    {content.consider.map((c, i) => (
+                    {content.consider.map((c: string, i: number) => (
                       <Text key={i} style={{ marginTop: 4, color: "#374151" }}>
                         • {c}
                       </Text>
@@ -412,7 +450,7 @@ export default function LoginScreen() {
                       justifyContent: "space-between",
                     }}
                   >
-                    {/* Inline language toggle inside modal (kept) */}
+                    {/* Inline language toggle inside modal */}
                     <TouchableOpacity
                       onPress={() => setLanguage(language === "en" ? "hi" : "en")}
                       style={{

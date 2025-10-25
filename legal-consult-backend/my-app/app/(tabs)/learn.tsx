@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   SafeAreaView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Link } from "expo-router";
 import { INFO_TOPICS } from "../../constants/legal_tips";
 
 const INK = "#0B1220";
@@ -20,9 +21,7 @@ export default function LearnScreen() {
 
   const content = INFO_TOPICS[tipIndex][language];
 
-  function pickRandomTip() {
-    return Math.floor(Math.random() * INFO_TOPICS.length);
-  }
+  const pickRandomTip = () => Math.floor(Math.random() * INFO_TOPICS.length);
 
   function handleNext() {
     setInfoLoading(true);
@@ -34,21 +33,34 @@ export default function LearnScreen() {
     }, 800);
   }
 
+  const heading = useMemo(
+    () => (language === "en" ? "Learn Law" : "कानून सीखें"),
+    [language]
+  );
+
+  const subHeading = useMemo(
+    () =>
+      language === "en"
+        ? "Quick daily legal knowledge for you."
+        : "हर बार नया कानूनी ज्ञान जानिए।",
+    [language]
+  );
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
       <ScrollView contentContainerStyle={{ padding: 20 }}>
+        {/* Header */}
         <View style={{ alignItems: "center", marginBottom: 20 }}>
           <Ionicons name="school-outline" size={50} color={INK} />
           <Text style={{ fontSize: 24, fontWeight: "800", color: INK, marginTop: 8 }}>
-            {language === "en" ? "Learn Law" : "कानून सीखें"}
+            {heading}
           </Text>
           <Text style={{ color: "#6B7280", marginTop: 4, textAlign: "center" }}>
-            {language === "en"
-              ? "Quick daily legal knowledge for you."
-              : "हर बार नया कानूनी ज्ञान जानिए।"}
+            {subHeading}
           </Text>
         </View>
 
+        {/* Card */}
         {infoLoading ? (
           <View style={{ alignItems: "center", marginTop: 100 }}>
             <ActivityIndicator size="large" />
@@ -87,7 +99,7 @@ export default function LearnScreen() {
                 {language === "en" ? "Things to consider" : "ध्यान रखने योग्य बातें"}
               </Text>
               {content.consider.map((c, i) => (
-                <Text key={i} style={{ marginTop: 4, color: "#374151" }}>
+                <Text key={i} style={{ marginTop: 4, color: "#374151", lineHeight: 20 }}>
                   • {c}
                 </Text>
               ))}
@@ -130,6 +142,35 @@ export default function LearnScreen() {
               {language === "en" ? "Next Topic" : "अगला विषय"}
             </Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Legal links footer */}
+        <View
+          style={{
+            marginTop: 28,
+            paddingTop: 14,
+            borderTopWidth: 1,
+            borderColor: "#E5E7EB",
+            gap: 8,
+          }}
+        >
+          <Text style={{ color: "#6B7280" }}>
+            {language === "en"
+              ? "More from CaseFit"
+              : "केसफिट से और जानकारी"}
+          </Text>
+
+          <Link href="/legal/privacy">
+            <Text style={{ textDecorationLine: "underline", color: INK }}>
+              {language === "en" ? "Privacy Policy" : "गोपनीयता नीति"}
+            </Text>
+          </Link>
+
+          <Link href="/legal/terms">
+            <Text style={{ textDecorationLine: "underline", color: INK }}>
+              {language === "en" ? "Terms & Conditions" : "नियम और शर्तें"}
+            </Text>
+          </Link>
         </View>
       </ScrollView>
     </SafeAreaView>
