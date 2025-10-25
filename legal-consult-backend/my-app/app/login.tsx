@@ -10,7 +10,11 @@ import {
   ScrollView,
   Linking,
   Image,
+  Pressable,
+  Modal,
+  ActivityIndicator,
 } from "react-native";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
@@ -19,6 +23,9 @@ import { useAuth } from "../context/auth";
 
 // 🔥 Top brand bar (black header)
 import CaseFitHero from "../components/CaseFitHero";
+
+// 📚 Bilingual topics (50 items)
+import { INFO_TOPICS } from "../constants/legal_tips";
 
 const BG = "#F5F7FB";
 const CARD = "#FFFFFF";
@@ -41,10 +48,31 @@ export default function LoginScreen() {
   const [step, setStep] = useState<"request" | "verify">("request");
   const [loading, setLoading] = useState(false);
 
+  // 👉 Info modal state
+  const [showInfo, setShowInfo] = useState(false);
+  const [infoLoading, setInfoLoading] = useState(false);
+  const [tipIndex, setTipIndex] = useState(0);
+  const [language, setLanguage] = useState<"en" | "hi">("en"); // default English
+
   // India-only: accept any input, strip non-digits
   const normalizePhone = (s: string) => s.replace(/\D/g, "").slice(-12);
   const digits = normalizePhone(phone);
   const isValidIndian = digits.length === 10;
+
+  function pickRandomTip() {
+    return Math.floor(Math.random() * INFO_TOPICS.length);
+  }
+
+  function handleLogoPress() {
+    setShowInfo(true);
+    setInfoLoading(true);
+    setTimeout(() => {
+      let i = pickRandomTip();
+      while (i === tipIndex && INFO_TOPICS.length > 1) i = pickRandomTip();
+      setTipIndex(i);
+      setInfoLoading(false);
+    }, 2200); // 2.2s spinner
+  }
 
   async function requestCode() {
     const ph = normalizePhone(phone);
@@ -120,6 +148,9 @@ export default function LoginScreen() {
     });
   }
 
+  // current topic content (selected language)
+  const content = INFO_TOPICS[tipIndex][language];
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
       {/* ⬇️ Hide the native header on this screen */}
@@ -136,6 +167,23 @@ export default function LoginScreen() {
           {/* 🔥 Top brand bar */}
           <CaseFitHero tagline="Legal help, done right." />
 
+          {/* Optional language toggle (top-right of content) */}
+          <View style={{ paddingHorizontal: 16, marginTop: 8, alignItems: "flex-end" }}>
+            <TouchableOpacity
+              onPress={() => setLanguage(language === "en" ? "hi" : "en")}
+              style={{
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+                backgroundColor: "#E5E7EB",
+                borderRadius: 8,
+              }}
+            >
+              <Text style={{ color: "#111827", fontWeight: "600" }}>
+                {language === "en" ? "हिन्दी" : "English"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           {/* Main content wrapper */}
           <View style={{ paddingHorizontal: 16, marginTop: HERO_PULLUP }}>
             {/* LOGO: left-aligned, placed closer to the login title */}
@@ -147,11 +195,14 @@ export default function LoginScreen() {
                 marginLeft: 10,
               }}
             >
-              <Image
+            </View>
+             
+            <View pointerEvents="none">
+            <Image
                 source={require("../assets/images/only_logoo.png")}
                 style={{ width: LOGO_SIZE, height: LOGO_SIZE }}
                 resizeMode="contain"
-              />
+            />
             </View>
 
             {/* Title + subtitle */}
@@ -325,6 +376,129 @@ export default function LoginScreen() {
               By proceeding, you agree to caseFit’s Privacy Policy and Terms & Conditions.
             </Text>
           </View>
+
+          {/* ℹ️ RANDOM INFO MODAL */}
+          <Modal
+            visible={showInfo}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setShowInfo(false)}
+          >
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: "rgba(0,0,0,0.45)",
+                justifyContent: "center",
+                padding: 20,
+              }}
+            >
+              {infoLoading ? (
+                <View
+                  style={{
+                    alignSelf: "center",
+                    width: 120,
+                    height: 120,
+                    borderRadius: 60,
+                    backgroundColor: "#fff",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <ActivityIndicator size="large" />
+                </View>
+              ) : (
+                <View style={{ backgroundColor: "#fff", borderRadius: 16, padding: 16 }}>
+                  <Text style={{ fontSize: 18, fontWeight: "800", color: INK }}>
+                    {content.title}
+                  </Text>
+                  <Text style={{ marginTop: 8, color: INK, lineHeight: 20 }}>
+                    {content.body}
+                  </Text>
+
+                  <View
+                    style={{
+                      marginTop: 10,
+                      paddingTop: 8,
+                      borderTopWidth: 1,
+                      borderColor: "#EAEAEA",
+                    }}
+                  >
+                    <Text style={{ fontWeight: "700", color: INK }}>
+                      {language === "en" ? "Things to consider" : "ध्यान रखने योग्य बातें"}
+                    </Text>
+                    {content.consider.map((c, i) => (
+                      <Text key={i} style={{ marginTop: 4, color: "#374151" }}>
+                        • {c}
+                      </Text>
+                    ))}
+                  </View>
+
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      gap: 10,
+                      marginTop: 16,
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    {/* Inline language toggle inside modal as well */}
+                    <TouchableOpacity
+                      onPress={() => setLanguage(language === "en" ? "hi" : "en")}
+                      style={{
+                        paddingVertical: 10,
+                        paddingHorizontal: 14,
+                        borderRadius: 10,
+                        backgroundColor: "#E5E7EB",
+                      }}
+                    >
+                      <Text style={{ color: "#111827", fontWeight: "700" }}>
+                        {language === "en" ? "हिन्दी" : "English"}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <View style={{ flexDirection: "row", gap: 10 }}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setInfoLoading(true);
+                          setTimeout(() => {
+                            let i = pickRandomTip();
+                            while (i === tipIndex && INFO_TOPICS.length > 1)
+                              i = pickRandomTip();
+                            setTipIndex(i);
+                            setInfoLoading(false);
+                          }, 900);
+                        }}
+                        style={{
+                          paddingVertical: 10,
+                          paddingHorizontal: 14,
+                          borderRadius: 10,
+                          backgroundColor: "#0B1220",
+                        }}
+                      >
+                        <Text style={{ color: "#fff", fontWeight: "700" }}>
+                          {language === "en" ? "Another" : "और एक"}
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={() => setShowInfo(false)}
+                        style={{
+                          paddingVertical: 10,
+                          paddingHorizontal: 14,
+                          borderRadius: 10,
+                          backgroundColor: "#E5E7EB",
+                        }}
+                      >
+                        <Text style={{ color: "#111827", fontWeight: "700" }}>
+                          {language === "en" ? "Close" : "बंद करें"}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              )}
+            </View>
+          </Modal>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

@@ -4,6 +4,8 @@ import { Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import CaseFitHeader from "@/components/CaseFitHeader";
+import { usePathname } from "expo-router";
+
 
 const INK = "#000000";
 const MUTED = "#9CA3AF";
@@ -37,6 +39,7 @@ export default function TabLayout() {
         },
       }}
     >
+     { 
       <Tabs.Screen
         name="articles"
         options={{
@@ -45,7 +48,25 @@ export default function TabLayout() {
             <Feather name="book-open" size={size ?? 22} color={color} />
           ),
         }}
+      />}
+
+      <Tabs.Screen
+      name="_articles"
+      options={{
+        href: null,               // removes from deep links
+        // tabBarButton: () => null, // hides from the bottom bar
+       }}
       />
+
+      <Tabs.Screen
+        name="learn"
+        options={{
+          title: "Explore",
+          tabBarLabel: "Explore",
+        }}
+      />
+
+
       <Tabs.Screen
         name="consult"
         options={{
