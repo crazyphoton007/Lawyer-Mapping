@@ -1,5 +1,4 @@
-﻿import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+﻿import { useState } from "react";
 import {
   View,
   Text,
@@ -10,6 +9,7 @@ import {
   Platform,
   ScrollView,
   Linking,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
@@ -17,7 +17,7 @@ import * as SecureStore from "expo-secure-store";
 import { API_BASE } from "../constants/config";
 import { useAuth } from "../context/auth";
 
-// 🔥 Big brand band
+// 🔥 Top brand bar (black header)
 import CaseFitHero from "../components/CaseFitHero";
 
 const BG = "#F5F7FB";
@@ -25,6 +25,12 @@ const CARD = "#FFFFFF";
 const INK = "#0B1220";
 const MUTED = "#6B7280";
 const BORDER = "#E5E7EB";
+
+// ✅ Adjust these for look & spacing
+const LOGO_SIZE = 38; // logo image size
+const HERO_PULLUP = 0; // keep zero so we don’t touch the header
+const LOGO_TOP_MARGIN = 65; // space below the black header before logo
+const LOGO_BOTTOM_MARGIN = 3; // tighter gap below logo
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -92,7 +98,9 @@ export default function LoginScreen() {
 
       await setAuth(jwt, userPayload);
       await SecureStore.setItemAsync("user_mobile", ph);
-      try { await SecureStore.deleteItemAsync("my_requests__local__"); } catch {}
+      try {
+        await SecureStore.deleteItemAsync("my_requests__local__");
+      } catch {}
 
       Alert.alert("Logged in", "You’re signed in.");
       router.replace("/(tabs)/requests");
@@ -121,25 +129,51 @@ export default function LoginScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={{ padding: 0, paddingBottom: 32 }} keyboardShouldPersistTaps="handled">
-          {/* 🔥 Big brand band (only logo now) */}
+        <ScrollView
+          contentContainerStyle={{ padding: 0, paddingBottom: 32 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* 🔥 Top brand bar */}
           <CaseFitHero tagline="Legal help, done right." />
 
-          <View style={{ paddingHorizontal: 16, marginTop: 60 }}>
-            {/* Hero copy */}
+          {/* Main content wrapper */}
+          <View style={{ paddingHorizontal: 16, marginTop: HERO_PULLUP }}>
+            {/* LOGO: left-aligned, placed closer to the login title */}
+            <View
+              style={{
+                alignItems: "flex-start",
+                marginTop: LOGO_TOP_MARGIN,
+                marginBottom: LOGO_BOTTOM_MARGIN,
+                marginLeft: 10,
+              }}
+            >
+              <Image
+                source={require("../assets/images/only_logoo.png")}
+                style={{ width: LOGO_SIZE, height: LOGO_SIZE }}
+                resizeMode="contain"
+              />
+            </View>
+
+            {/* Title + subtitle */}
             <Text
               style={{
                 fontSize: 22,
                 lineHeight: 28,
                 fontWeight: "800",
                 color: INK,
-                textAlign: "center",
-                marginTop: 12,
+                textAlign: "left",
               }}
             >
               Log in with your caseFit Account
             </Text>
-            <Text style={{ fontSize: 14, color: MUTED, marginTop: 4, textAlign: "center" }}>
+            <Text
+              style={{
+                fontSize: 14,
+                color: MUTED,
+                marginTop: 4,
+                textAlign: "left",
+              }}
+            >
               No passwords - just a quick OTP!
             </Text>
 
@@ -213,7 +247,8 @@ export default function LoginScreen() {
                   onPress={requestCode}
                   disabled={loading || !isValidIndian}
                   style={{
-                    backgroundColor: !isValidIndian ? "#9CA3AF" : loading ? "#11182799" : INK,
+                    backgroundColor:
+                      !isValidIndian ? "#9CA3AF" : loading ? "#11182799" : INK,
                     paddingVertical: 14,
                     borderRadius: 12,
                     alignItems: "center",
@@ -283,7 +318,10 @@ export default function LoginScreen() {
             )}
 
             {/* Footer note */}
-            <Text style={{ fontSize: 12, color: MUTED, marginTop: 16, textAlign: "center" }}>
+            <Text
+              style={{ fontSize: 12, color: MUTED, marginTop: 16, textAlign: "center" }}
+              onPress={openHelp}
+            >
               By proceeding, you agree to caseFit’s Privacy Policy and Terms & Conditions.
             </Text>
           </View>
