@@ -5,7 +5,7 @@ import { useAuth } from "../context/auth";
 export default function Index() {
   const { token, hydrated } = useAuth();
 
-  // Wait until SecureStore is read, so we don't flicker to the wrong screen
+  // Wait until SecureStore is read, to prevent flickering
   if (!hydrated) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -14,9 +14,11 @@ export default function Index() {
     );
   }
 
-  // If signed in, go straight to Articles (or wherever you want)
-  if (token) return <Redirect href="/articles" />;
+  // ✅ If signed in, go straight to "My Requests" tab
+  if (token) {
+    return <Redirect href="/(tabs)/requests" />;
+  }
 
-  // If not signed in, go to Profile so user can log in
-  return <Redirect href="/profile" />;
+  // ✅ If not signed in, show login screen
+  return <Redirect href="/login" />;
 }

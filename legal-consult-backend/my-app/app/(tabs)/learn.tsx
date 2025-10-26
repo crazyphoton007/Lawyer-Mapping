@@ -5,10 +5,9 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  SafeAreaView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { Link } from "expo-router";
 import { INFO_TOPICS } from "../../constants/legal_tips";
 
 const INK = "#0B1220";
@@ -20,7 +19,6 @@ export default function LearnScreen() {
   const [language, setLanguage] = useState<"en" | "hi">("en");
 
   const content = INFO_TOPICS[tipIndex][language];
-
   const pickRandomTip = () => Math.floor(Math.random() * INFO_TOPICS.length);
 
   function handleNext() {
@@ -48,7 +46,7 @@ export default function LearnScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
-      <ScrollView contentContainerStyle={{ padding: 20 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 32 }}>
         {/* Header */}
         <View style={{ alignItems: "center", marginBottom: 20 }}>
           <Ionicons name="school-outline" size={50} color={INK} />
@@ -98,7 +96,7 @@ export default function LearnScreen() {
               <Text style={{ fontWeight: "700", color: INK }}>
                 {language === "en" ? "Things to consider" : "ध्यान रखने योग्य बातें"}
               </Text>
-              {content.consider.map((c, i) => (
+              {content.consider.map((c: string, i: number) => (
                 <Text key={i} style={{ marginTop: 4, color: "#374151", lineHeight: 20 }}>
                   • {c}
                 </Text>
@@ -144,34 +142,7 @@ export default function LearnScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Legal links footer */}
-        <View
-          style={{
-            marginTop: 28,
-            paddingTop: 14,
-            borderTopWidth: 1,
-            borderColor: "#E5E7EB",
-            gap: 8,
-          }}
-        >
-          <Text style={{ color: "#6B7280" }}>
-            {language === "en"
-              ? "More from CaseFit"
-              : "केसफिट से और जानकारी"}
-          </Text>
-
-          <Link href="/legal/privacy">
-            <Text style={{ textDecorationLine: "underline", color: INK }}>
-              {language === "en" ? "Privacy Policy" : "गोपनीयता नीति"}
-            </Text>
-          </Link>
-
-          <Link href="/legal/terms">
-            <Text style={{ textDecorationLine: "underline", color: INK }}>
-              {language === "en" ? "Terms & Conditions" : "नियम और शर्तें"}
-            </Text>
-          </Link>
-        </View>
+        {/* (Footer with legal links was intentionally removed for this page) */}
       </ScrollView>
     </SafeAreaView>
   );
