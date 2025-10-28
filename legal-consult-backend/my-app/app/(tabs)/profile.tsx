@@ -1287,7 +1287,7 @@ export default function ProfileScreen() {
               {form.name || "Add your name"}
             </Text>
             <Text style={{ color: MUTED, marginTop: 2 }}>
-              {form.phone ? `+${form.phone}` : "Phone not available"}
+              {form.phone ? form.phone : "Phone not available"}
             </Text>
             {profileIncomplete ? (
               <Text style={{ marginTop: 6, color: "#92400E", fontWeight: "600" }}>
