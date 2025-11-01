@@ -1,27 +1,27 @@
-export type CourtLink = {
-  id: string;
-  title: string;
-  desc?: string;
-  url: string;
-  tags?: string[]; // future: state, bench, court type
-};
+export type Bench = { name: string; url: string | null };
+export type NamedCourt = { name: string; benches?: Bench[]; url?: string | null };
 
-// Start with only Lucknow Bench
-export const COURT_LINKS: CourtLink[] = [
-  {
-    id: "allahabad_hc_lucknow",
-    title: "Lucknow Bench",
-    desc: "",
-    url: "https://hclko.allahabadhighcourt.in/status/",
-    tags: ["Allahabad HC", "Lucknow Bench"],
+export const COURT_CATALOG = {
+  highCourt: {
+    title: "High Court",
+    courts: [
+      {
+        name: "Allahabad High Court",
+        benches: [
+          { name: "Allahabad ", url: "https://www.allahabadhighcourt.in/apps/status_ccms/" },
+          { name: "Lucknow Bench",  url: "https://hclko.allahabadhighcourt.in/status/" },
+        ],
+      },
+      // add more high courts later (e.g., Patna High Court) with benches
+    ] as NamedCourt[],
   },
-];
 
-// Example entries you can add later:
-// {
-//   id: "allahabad_hc_prayagraj",
-//   title: "Prayagraj — Case Status",
-//   desc: "Allahabad High Court (Main Bench)",
-//   url: "https://allahabadhighcourt.in/<status-url>",
-//   tags: ["Allahabad HC", "Prayagraj Bench"],
-// },
+  lowerCourt: {
+    title: "Lower Court",
+    courts: [
+      { name: "Allahabad", url: null },
+      { name: "Lucknow", url: null },
+      { name: "Lakhimpur Kheri", url: null },
+    ] as NamedCourt[],
+  },
+} as const;

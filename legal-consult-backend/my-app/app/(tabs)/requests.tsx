@@ -16,8 +16,9 @@ import { API_BASE } from "../../constants/config";
 import { useAuth } from "../../context/auth";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
-// ★ NEW: Court Connect (animated sparkle card list)
-import CourtConnectList from "../../components/ui/CourtConnectList";
+
+// NOTE: removed the old CourtConnectList import to use a single card → screen flow
+// import CourtConnectList from "../../components/ui/CourtConnectList";
 
 type Req = {
   id: string | number;
@@ -316,23 +317,76 @@ export default function RequestsScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
       <View style={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: 12 }}>
-        <Text style={{ fontSize: 24, fontWeight: "700", color: INK }}>My Requests</Text>
-        <Text style={{ fontSize: 12, color: MUTED }}>Linked to: {myPhone || "this device"}</Text>
+        <Text style={{ fontSize: 24, fontWeight: "700", color: INK }}>CaseBoard</Text>
+        <Text style={{ fontSize: 12, color: MUTED }}>Synced With: {myPhone || "this device"}</Text>
       </View>
 
-      {/* ★ Court Connect — animated black/white sparkle card(s). 
-          Compact height; doesn’t disturb your layout. */}
-      {/*<CourtConnectList compact style={{ paddingTop: 0, paddingBottom: 8 }} />*/}
-
-        <CourtConnectList
-      style={{
-          paddingTop: 4,
-          paddingBottom: 0,
-          paddingHorizontal: 16,
+      {/* Court Connect card → navigates to the dedicated screen */}
+      <TouchableOpacity
+        onPress={() => router.push("/court-connect")}
+        activeOpacity={0.9}
+        style={{
+          marginHorizontal: 16,
+          marginTop: 0,
+          marginBottom: 6,
           backgroundColor: "#fff",
-          borderRadius: 12,
+          borderRadius: 14,
+          borderWidth: 1,
+          borderColor: BORDER,
+          paddingVertical: 14,
+          paddingHorizontal: 14,
+          shadowColor: "#000",
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 4 },
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 12,
         }}
-    />
+      >
+        {/* Subtle neon pulse halo */}
+        <View
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            backgroundColor: INK,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <View
+            style={{
+              position: "absolute",
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              borderWidth: 2,
+              borderColor: "#60A5FA",
+              opacity: 0.6,
+            }}
+          />
+          <View
+            style={{
+              position: "absolute",
+              width: 48,
+              height: 48,
+              borderRadius: 24,
+              borderWidth: 2,
+              borderColor: "#93C5FD",
+              opacity: 0.25,
+            }}
+          />
+          <Feather name="grid" size={18} color="#fff" />
+        </View>
+
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 16, fontWeight: "800", color: INK }}>Court Connect</Text>
+          <Text style={{ fontSize: 12, color: MUTED }}>High Court and Lower Court status links</Text>
+        </View>
+
+        <Feather name="chevron-right" size={22} color={INK} />
+      </TouchableOpacity>
 
       <FlatList
         data={mine}
