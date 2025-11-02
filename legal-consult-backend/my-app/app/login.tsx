@@ -37,6 +37,16 @@ const HERO_PULLUP = 0;
 const LOGO_TOP_MARGIN = 65;
 const LOGO_BOTTOM_MARGIN = 3;
 
+/** Use identical typography for +91 and the phone digits */
+const DIGIT_TEXT = {
+  fontSize: 20 as const,
+  fontWeight: "800" as const,
+  letterSpacing: 0.5,
+  // Tabular numerals keep widths consistent across digits on iOS
+  fontVariant: ["tabular-nums"] as any,
+  lineHeight: 24 as const,
+};
+
 export default function LoginScreen() {
   const router = useRouter();
   const { setAuth } = useAuth();
@@ -52,8 +62,8 @@ export default function LoginScreen() {
   const [tipIndex, setTipIndex] = useState(0);
   const [language, setLanguage] = useState<"en" | "hi">("en");
 
-  // India-only: accept any input, strip non-digits
-  const normalizePhone = (s: string) => s.replace(/\D/g, "").slice(-12);
+  // India-only: keep only digits and hard-cap at 10
+  const normalizePhone = (s: string) => s.replace(/\D/g, "").slice(0, 10);
   const digits = normalizePhone(phone);
   const isValidIndian = digits.length === 10;
 
@@ -260,22 +270,26 @@ export default function LoginScreen() {
                     backgroundColor: "#FFFFFF",
                   }}
                 >
-                  <Text style={{ fontSize: 18 }}>🇮🇳</Text>
-                  <Text style={{ color: INK, fontWeight: "700" }}>+91</Text>
+                  <Text style={{ fontSize: 20, transform: [{ translateY: 1 }] }}>🇮🇳</Text>
+                  <Text style={[{ color: INK }, DIGIT_TEXT]}>+91</Text>
                 </View>
 
                 <TextInput
-                  value={phone}
-                  onChangeText={setPhone}
-                  keyboardType="phone-pad"
+                  value={digits}
+                  onChangeText={(t) => setPhone(normalizePhone(t))}
+                  maxLength={10}
+                  keyboardType="number-pad"
+                  inputMode="numeric"
                   placeholder="mobile number"
                   placeholderTextColor="#9CA3AF"
-                  style={{
-                    flex: 1,
-                    fontSize: 16,
-                    color: INK,
-                    paddingVertical: 8,
-                  }}
+                  style={[
+                    {
+                      flex: 1,
+                      color: INK,
+                      paddingVertical: 8,
+                    },
+                    DIGIT_TEXT, // same typography as +91
+                  ]}
                 />
               </View>
 
@@ -325,8 +339,11 @@ export default function LoginScreen() {
 
                 <TextInput
                   value={code}
-                  onChangeText={setCode}
+                  onChangeText={(t) => setCode(t.replace(/\D/g, "").slice(0, 6))}
+                  maxLength={6}
                   keyboardType="number-pad"
+                  inputMode="numeric"
+                  textContentType="oneTimeCode"
                   placeholder="Enter OTP"
                   placeholderTextColor="#9CA3AF"
                   style={{
@@ -335,8 +352,11 @@ export default function LoginScreen() {
                     borderRadius: 12,
                     padding: 12,
                     backgroundColor: "#FAFAFA",
-                    fontSize: 16,
+                    fontSize: 18,
                     color: INK,
+                    fontWeight: "700", // BOLD OTP
+                    letterSpacing: 2,   // subtle spacing to look like code boxes
+                    textAlign: "center",
                   }}
                 />
 
