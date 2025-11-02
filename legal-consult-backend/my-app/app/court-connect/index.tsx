@@ -1,9 +1,11 @@
 // my-app/app/court-connect/index.tsx
+
 import { useMemo } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Alert, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
+import { Stack, useRouter } from "expo-router"; // ← add useRouter
 import { COURT_CATALOG } from "../../constants/courtLinks";
 
 const BG = "#F7F8FA",
@@ -13,52 +15,74 @@ const BG = "#F7F8FA",
   CARD = "#FFFFFF";
 
 export default function CourtConnectHome() {
+  const router = useRouter(); // ← for custom back
   const { highCourt, lowerCourt } = COURT_CATALOG;
 
   const highCourtRows = useMemo(() => highCourt.courts, [highCourt]);
   const lowerCourtRows = useMemo(() => lowerCourt.courts, [lowerCourt]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
-        {/* Header */}
-        <View style={{ marginBottom: 10 }}>
-          <Text style={{ fontSize: 24, fontWeight: "800", color: INK }}>Court Connect</Text>
-          <Text style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>
-            Quick access to court case status portals
-          </Text>
-        </View>
+    <>
+      {/* Clean header: custom black back chevron, no title, no "(tabs)" */}
+      <Stack.Screen
+        options={{
+          headerTitle: "",                // hide "court-connect/index"
+          headerBackVisible: false,       // hide default back (prevents "(tabs)")
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: "#fff" },
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ paddingHorizontal: 12, paddingVertical: 8, marginLeft: -18 }}
+              accessibilityLabel="Go back"
+            >
+              <Feather name="chevron-left" size={32} color="#000" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
 
-        {/* High Court card */}
-        <SectionCard title={highCourt.title} icon="columns">
-          {highCourtRows.map((court) => (
-            <View key={court.name} style={{ marginBottom: 10 }}>
-              <Text style={{ fontSize: 14, fontWeight: "800", color: INK, marginBottom: 8 }}>
-                {court.name}
-              </Text>
-              {(court.benches ?? []).map((b) => (
-                <RowLink key={b.name} label={b.name} url={b.url} />
-              ))}
-            </View>
-          ))}
-        </SectionCard>
+      <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+          {/* Header */}
+          <View style={{ marginBottom: 10 }}>
+            <Text style={{ fontSize: 24, fontWeight: "800", color: INK }}>Court Connect</Text>
+            <Text style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>
+              Quick access to court case status portals
+            </Text>
+          </View>
 
-        {/* Lower Court card */}
-        <SectionCard title={lowerCourt.title} icon="layers">
-          {lowerCourtRows.map((c) => (
-            <RowLink key={c.name} label={c.name} url={c.url ?? null} />
-          ))}
-        </SectionCard>
+          {/* High Court card */}
+          <SectionCard title={highCourt.title} icon="columns">
+            {highCourtRows.map((court) => (
+              <View key={court.name} style={{ marginBottom: 10 }}>
+                <Text style={{ fontSize: 14, fontWeight: "800", color: INK, marginBottom: 8 }}>
+                  {court.name}
+                </Text>
+                {(court.benches ?? []).map((b) => (
+                  <RowLink key={b.name} label={b.name} url={b.url} />
+                ))}
+              </View>
+            ))}
+          </SectionCard>
 
-        {/* Tip / disclaimer */}
-        <View style={{ marginTop: 8 }}>
-          <Text style={{ fontSize: 11, color: MUTED }}>
-            Links open official court portals. Availability may vary. We will add more benches and
-            districts as they become officially available.
-          </Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+          {/* Lower Court card */}
+          <SectionCard title={lowerCourt.title} icon="layers">
+            {lowerCourtRows.map((c) => (
+              <RowLink key={c.name} label={c.name} url={c.url ?? null} />
+            ))}
+          </SectionCard>
+
+          {/* Tip / disclaimer */}
+          <View style={{ marginTop: 8 }}>
+            <Text style={{ fontSize: 11, color: MUTED }}>
+              Links open official court portals. Availability may vary. We will add more benches and
+              districts as they become officially available.
+            </Text>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </>
   );
 }
 
@@ -116,15 +140,14 @@ function RowLink({ label, url }: { label: string; url: string | null }) {
       await WebBrowser.openBrowserAsync(url, {
         enableBarCollapsing: true,
         showTitle: true,
-        // iOS-only options
+        // iOS
         dismissButtonStyle: "done",
         presentationStyle: "pageSheet",
-        // Android-only hint (uses device default custom tabs)
+        // Android Custom Tabs hints
         toolbarColor: "#ffffff",
         controlsColor: "#0B1220",
         secondaryToolbarColor: "#f2f3f5",
       });
-      // When user taps "Done" (iOS) or closes the tab (Android), they’re back here automatically.
     } catch (e) {
       Alert.alert("Couldn’t open link", "Please try again or use another network.");
     }
