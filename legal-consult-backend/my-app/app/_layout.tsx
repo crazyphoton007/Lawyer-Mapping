@@ -46,6 +46,7 @@
 // }
 
 // my-app/app/_layout.tsx
+// my-app/app/_layout.tsx
 import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -65,17 +66,28 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Stack initialRouteName="(tabs)">
+        {/* Launch splash first */}
+        <Stack initialRouteName="splash">
+          {/* Custom splash screen (no header) */}
+          <Stack.Screen
+            name="splash"
+            options={{
+              headerShown: false,
+              animation: "fade",       // subtle fade in/out
+              gestureEnabled: false,   // prevent swipe back from the splash
+            }}
+          />
+
           {/* Tabs hide their own header here; they add the black header in (tabs)/_layout.tsx */}
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
-          {/* Login shows the large brand hero, so keep the native header hidden */}
+          {/* Login shows compact black header (matches your component) */}
           <Stack.Screen
-           name="login"
-           options={{
-            header: () => <CaseFitHeader showBack showHelp />, // same compact black header
-        }}
-/>
+            name="login"
+            options={{
+              header: () => <CaseFitHeader showBack showHelp />,
+            }}
+          />
 
           {/* Example modal – keep a compact black header with a back button */}
           <Stack.Screen

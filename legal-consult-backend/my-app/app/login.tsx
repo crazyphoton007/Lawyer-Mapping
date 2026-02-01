@@ -47,6 +47,42 @@ const DIGIT_TEXT = {
   lineHeight: 24 as const,
 };
 
+// ---------- small helper: POST with default headers ----------
+async function apiPost(path: string, body: unknown) {
+  const url = `${API_BASE}${path}`;
+  console.log("[apiPost] POST", url, "body =", body);
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      // IMPORTANT: bypass ngrok abuse warning page
+      "ngrok-skip-browser-warning": "true",
+    },
+    body: JSON.stringify(body),
+  });
+
+  // Try to get some useful text for error/debugging
+  const text = await res.text();
+  let json: any = null;
+
+  try {
+    json = text ? JSON.parse(text) : null;
+  } catch {
+    // not JSON, ignore
+  }
+
+  if (!res.ok) {
+    const message =
+      (json && (json.detail || json.error || json.message)) ||
+      `HTTP ${res.status}: ${text.slice(0, 200)}`;
+    throw new Error(message);
+  }
+
+  return json ?? {};
+}
+
 export default function LoginScreen() {
   const router = useRouter();
   const { setAuth } = useAuth();
@@ -77,27 +113,17 @@ export default function LoginScreen() {
       Alert.alert("Invalid number", "Enter a valid Indian mobile number (10 digits).");
       return;
     }
+
     setLoading(true);
     try {
       const e164 = `+91${ph}`;
-      const url = `${API_BASE}/auth/request-code`;
-      console.log("OTP request URL:", url);
+      const data = await apiPost("/auth/request-code", { phone: e164 });
+      console.log("[requestCode] response:", data);
 
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
-        body: JSON.stringify({ phone: e164 }),
-      });
-
-      const txt = await res.text();
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${txt.slice(0, 200)}`);
       setStep("verify");
-      Alert.alert("OTP sent", "Enter the code you received.");
+      // Alert.alert("OTP sent", "Enter the code you received.");
     } catch (e: any) {
+      console.error("[requestCode] error:", e);
       Alert.alert("Error", e?.message || "Failed to request code");
     } finally {
       setLoading(false);
@@ -110,28 +136,18 @@ export default function LoginScreen() {
       Alert.alert("Missing info", "Enter your mobile and the OTP code.");
       return;
     }
+
     setLoading(true);
     try {
       const e164 = `+91${ph}`;
-      const url = `${API_BASE}/auth/verify`;
-      console.log("OTP verify URL:", url);
-
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
-        body: JSON.stringify({ phone: e164, code: code.trim() }),
+      const data = await apiPost("/auth/verify", {
+        phone: e164,
+        code: code.trim(),
       });
-
-      const txt = await res.text();
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${txt.slice(0, 200)}`);
-      const data = JSON.parse(txt);
+      console.log("[verifyCode] response:", data);
 
       const jwt = data.token || data.access_token || data.jwt;
-      if (!jwt) throw new Error("No token returned");
+      if (!jwt) throw new Error("No token returned from server");
 
       const userFromApi = data.user ?? {};
       const userPayload = {
@@ -145,9 +161,10 @@ export default function LoginScreen() {
         await SecureStore.deleteItemAsync("my_requests__local__");
       } catch {}
 
-      Alert.alert("Logged in", "You’re signed in.");
+      // Alert.alert("Logged in", "You’re signed in.");
       router.replace("/(tabs)/requests");
     } catch (e: any) {
+      console.error("[verifyCode] error:", e);
       Alert.alert("Error", e?.message || "Failed to verify code");
     } finally {
       setLoading(false);
@@ -355,7 +372,7 @@ export default function LoginScreen() {
                     fontSize: 18,
                     color: INK,
                     fontWeight: "700", // BOLD OTP
-                    letterSpacing: 2,   // subtle spacing to look like code boxes
+                    letterSpacing: 2, // subtle spacing to look like code boxes
                     textAlign: "center",
                   }}
                 />
@@ -393,7 +410,9 @@ export default function LoginScreen() {
               </Link>{" "}
               &{" "}
               <Link href="/legal/terms" asChild>
-                <Text style={{ textDecorationLine: "underline" }}>Terms &amp; Conditions</Text>
+                <Text style={{ textDecorationLine: "underline" }}>
+                  Terms &amp; Conditions
+                </Text>
               </Link>
               .
               {"\n\n"}
@@ -436,7 +455,9 @@ export default function LoginScreen() {
                   <ActivityIndicator size="large" />
                 </View>
               ) : (
-                <View style={{ backgroundColor: "#fff", borderRadius: 16, padding: 16 }}>
+                <View
+                  style={{ backgroundColor: "#fff", borderRadius: 16, padding: 16 }}
+                >
                   <Text style={{ fontSize: 18, fontWeight: "800", color: INK }}>
                     {content.title}
                   </Text>
@@ -453,7 +474,9 @@ export default function LoginScreen() {
                     }}
                   >
                     <Text style={{ fontWeight: "700", color: INK }}>
-                      {language === "en" ? "Things to consider" : "ध्यान रखने योग्य बातें"}
+                      {language === "en"
+                        ? "Things to consider"
+                        : "ध्यान रखने योग्य बातें"}
                     </Text>
                     {content.consider.map((c: string, i: number) => (
                       <Text key={i} style={{ marginTop: 4, color: "#374151" }}>
@@ -472,7 +495,9 @@ export default function LoginScreen() {
                   >
                     {/* Inline language toggle inside modal */}
                     <TouchableOpacity
-                      onPress={() => setLanguage(language === "en" ? "hi" : "en")}
+                      onPress={() =>
+                        setLanguage(language === "en" ? "hi" : "en")
+                      }
                       style={{
                         paddingVertical: 10,
                         paddingHorizontal: 14,
@@ -491,7 +516,11 @@ export default function LoginScreen() {
                           setInfoLoading(true);
                           setTimeout(() => {
                             let i = pickRandomTip();
-                            while (i === tipIndex && INFO_TOPICS.length > 1) i = pickRandomTip();
+                            while (
+                              i === tipIndex &&
+                              INFO_TOPICS.length > 1
+                            )
+                              i = pickRandomTip();
                             setTipIndex(i);
                             setInfoLoading(false);
                           }, 900);
