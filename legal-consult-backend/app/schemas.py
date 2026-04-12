@@ -1,7 +1,10 @@
+# app/schemas.py
 from typing import Optional, Literal
-from pydantic import BaseModel, Field
 from uuid import UUID
 from datetime import datetime
+
+from pydantic import BaseModel, Field
+
 
 # ---------- Articles ----------
 class ArticleOut(BaseModel):
@@ -18,13 +21,15 @@ class ArticleOut(BaseModel):
 
 # ---------- Requests ----------
 class RequestBase(BaseModel):
+    category: Optional[str] = None
     description: Optional[str] = None
     preferred_window: Optional[str] = None
 
 
-class RequestCreate(RequestBase):
-    user_id: Optional[UUID] = None
-    assigned_lawyer: Optional[UUID] = None
+class RequestCreate(BaseModel):
+    category: str
+    details: str
+    preferred_window: Optional[str] = None
 
 
 class RequestOut(RequestBase):

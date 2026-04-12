@@ -17,23 +17,22 @@ import { useAuth } from "../../context/auth";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 
-// NOTE: removed the old CourtConnectList import to use a single card → screen flow
-// import CourtConnectList from "../../components/ui/CourtConnectList";
-
 type Req = {
-  id: string | number;
-  topic?: string;
-  category?: string;
-  details?: string;
-  status?: string;
-  created_at?: string;
-} & Record<string, any>;
+  id: string;
+  category?: string | null;
+  description?: string | null;
+  preferred_window?: string | null;
+  status?: string | null;
+  created_at?: string | null;
+  user_id?: string | null;
+  assigned_lawyer?: string | null;
+};
 
-const BG = "#F7F8FA",
-  INK = "#0B1220",
-  CARD = "#FFFFFF",
-  BORDER = "#E5E7EB",
-  MUTED = "#6B7280";
+const BG = "#F7F8FA";
+const INK = "#0B1220";
+const CARD = "#FFFFFF";
+const BORDER = "#E5E7EB";
+const MUTED = "#6B7280";
 
 const STATUS_COLOR: Record<string, string> = {
   pending: "#F59E0B",
@@ -45,21 +44,23 @@ const STATUS_COLOR: Record<string, string> = {
   cancelled: "#EF4444",
 };
 
-// --- Helpers ---
-function deriveCaseNumber(id: string | number) {
-  if (typeof id === "number") return String(id % 100000).padStart(5, "0");
+function deriveCaseNumber(id: string) {
   const s = String(id);
   let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  }
   return String(h % 100000).padStart(5, "0");
 }
-function stepFromStatus(status?: string) {
+
+function stepFromStatus(status?: string | null) {
   const st = (status || "pending").toLowerCase();
   if (st === "paid" || st === "payment_confirmed") return 2;
   if (["calling", "scheduled", "booked", "completed"].includes(st)) return 3;
   if (st === "cancelled") return 0;
   return 1;
 }
+
 function normalizePhone(s?: string | null) {
   const n = (s ?? "").toString().replace(/\D/g, "");
   return n.slice(-12);
@@ -74,12 +75,8 @@ export default function RequestsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const [myPhone, setMyPhone] = useState<string>("");
-  const [myIds, setMyIds] = useState<string[]>([]);
-  const [localIds, setLocalIds] = useState<string[]>([]);
 
-  // read token from SecureStore (fallback if context is empty)
   useEffect(() => {
     (async () => {
       const t = await SecureStore.getItemAsync("token");
@@ -87,49 +84,49 @@ export default function RequestsScreen() {
     })();
   }, []);
 
-  // (re)load phone + id lists
-  const reloadIds = useCallback(async () => {
+  const reloadPhone = useCallback(async () => {
     const rawPhone = await SecureStore.getItemAsync("user_mobile");
-    const phone = normalizePhone(rawPhone);
-    setMyPhone(phone);
-
-    if (phone) {
-      const raw = await SecureStore.getItemAsync(`my_requests_${phone}`);
-      setMyIds(raw ? JSON.parse(raw) : []);
-    } else {
-      setMyIds([]);
-    }
-    const rawLocal = await SecureStore.getItemAsync("my_requests__local__");
-    setLocalIds(rawLocal ? JSON.parse(rawLocal) : []);
+    setMyPhone(normalizePhone(rawPhone));
   }, []);
 
   useEffect(() => {
-    reloadIds();
-  }, [reloadIds]);
+    reloadPhone();
+  }, [reloadPhone]);
 
   useFocusEffect(
     useCallback(() => {
-      reloadIds();
-    }, [reloadIds])
+      reloadPhone();
+    }, [reloadPhone])
   );
 
-  // load list from backend
-  async function load() {
-    const authToken = token || storedToken;
+  const authToken = useMemo(() => token || storedToken, [token, storedToken]);
+
+  const load = useCallback(async () => {
     if (!authToken) {
       setItems([]);
       setLoading(false);
+      setError(null);
       return;
     }
+
     setError(null);
     setLoading(true);
+
     try {
       const res = await fetch(`${API_BASE}/requests/`, {
-        headers: { authorization: `Bearer ${authToken}` },
+        headers: {
+          authorization: `Bearer ${authToken}`,
+        },
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      const list: Req[] = Array.isArray(json) ? json : json.items ?? [];
+
+      const text = await res.text();
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${text}`);
+      }
+
+      const json = text ? JSON.parse(text) : [];
+      const list: Req[] = Array.isArray(json) ? json : [];
       setItems(list);
     } catch (e: any) {
       setError(e?.message || "Failed to load requests");
@@ -137,40 +134,47 @@ export default function RequestsScreen() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [authToken]);
 
   useEffect(() => {
     load();
-  }, [token, storedToken]);
+  }, [load]);
 
   useFocusEffect(
     useCallback(() => {
       load();
       return () => {};
-    }, [token, storedToken])
+    }, [load])
   );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
+    await reloadPhone();
     await load();
-    await reloadIds();
     setRefreshing(false);
-  }, [token, storedToken, reloadIds]);
+  }, [reloadPhone, load]);
 
-  // client-only filter to this user's IDs
-  const displayIds = myPhone ? myIds : localIds;
-  const mine = useMemo(() => {
-    if (!displayIds.length) return [];
-    const idSet = new Set(displayIds.map(String));
-    return items.filter((r) => idSet.has(String(r.id)));
-  }, [items, displayIds]);
-
-  // UI states
-  if (!(token || storedToken)) {
+  if (!authToken) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
-        <View style={{ flex: 1, padding: 24, alignItems: "center", justifyContent: "center" }}>
-          <Text style={{ fontSize: 20, fontWeight: "700", marginBottom: 8, color: INK }}>Please log in</Text>
+        <View
+          style={{
+            flex: 1,
+            padding: 24,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 20,
+              fontWeight: "700",
+              marginBottom: 8,
+              color: INK,
+            }}
+          >
+            Please log in
+          </Text>
           <Button title="Go to Profile" onPress={() => router.push("/profile")} />
         </View>
       </SafeAreaView>
@@ -188,15 +192,30 @@ export default function RequestsScreen() {
   if (error) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
-        <View style={{ flex: 1, padding: 24, alignItems: "center", justifyContent: "center" }}>
-          <Text style={{ fontSize: 16, color: "#b00020", marginBottom: 12, textAlign: "center" }}>{error}</Text>
+        <View
+          style={{
+            flex: 1,
+            padding: 24,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 16,
+              color: "#b00020",
+              marginBottom: 12,
+              textAlign: "center",
+            }}
+          >
+            {error}
+          </Text>
           <Button title="Retry" onPress={load} />
         </View>
       </SafeAreaView>
     );
   }
 
-  // --- Empty State component ---
   const EmptyState = () => (
     <View
       style={{
@@ -219,13 +238,14 @@ export default function RequestsScreen() {
         <Feather name="file-text" size={36} color="#fff" />
       </View>
 
-      <Text style={{ fontSize: 20, fontWeight: "800", color: INK, marginTop: 4 }}>No requests yet</Text>
+      <Text style={{ fontSize: 20, fontWeight: "800", color: INK, marginTop: 4 }}>
+        No requests yet
+      </Text>
       <Text style={{ color: MUTED, textAlign: "center", lineHeight: 20 }}>
         Book a quick paid consult with a verified lawyer.{"\n"}
         Your requests will appear here.
       </Text>
 
-      {/* Mini “how it works” */}
       <View style={{ marginTop: 6, width: "100%", gap: 8 }}>
         {[
           { icon: "phone", text: "Tell us your legal issue" },
@@ -239,7 +259,6 @@ export default function RequestsScreen() {
         ))}
       </View>
 
-      {/* Primary CTA */}
       <TouchableOpacity
         onPress={() => router.push("/consult")}
         style={{
@@ -255,7 +274,6 @@ export default function RequestsScreen() {
         <Text style={{ color: "#fff", fontWeight: "800" }}>Start a consult</Text>
       </TouchableOpacity>
 
-      {/* Secondary actions */}
       <View style={{ flexDirection: "row", gap: 10, marginTop: 6 }}>
         <TouchableOpacity
           onPress={() => router.push("/articles")}
@@ -318,10 +336,11 @@ export default function RequestsScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
       <View style={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: 12 }}>
         <Text style={{ fontSize: 24, fontWeight: "700", color: INK }}>CaseBoard</Text>
-        <Text style={{ fontSize: 12, color: MUTED }}>Synced With: {myPhone || "this device"}</Text>
+        <Text style={{ fontSize: 12, color: MUTED }}>
+          Synced With: {myPhone || "your account"}
+        </Text>
       </View>
 
-      {/* Court Connect card → navigates to the dedicated screen */}
       <TouchableOpacity
         onPress={() => router.push("/court-connect")}
         activeOpacity={0.9}
@@ -344,7 +363,6 @@ export default function RequestsScreen() {
           gap: 12,
         }}
       >
-        {/* Subtle neon pulse halo */}
         <View
           style={{
             width: 36,
@@ -381,16 +399,20 @@ export default function RequestsScreen() {
         </View>
 
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 16, fontWeight: "800", color: INK }}>Court Connect</Text>
-          <Text style={{ fontSize: 12, color: MUTED }}>High Court and Lower Court status links</Text>
+          <Text style={{ fontSize: 16, fontWeight: "800", color: INK }}>
+            Court Connect
+          </Text>
+          <Text style={{ fontSize: 12, color: MUTED }}>
+            High Court and Lower Court status links
+          </Text>
         </View>
 
         <Feather name="chevron-right" size={22} color={INK} />
       </TouchableOpacity>
 
       <FlatList
-        data={mine}
-        keyExtractor={(it, idx) => String(it.id ?? idx)}
+        data={items}
+        keyExtractor={(it) => String(it.id)}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         contentContainerStyle={{ padding: 16, paddingBottom: 24, flexGrow: 1 }}
@@ -399,9 +421,11 @@ export default function RequestsScreen() {
           const status = (item.status || "pending").toLowerCase();
           const step = stepFromStatus(status);
           const chip = STATUS_COLOR[status] ?? MUTED;
-          const title = item.category || item.topic || `Request ${index + 1}`;
+          const title = item.category || `Request ${index + 1}`;
           const caseNo = deriveCaseNumber(item.id);
           const date = item.created_at ? new Date(item.created_at).toLocaleString() : "";
+          const details = item.description || "";
+
           const stepStyle = (n: number) => ({
             color: step >= n ? INK : MUTED,
             fontWeight: (step >= n ? "700" : "600") as "700" | "600",
@@ -422,20 +446,45 @@ export default function RequestsScreen() {
                 elevation: 2,
               }}
             >
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <View style={{ backgroundColor: chip, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999 }}>
-                  <Text style={{ color: "#fff", fontWeight: "700", fontSize: 12 }}>{status}</Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <View
+                  style={{
+                    backgroundColor: chip,
+                    paddingVertical: 4,
+                    paddingHorizontal: 10,
+                    borderRadius: 999,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontWeight: "700", fontSize: 12 }}>
+                    {status}
+                  </Text>
                 </View>
                 <Text style={{ color: MUTED, fontSize: 12 }}>{date}</Text>
               </View>
 
-              <Text style={{ marginTop: 10, fontSize: 16, fontWeight: "700", color: INK }}>
+              <Text
+                style={{
+                  marginTop: 10,
+                  fontSize: 16,
+                  fontWeight: "700",
+                  color: INK,
+                }}
+              >
                 {`Request ${index + 1}: Case #${caseNo}`}
               </Text>
+
               <Text style={{ marginTop: 2, color: "#374151" }}>{title}</Text>
 
               {status === "cancelled" ? (
-                <Text style={{ marginTop: 10, color: "#EF4444", fontWeight: "700" }}>Cancelled</Text>
+                <Text style={{ marginTop: 10, color: "#EF4444", fontWeight: "700" }}>
+                  Cancelled
+                </Text>
               ) : (
                 <View style={{ marginTop: 10 }}>
                   <Text>
@@ -448,9 +497,12 @@ export default function RequestsScreen() {
                 </View>
               )}
 
-              {item.details ? (
-                <Text numberOfLines={3} style={{ marginTop: 8, color: "#374151", lineHeight: 20 }}>
-                  {item.details}
+              {details ? (
+                <Text
+                  numberOfLines={3}
+                  style={{ marginTop: 8, color: "#374151", lineHeight: 20 }}
+                >
+                  {details}
                 </Text>
               ) : null}
 
