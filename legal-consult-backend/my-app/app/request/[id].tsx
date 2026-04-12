@@ -5,11 +5,13 @@ import {
   ActivityIndicator,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { Feather } from "@expo/vector-icons";
+import * as WebBrowser from "expo-web-browser";
 
 import { API_BASE } from "../../constants/config";
 import { useAuth } from "../../context/auth";
@@ -25,11 +27,22 @@ type Req = {
   assigned_lawyer?: string | null;
 };
 
+type PaymentLinkResponse = {
+  success?: boolean;
+  payment_link_id?: string;
+  payment_link_url?: string;
+  amount?: number;
+  currency?: string;
+  status?: string;
+};
+
 const BG = "#F7F8FA";
 const INK = "#0B1220";
 const CARD = "#FFFFFF";
 const BORDER = "#E5E7EB";
 const MUTED = "#6B7280";
+const GOLD = "#C89B3C";
+const GOLD_LIGHT = "#F6E7C1";
 
 const STATUS_COLOR: Record<string, string> = {
   pending: "#F59E0B",
@@ -81,6 +94,7 @@ function formatDate(value?: string | null) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    hour12: true,
   });
 }
 
@@ -127,6 +141,7 @@ export default function RequestDetailsScreen() {
   const [item, setItem] = useState<Req | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [paying, setPaying] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -198,6 +213,57 @@ export default function RequestDetailsScreen() {
       return () => {};
     }, [load])
   );
+
+  const handlePayNow = useCallback(async () => {
+    if (!authToken) {
+      Alert.alert("Login required", "Please log in first.");
+      return;
+    }
+
+    if (!item) {
+      Alert.alert("Error", "Request details are not available.");
+      return;
+    }
+
+    try {
+      setPaying(true);
+
+      const res = await fetch(`${API_BASE}/payments/create-link`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          request_id: item.id,
+          category: item.category || "Legal Consultation",
+          description: item.description || "caseFit legal consultation",
+          amount_rupees: 199,
+        }),
+      });
+
+      const text = await res.text();
+
+      if (!res.ok) {
+        throw new Error(text || `HTTP ${res.status}`);
+      }
+
+      const data: PaymentLinkResponse = text ? JSON.parse(text) : {};
+
+      if (!data.payment_link_url) {
+        throw new Error("Payment link not returned by server.");
+      }
+
+      await WebBrowser.openBrowserAsync(data.payment_link_url);
+    } catch (e: any) {
+      Alert.alert(
+        "Payment could not start",
+        e?.message || "Something went wrong while creating the payment link."
+      );
+    } finally {
+      setPaying(false);
+    }
+  }, [authToken, item]);
 
   if (loading) {
     return (
@@ -280,6 +346,7 @@ export default function RequestDetailsScreen() {
   const chip = STATUS_COLOR[status] ?? MUTED;
   const step = stepFromStatus(status);
   const caseNo = deriveCaseNumber(item.id);
+  const showPaymentBox = status === "pending" || status === "awaiting_payment";
 
   const stepStyle = (n: number) => ({
     color: step >= n ? INK : MUTED,
@@ -388,6 +455,147 @@ export default function RequestDetailsScreen() {
             )}
           </View>
         </View>
+
+        {showPaymentBox ? (
+          <View
+            style={{
+              marginTop: 14,
+              borderRadius: 22,
+              padding: 1.5,
+              backgroundColor: GOLD,
+              shadowColor: "#000",
+              shadowOpacity: 0.12,
+              shadowRadius: 12,
+              shadowOffset: { width: 0, height: 6 },
+              elevation: 4,
+            }}
+          >
+            <View
+              style={{
+                borderRadius: 20,
+                backgroundColor: "#111111",
+                padding: 16,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <View style={{ flex: 1, paddingRight: 12 }}>
+                  <View
+                    style={{
+                      alignSelf: "flex-start",
+                      backgroundColor: GOLD_LIGHT,
+                      borderRadius: 999,
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      marginBottom: 10,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "#6A4B00",
+                        fontWeight: "800",
+                        fontSize: 11,
+                        letterSpacing: 0.4,
+                      }}
+                    >
+                      PRIORITY CHECKOUT
+                    </Text>
+                  </View>
+
+                  <Text
+                    style={{
+                      color: "#FFFFFF",
+                      fontSize: 20,
+                      fontWeight: "900",
+                    }}
+                  >
+                    Secure your consult
+                  </Text>
+
+                  <Text
+                    style={{
+                      color: "#D1D5DB",
+                      marginTop: 6,
+                      lineHeight: 20,
+                    }}
+                  >
+                    Complete payment to move this request toward lawyer scheduling.
+                  </Text>
+
+                  <View
+                    style={{
+                      marginTop: 12,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <Feather name="shield" size={16} color={GOLD} />
+                    <Text style={{ color: "#F3F4F6", fontWeight: "700" }}>
+                      ₹199 fixed consultation fee
+                    </Text>
+                  </View>
+                </View>
+
+                <View
+                  style={{
+                    width: 54,
+                    height: 54,
+                    borderRadius: 27,
+                    backgroundColor: "rgba(200,155,60,0.18)",
+                    borderWidth: 1,
+                    borderColor: "rgba(246,231,193,0.25)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Feather name="credit-card" size={24} color={GOLD} />
+                </View>
+              </View>
+
+              <TouchableOpacity
+                activeOpacity={0.9}
+                disabled={paying}
+                onPress={handlePayNow}
+                style={{
+                  marginTop: 16,
+                  backgroundColor: GOLD,
+                  borderRadius: 16,
+                  paddingVertical: 15,
+                  paddingHorizontal: 16,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 10,
+                }}
+              >
+                {paying ? (
+                  <ActivityIndicator color="#111111" />
+                ) : (
+                  <>
+                    <Feather name="lock" size={18} color="#111111" />
+                    <Text
+                      style={{
+                        color: "#111111",
+                        fontWeight: "900",
+                        fontSize: 16,
+                        letterSpacing: 0.2,
+                      }}
+                    >
+                      Pay Securely
+                    </Text>
+                    <Feather name="arrow-up-right" size={18} color="#111111" />
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : null}
 
         <View
           style={{
