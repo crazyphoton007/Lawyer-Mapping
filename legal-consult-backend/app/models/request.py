@@ -11,6 +11,7 @@ from app.db import Base
 
 UUID_PK = PG_UUID(as_uuid=True)
 
+
 class Request(Base):
     __tablename__ = "requests"
 
@@ -19,6 +20,8 @@ class Request(Base):
     user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID_PK, ForeignKey("users.id"), nullable=True
     )
+
+    category: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # pending | assigned | calling | completed
