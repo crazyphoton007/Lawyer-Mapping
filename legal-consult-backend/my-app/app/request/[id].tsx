@@ -36,6 +36,16 @@ type PaymentLinkResponse = {
   status?: string;
 };
 
+type VerifyPaymentResponse = {
+  success?: boolean;
+  request_id?: string;
+  request_status?: string;
+  payment_link_id?: string;
+  payment_status?: string;
+  amount?: number;
+  currency?: string;
+};
+
 const BG = "#F7F8FA";
 const INK = "#0B1220";
 const CARD = "#FFFFFF";
@@ -142,6 +152,8 @@ export default function RequestDetailsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
+  const [checkingPayment, setCheckingPayment] = useState(false);
+  const [latestPaymentLinkId, setLatestPaymentLinkId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -214,6 +226,19 @@ export default function RequestDetailsScreen() {
     }, [load])
   );
 
+  useEffect(() => {
+    if (!id || Array.isArray(id)) return;
+
+    const key = `payment_link_id_${id}`;
+
+    (async () => {
+      const saved = await SecureStore.getItemAsync(key);
+      if (saved) {
+        setLatestPaymentLinkId(saved);
+      }
+    })();
+  }, [id]);
+
   const handlePayNow = useCallback(async () => {
     if (!authToken) {
       Alert.alert("Login required", "Please log in first.");
@@ -250,10 +275,15 @@ export default function RequestDetailsScreen() {
 
       const data: PaymentLinkResponse = text ? JSON.parse(text) : {};
 
-      if (!data.payment_link_url) {
-        throw new Error("Payment link not returned by server.");
+      if (!data.payment_link_url || !data.payment_link_id) {
+        throw new Error("Payment link data was incomplete.");
       }
 
+      const storageKey = `payment_link_id_${item.id}`;
+      await SecureStore.setItemAsync(storageKey, data.payment_link_id);
+      setLatestPaymentLinkId(data.payment_link_id);
+
+      await load();
       await WebBrowser.openBrowserAsync(data.payment_link_url);
     } catch (e: any) {
       Alert.alert(
@@ -263,7 +293,73 @@ export default function RequestDetailsScreen() {
     } finally {
       setPaying(false);
     }
-  }, [authToken, item]);
+  }, [authToken, item, load]);
+
+  const handleCheckPaymentStatus = useCallback(async () => {
+    if (!authToken) {
+      Alert.alert("Login required", "Please log in first.");
+      return;
+    }
+
+    if (!item) {
+      Alert.alert("Error", "Request details are not available.");
+      return;
+    }
+
+    if (!latestPaymentLinkId) {
+      Alert.alert(
+        "No payment found",
+        "Start payment first, then come back and check payment status."
+      );
+      return;
+    }
+
+    try {
+      setCheckingPayment(true);
+
+      const res = await fetch(`${API_BASE}/payments/verify-link`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          request_id: item.id,
+          payment_link_id: latestPaymentLinkId,
+        }),
+      });
+
+      const text = await res.text();
+
+      if (!res.ok) {
+        throw new Error(text || `HTTP ${res.status}`);
+      }
+
+      const data: VerifyPaymentResponse = text ? JSON.parse(text) : {};
+
+      await load();
+
+      if (data.request_status === "paid" || data.payment_status === "paid") {
+        Alert.alert(
+          "Payment confirmed",
+          "Your payment has been confirmed and your request is now marked as paid."
+        );
+        return;
+      }
+
+      Alert.alert(
+        "Payment still pending",
+        "We could not confirm a completed payment yet. If you just paid, wait a few seconds and check again."
+      );
+    } catch (e: any) {
+      Alert.alert(
+        "Could not verify payment",
+        e?.message || "Something went wrong while checking payment status."
+      );
+    } finally {
+      setCheckingPayment(false);
+    }
+  }, [authToken, item, latestPaymentLinkId, load]);
 
   if (loading) {
     return (
@@ -347,6 +443,7 @@ export default function RequestDetailsScreen() {
   const step = stepFromStatus(status);
   const caseNo = deriveCaseNumber(item.id);
   const showPaymentBox = status === "pending" || status === "awaiting_payment";
+  const showCheckStatusButton = status === "awaiting_payment" && !!latestPaymentLinkId;
 
   const stepStyle = (n: number) => ({
     color: step >= n ? INK : MUTED,
@@ -540,6 +637,18 @@ export default function RequestDetailsScreen() {
                       ₹199 fixed consultation fee
                     </Text>
                   </View>
+
+                  {latestPaymentLinkId ? (
+                    <Text
+                      style={{
+                        marginTop: 8,
+                        color: "#D1D5DB",
+                        fontSize: 12,
+                      }}
+                    >
+                      Payment session ready
+                    </Text>
+                  ) : null}
                 </View>
 
                 <View
@@ -593,6 +702,44 @@ export default function RequestDetailsScreen() {
                   </>
                 )}
               </TouchableOpacity>
+
+              {showCheckStatusButton ? (
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  disabled={checkingPayment}
+                  onPress={handleCheckPaymentStatus}
+                  style={{
+                    marginTop: 12,
+                    backgroundColor: "#1F2937",
+                    borderRadius: 16,
+                    paddingVertical: 14,
+                    paddingHorizontal: 16,
+                    borderWidth: 1,
+                    borderColor: "rgba(246,231,193,0.25)",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 10,
+                  }}
+                >
+                  {checkingPayment ? (
+                    <ActivityIndicator color="#F6E7C1" />
+                  ) : (
+                    <>
+                      <Feather name="refresh-cw" size={18} color="#F6E7C1" />
+                      <Text
+                        style={{
+                          color: "#F6E7C1",
+                          fontWeight: "800",
+                          fontSize: 15,
+                        }}
+                      >
+                        Check Payment Status
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              ) : null}
             </View>
           </View>
         ) : null}

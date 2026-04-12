@@ -1,5 +1,6 @@
 import os
 from typing import Optional
+from uuid import UUID
 
 import razorpay
 from fastapi import APIRouter, Depends, HTTPException
@@ -7,6 +8,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.db import get_db
+from app.models.request import Request
 from app.models.user import User
 from app.routers.auth import get_current_user
 
@@ -29,15 +31,30 @@ class CreatePaymentLinkOut(BaseModel):
     status: str
 
 
+class VerifyPaymentIn(BaseModel):
+    request_id: str
+    payment_link_id: str
+
+
+class VerifyPaymentOut(BaseModel):
+    success: bool
+    request_id: str
+    request_status: str
+    payment_link_id: str
+    payment_status: str
+    amount: int
+    currency: str
+
+
 def get_razorpay_client() -> razorpay.Client:
     key_id = os.getenv("RAZORPAY_KEY_ID")
     key_secret = os.getenv("RAZORPAY_KEY_SECRET")
 
     if not key_id or not key_secret:
-      raise HTTPException(
-          status_code=500,
-          detail="Razorpay credentials are missing in environment variables.",
-      )
+        raise HTTPException(
+            status_code=500,
+            detail="Razorpay credentials are missing in environment variables.",
+        )
 
     return razorpay.Client(auth=(key_id, key_secret))
 
@@ -50,13 +67,22 @@ def create_payment_link(
 ):
     client = get_razorpay_client()
 
+    try:
+        request_uuid = UUID(str(payload.request_id))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid request_id")
+
+    req = db.get(Request, request_uuid)
+    if not req or req.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Request not found")
+
     amount_paise = payload.amount_rupees * 100
 
     customer_name = getattr(current_user, "name", None) or "caseFit User"
     customer_contact = getattr(current_user, "phone", None) or ""
 
     notes = {
-        "request_id": payload.request_id,
+        "request_id": str(req.id),
         "user_id": str(getattr(current_user, "id", "")),
         "category": payload.category or "",
     }
@@ -90,6 +116,11 @@ def create_payment_link(
     if not short_url or not payment_link_id:
         raise HTTPException(status_code=500, detail="Payment link response was incomplete.")
 
+    if req.status == "pending":
+        req.status = "awaiting_payment"
+        db.commit()
+        db.refresh(req)
+
     return CreatePaymentLinkOut(
         success=True,
         payment_link_id=payment_link_id,
@@ -97,4 +128,51 @@ def create_payment_link(
         amount=amount_paise,
         currency="INR",
         status=payment_link.get("status", "created"),
+    )
+
+
+@router.post("/verify-link", response_model=VerifyPaymentOut)
+def verify_payment_link(
+    payload: VerifyPaymentIn,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    client = get_razorpay_client()
+
+    try:
+        request_uuid = UUID(str(payload.request_id))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid request_id")
+
+    req = db.get(Request, request_uuid)
+    if not req or req.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Request not found")
+
+    try:
+        payment_link = client.payment_link.fetch(payload.payment_link_id)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Unable to verify payment link: {exc}")
+
+    payment_status = (payment_link.get("status") or "").lower()
+    amount = payment_link.get("amount", 0)
+    currency = payment_link.get("currency", "INR")
+
+    if payment_status == "paid":
+        if req.status != "paid":
+            req.status = "paid"
+            db.commit()
+            db.refresh(req)
+    elif req.status == "pending":
+        req.status = "awaiting_payment"
+        db.commit()
+        db.refresh(req)
+
+    return VerifyPaymentOut(
+        success=payment_status == "paid",
+        request_id=str(req.id),
+        request_status=req.status,
+        payment_link_id=payload.payment_link_id,
+        payment_status=payment_status or "unknown",
+        amount=amount,
+        currency=currency,
     )
