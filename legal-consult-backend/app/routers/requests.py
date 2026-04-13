@@ -13,6 +13,19 @@ from app.schemas import RequestCreate, RequestOut
 
 router = APIRouter(prefix="/requests", tags=["requests"])
 
+ALLOWED_STATUSES = (
+    "pending",
+    "assigned",
+    "awaiting_payment",
+    "paid",
+    "appointment_scheduled",
+    "calling",
+    "in_progress",
+    "completed",
+    "closed",
+    "cancelled",
+)
+
 
 @router.get("/", response_model=list[RequestOut])
 def list_requests(
@@ -71,10 +84,16 @@ def get_request(
 @router.patch("/{request_id}/status", response_model=RequestOut)
 def update_status(
     request_id: UUID,
-    status: str = Query(..., description="pending|assigned|calling|completed"),
+    status: str = Query(
+        ...,
+        description=(
+            "pending|assigned|awaiting_payment|paid|appointment_scheduled|"
+            "calling|in_progress|completed|closed|cancelled"
+        ),
+    ),
     db: Session = Depends(get_db),
 ):
-    if status not in ("pending", "assigned", "calling", "completed"):
+    if status not in ALLOWED_STATUSES:
         raise HTTPException(status_code=400, detail="Invalid status")
 
     rec = db.get(Request, request_id)

@@ -520,7 +520,7 @@ export default function RequestsScreen() {
                   gap: 6,
                 }}
                 onPress={() => {
-                  Alert.alert("Details", "Route to a details page when ready.");
+                  router.push(`/request/${item.id}`);
                 }}
               >
                 <Feather name="arrow-right-circle" size={16} color={INK} />

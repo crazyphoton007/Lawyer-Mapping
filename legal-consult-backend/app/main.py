@@ -4,10 +4,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
 
+
 from .db import Base, engine
 from .routers import articles
 from .routers import requests as requests_router
 from .routers import auth as auth_router  # <-- NEW: bring in /auth routes
+from .routers.payments import router as payments_router
 
 app = FastAPI(title="Legal Consult API", version="0.1.0")
 
@@ -37,3 +39,4 @@ def health():
 app.include_router(articles.router)          # /articles
 app.include_router(requests_router.router)   # /requests
 app.include_router(auth_router.router)       # /auth  <-- NEW: request-code, verify, me
+app.include_router(payments_router)
