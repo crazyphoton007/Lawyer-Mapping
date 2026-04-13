@@ -15,11 +15,15 @@ router = APIRouter(prefix="/requests", tags=["requests"])
 
 ALLOWED_STATUSES = (
     "pending",
+    "assigned",
     "awaiting_payment",
     "paid",
-    "assigned",
+    "appointment_scheduled",
     "calling",
+    "in_progress",
     "completed",
+    "closed",
+    "cancelled",
 )
 
 
@@ -80,7 +84,13 @@ def get_request(
 @router.patch("/{request_id}/status", response_model=RequestOut)
 def update_status(
     request_id: UUID,
-    status: str = Query(..., description="pending|awaiting_payment|paid|assigned|calling|completed"),
+    status: str = Query(
+        ...,
+        description=(
+            "pending|assigned|awaiting_payment|paid|appointment_scheduled|"
+            "calling|in_progress|completed|closed|cancelled"
+        ),
+    ),
     db: Session = Depends(get_db),
 ):
     if status not in ALLOWED_STATUSES:
