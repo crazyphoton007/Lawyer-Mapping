@@ -43,6 +43,27 @@ alembic upgrade head
 - Add CORS middleware for your mobile app
 - Set up GitHub Actions for CI (lint/test)
 
+## 5A) Production environment
+For production, use explicit backend settings instead of the local development defaults:
+
+```env
+APP_ENV=production
+ENABLE_DOCS=0
+CORS_ALLOW_ORIGINS=https://thecasefit.com,https://api.thecasefit.com
+RUN_SYNC_DDL=0
+```
+
+Recommended production values:
+- `APP_ENV=production`
+- `ENABLE_DOCS=0` so Swagger is not publicly exposed by default
+- `CORS_ALLOW_ORIGINS` should be a comma-separated allowlist, not `*`
+- `RUN_SYNC_DDL=0` and use `alembic upgrade head` during deploy
+
+Recommended domain structure:
+- Public website: `https://thecasefit.com`
+- Backend API: `https://api.thecasefit.com`
+- Admin tool: `https://api.thecasefit.com/admin`
+
 ## 6) Admin bootstrap
 To create your first team account without editing the DB manually:
 
