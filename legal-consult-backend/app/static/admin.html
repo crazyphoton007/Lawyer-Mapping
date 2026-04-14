@@ -582,7 +582,40 @@
       function formatDate(value) {
         if (!value) return "Not scheduled";
         const date = new Date(value);
-        return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+        if (Number.isNaN(date.getTime())) return value;
+        return new Intl.DateTimeFormat("en-IN", {
+          timeZone: "Asia/Kolkata",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        }).format(date);
+      }
+
+      function toIndiaDateTimeLocal(value) {
+        if (!value) return "";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "";
+
+        const parts = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Asia/Kolkata",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        }).formatToParts(date);
+
+        const map = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+        return `${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}`;
+      }
+
+      function indiaDateTimeLocalToIso(value) {
+        if (!value) return null;
+        return `${value}:00+05:30`;
       }
 
       function selectedRequest() {
@@ -631,7 +664,7 @@
 
         document.getElementById("statusInput").value = item.status || "pending";
         document.getElementById("scheduledFor").value = item.scheduled_for
-          ? new Date(item.scheduled_for).toISOString().slice(0, 16)
+          ? toIndiaDateTimeLocal(item.scheduled_for)
           : "";
         document.getElementById("appointmentMode").value = item.appointment_mode || "call";
         document.getElementById("appointmentNotes").value = item.appointment_notes || "";
@@ -892,7 +925,7 @@
             throw new Error("Choose a date and time first.");
           }
           await updateSelected("/admin/requests/{id}/schedule", {
-            scheduled_for: new Date(value).toISOString(),
+            scheduled_for: indiaDateTimeLocalToIso(value),
             appointment_mode: document.getElementById("appointmentMode").value,
             appointment_notes: document.getElementById("appointmentNotes").value || null,
           });

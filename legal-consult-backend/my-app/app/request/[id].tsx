@@ -115,18 +115,31 @@ function formatDate(value?: string | null) {
 
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
+  try {
+    const formatter = new Intl.DateTimeFormat("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
 
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
+    return formatter.format(date).replace(",", ", ");
+  } catch {
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
 
-  let hours = date.getHours();
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  const meridiem = hours >= 12 ? "PM" : "AM";
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const meridiem = hours >= 12 ? "PM" : "AM";
 
-  hours = hours % 12 || 12;
+    hours = hours % 12 || 12;
 
-  return `${day}/${month}/${year}, ${hours}:${minutes} ${meridiem}`;
+    return `${day}/${month}/${year}, ${hours}:${minutes} ${meridiem}`;
+  }
 }
 
 function formatAppointmentMode(value?: string | null) {
@@ -151,7 +164,7 @@ function appointmentSummary(
   lawyerName?: string | null
 ) {
   if (hasAppointment) {
-    return `${formatAppointmentMode(mode)} consultation confirmed`;
+    return `${formatAppointmentMode(mode)} session confirmed`;
   }
 
   if (lawyerName) {
@@ -167,7 +180,7 @@ function appointmentSupportingCopy(
   lawyerName?: string | null
 ) {
   if (hasAppointment) {
-    return `${formatAppointmentMode(mode)} format with guided lawyer follow-up.`;
+    return `Your ${formatAppointmentMode(mode).toLowerCase()} with counsel is locked in and ready.`;
   }
 
   if (lawyerName) {
@@ -211,48 +224,49 @@ function DetailRow({
   );
 }
 
-function SummaryTile({
+function SummaryRow({
   label,
   value,
+  muted,
 }: {
   label: string;
   value?: string | null;
+  muted?: boolean;
 }) {
   return (
     <View
       style={{
-        minWidth: "47%",
-        flexGrow: 1,
-        borderRadius: 22,
-        backgroundColor: "rgba(255,255,255,0.05)",
-        borderWidth: 1,
-        borderColor: "rgba(231,201,125,0.12)",
-        padding: 18,
-        shadowColor: "#000000",
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-        shadowOffset: { width: 0, height: 6 },
-        elevation: 2,
+        flexDirection: "row",
+        alignItems: "flex-start",
+        justifyContent: "space-between",
+        gap: 18,
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: "rgba(231,201,125,0.08)",
       }}
     >
       <Text
         style={{
-          fontSize: 11,
           color: "#D4B46A",
-          fontWeight: "800",
-          textTransform: "uppercase",
+          fontSize: 11,
+          fontWeight: "900",
           letterSpacing: 0.9,
+          textTransform: "uppercase",
+          width: "36%",
+          lineHeight: 16,
+          paddingTop: 2,
         }}
       >
         {label}
       </Text>
       <Text
         style={{
-          marginTop: 10,
-          fontSize: 18,
-          color: "#F8FAFC",
-          lineHeight: 26,
-          fontWeight: "800",
+          width: "58%",
+          textAlign: "right",
+          color: muted ? "#9FB1C9" : "#FCF8EE",
+          fontSize: 15,
+          lineHeight: 22,
+          fontWeight: "700",
         }}
       >
         {value && value.trim() ? value : "Not provided"}
@@ -614,7 +628,7 @@ export default function RequestDetailsScreen() {
   const lawyerSpecialties = item.assigned_lawyer_specialties?.filter(Boolean) || [];
   const hasAppointment = !!item.scheduled_for;
   const nextMilestone = hasAppointment
-    ? `${formatAppointmentMode(item.appointment_mode)} scheduled`
+    ? `${formatAppointmentMode(item.appointment_mode)} confirmed`
     : status === "assigned"
       ? "Scheduling in progress"
       : "Awaiting lawyer assignment";
@@ -689,11 +703,20 @@ export default function RequestDetailsScreen() {
             }}
           >
             <View style={{ flex: 1, paddingRight: 12 }}>
-              <Text style={{ fontSize: 22, fontWeight: "800", color: INK }}>
-                Case #{caseNo}
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: "900",
+                  color: MUTED,
+                  textTransform: "uppercase",
+                  letterSpacing: 1.2,
+                  marginBottom: 6,
+                }}
+              >
+                Case Reference
               </Text>
-              <Text style={{ marginTop: 4, color: MUTED }}>
-                Request ID: {item.id}
+              <Text style={{ fontSize: 26, fontWeight: "900", color: INK, letterSpacing: 0.4 }}>
+                CF-{caseNo}
               </Text>
             </View>
 
@@ -1018,7 +1041,7 @@ export default function RequestDetailsScreen() {
                     {lawyerSpecialties.length
                       ? lawyerSpecialties.join(" • ")
                       : lawyerName
-                        ? "Dedicated legal consultation"
+                        ? "Personally assigned counsel"
                         : nextMilestone}
                   </Text>
                 </View>
@@ -1337,20 +1360,23 @@ export default function RequestDetailsScreen() {
 
               <View
                 style={{
-                  flexDirection: "row",
-                  flexWrap: "wrap",
-                  gap: 12,
+                  borderRadius: 24,
+                  backgroundColor: "rgba(255,255,255,0.035)",
+                  borderWidth: 1,
+                  borderColor: "rgba(231,201,125,0.12)",
+                  paddingHorizontal: 18,
+                  paddingVertical: 6,
                 }}
               >
-                <SummaryTile label="Category" value={item.category} />
-                <SummaryTile label="Current Status" value={formatStatus(item.status)} />
-                <SummaryTile label="Assigned Lawyer" value={lawyerName || item.assigned_lawyer} />
-                <SummaryTile
+                <SummaryRow label="Category" value={item.category} />
+                <SummaryRow label="Current Status" value={formatStatus(item.status)} />
+                <SummaryRow label="Assigned Lawyer" value={lawyerName || item.assigned_lawyer} />
+                <SummaryRow
                   label="Appointment"
                   value={item.scheduled_for ? formatDate(item.scheduled_for) : "Not scheduled yet"}
                 />
-                <SummaryTile label="Preferred Window" value={item.preferred_window} />
-                <SummaryTile label="Created At" value={formatDate(item.created_at)} />
+                <SummaryRow label="Preferred Window" value={item.preferred_window} />
+                <SummaryRow label="Created" value={formatDate(item.created_at)} muted />
               </View>
 
               <View
