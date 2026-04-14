@@ -37,6 +37,7 @@ export default function ConsultScreen() {
 
   const [category, setCategory] = useState<string>("");
   const [details, setDetails] = useState<string>("");
+  const [preferredWindow, setPreferredWindow] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
   // success sheet
@@ -95,7 +96,11 @@ export default function ConsultScreen() {
           "content-type": "application/json",
           authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ category: category.trim(), details: details.trim() }),
+        body: JSON.stringify({
+          category: category.trim(),
+          details: details.trim(),
+          preferred_window: preferredWindow.trim() || null,
+        }),
       });
       const txt = await res.text();
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${txt}`);
@@ -116,6 +121,7 @@ export default function ConsultScreen() {
       // reset form
       setCategory("");
       setDetails("");
+      setPreferredWindow("");
 
       // show success sheet
       setOkOpen(true);
@@ -241,6 +247,30 @@ export default function ConsultScreen() {
                   </View>
                 ))}
               </View>
+            </View>
+
+            <View>
+              <Text style={{ fontSize: 14, fontWeight: "700", color: INK }}>
+                Preferred time
+              </Text>
+              <Text style={{ fontSize: 12, color: MUTED, marginTop: 4 }}>
+                Share your availability so our team can schedule more smoothly.
+              </Text>
+
+              <TextInput
+                value={preferredWindow}
+                onChangeText={setPreferredWindow}
+                placeholder="Example: Weekdays after 6 PM or Saturday morning"
+                style={{
+                  borderWidth: 1,
+                  borderColor: BORDER,
+                  borderRadius: 12,
+                  padding: 12,
+                  fontSize: 15,
+                  backgroundColor: "#FAFAFA",
+                  marginTop: 8,
+                }}
+              />
             </View>
 
             {/* Submit */}

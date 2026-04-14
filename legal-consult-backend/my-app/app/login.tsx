@@ -57,8 +57,6 @@ async function apiPost(path: string, body: unknown) {
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
-      // IMPORTANT: bypass ngrok abuse warning page
-      "ngrok-skip-browser-warning": "true",
     },
     body: JSON.stringify(body),
   });
