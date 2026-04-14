@@ -1,13 +1,16 @@
 import os
+import time
 from typing import Optional
 from uuid import UUID
 
 import razorpay
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db import get_db
+from app.db import SessionLocal, get_db
+from app.models.lawyer import Lawyer
 from app.models.request import Request
 from app.models.user import User
 from app.routers.auth import get_current_user
@@ -57,6 +60,26 @@ def get_razorpay_client() -> razorpay.Client:
         )
 
     return razorpay.Client(auth=(key_id, key_secret))
+
+
+def assign_lawyer_after_delay(request_id: UUID, delay_seconds: int = 60) -> None:
+    time.sleep(delay_seconds)
+
+    db = SessionLocal()
+    try:
+        req = db.get(Request, request_id)
+        if not req or req.status != "paid" or req.assigned_lawyer:
+            return
+
+        lawyers = db.execute(select(Lawyer).order_by(Lawyer.id)).scalars().all()
+        if len(lawyers) != 1:
+            return
+
+        req.assigned_lawyer = lawyers[0].id
+        req.status = "assigned"
+        db.commit()
+    finally:
+        db.close()
 
 
 @router.post("/create-link", response_model=CreatePaymentLinkOut)
@@ -134,6 +157,7 @@ def create_payment_link(
 @router.post("/verify-link", response_model=VerifyPaymentOut)
 def verify_payment_link(
     payload: VerifyPaymentIn,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -160,8 +184,9 @@ def verify_payment_link(
     if payment_status == "paid":
         if req.status != "paid":
             req.status = "paid"
-            db.commit()
-            db.refresh(req)
+        db.commit()
+        db.refresh(req)
+        background_tasks.add_task(assign_lawyer_after_delay, req.id, 60)
     elif req.status == "pending":
         req.status = "awaiting_payment"
         db.commit()

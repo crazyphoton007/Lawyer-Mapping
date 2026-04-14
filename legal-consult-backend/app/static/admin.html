@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CaseFit Admin Console</title>
+    <style>
+      :root {
+        --bg: #f3f5f8;
+        --panel: #ffffff;
+        --ink: #0b1220;
+        --muted: #64748b;
+        --line: #d9e1ea;
+        --navy: #0f1c33;
+        --gold: #c89b3c;
+        --gold-soft: #f5e7c2;
+        --accent: #2f6fec;
+        --success: #16a34a;
+        --danger: #dc2626;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+        background:
+          radial-gradient(circle at top right, rgba(200, 155, 60, 0.16), transparent 24rem),
+          linear-gradient(180deg, #fbfcfe 0%, var(--bg) 100%);
+        color: var(--ink);
+      }
+
+      .shell {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .hero {
+        background: linear-gradient(135deg, #10192d 0%, #182846 100%);
+        color: #fff;
+        border-radius: 28px;
+        padding: 28px;
+        box-shadow: 0 24px 60px rgba(10, 18, 32, 0.18);
+      }
+
+      .eyebrow {
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #d7deea;
+      }
+
+      .hero h1 {
+        margin: 10px 0 8px;
+        font-size: 34px;
+      }
+
+      .hero p {
+        margin: 0;
+        color: #c8d3e3;
+        max-width: 760px;
+        line-height: 1.5;
+      }
+
+      .auth-bar {
+        margin-top: 20px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 12px;
+      }
+
+      .auth-card {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 18px;
+        padding: 14px;
+      }
+
+      .auth-card-title {
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #d7deea;
+        margin-bottom: 10px;
+      }
+
+      .auth-actions {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 10px;
+      }
+
+      .session-row {
+        margin-top: 14px;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        color: #d7deea;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid rgba(15, 28, 51, 0.08);
+        border-radius: 24px;
+        box-shadow: 0 20px 40px rgba(15, 28, 51, 0.05);
+      }
+
+      .panel-head {
+        padding: 20px 22px 12px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .panel-head h2,
+      .panel-head h3 {
+        margin: 0;
+      }
+
+      .panel-sub {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .panel-body {
+        padding: 18px 22px 22px;
+      }
+
+      label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+
+      input,
+      select,
+      textarea,
+      button {
+        font: inherit;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px 14px;
+        background: #fff;
+        color: var(--ink);
+      }
+
+      textarea {
+        min-height: 92px;
+        resize: vertical;
+      }
+
+      button {
+        border: 0;
+        border-radius: 14px;
+        padding: 12px 16px;
+        cursor: pointer;
+        font-weight: 800;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, var(--gold) 0%, #e4b95d 100%);
+        color: #111827;
+      }
+
+      .btn-secondary {
+        background: #edf2f7;
+        color: var(--ink);
+      }
+
+      .filters {
+        display: flex;
+        gap: 12px;
+        align-items: end;
+      }
+
+      .request-list {
+        display: grid;
+        gap: 12px;
+        max-height: 860px;
+        overflow: auto;
+      }
+
+      .request-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 16px;
+        background: #fbfcfe;
+        cursor: pointer;
+      }
+
+      .request-card.active {
+        border-color: rgba(47, 111, 236, 0.38);
+        box-shadow: 0 12px 28px rgba(47, 111, 236, 0.12);
+        background: #ffffff;
+      }
+
+      .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+      }
+
+      .status-chip {
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 800;
+        color: #fff;
+        background: var(--accent);
+      }
+
+      .meta {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 4px;
+        line-height: 1.45;
+      }
+
+      .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .info-box {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 14px;
+        background: #fbfcfe;
+      }
+
+      .info-label {
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+
+      .info-value {
+        margin-top: 8px;
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.45;
+      }
+
+      .action-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 16px;
+      }
+
+      .action-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 16px;
+        background: #fff;
+      }
+
+      .action-card.full {
+        grid-column: 1 / -1;
+      }
+
+      .action-card h4 {
+        margin: 0 0 12px;
+        font-size: 16px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .message {
+        margin-top: 16px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        font-weight: 700;
+        display: none;
+      }
+
+      .message.success {
+        display: block;
+        background: rgba(22, 163, 74, 0.12);
+        color: #166534;
+      }
+
+      .message.error {
+        display: block;
+        background: rgba(220, 38, 38, 0.12);
+        color: #991b1b;
+      }
+
+      .empty {
+        padding: 28px;
+        text-align: center;
+        color: var(--muted);
+      }
+
+      @media (max-width: 1100px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .shell {
+          padding: 14px;
+        }
+
+        .auth-bar,
+        .detail-grid,
+        .action-grid,
+        .filters {
+          grid-template-columns: 1fr;
+          display: grid;
+        }
+
+        .hero h1 {
+          font-size: 28px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <section class="hero">
+        <div class="eyebrow">CaseFit Internal Console</div>
+        <h1>Premium Operations Desk</h1>
+        <p>
+          Manage every request from one place. Override payment status, assign lawyers,
+          schedule appointments, and manually share the exact lawyer details you want the
+          client to see.
+        </p>
+
+        <div class="auth-bar">
+          <div class="auth-card">
+            <div class="auth-card-title">Team Login</div>
+            <div class="stack">
+              <input id="phone" type="text" placeholder="+911234567890" />
+              <div class="auth-actions">
+                <input id="otp" type="text" placeholder="Enter OTP" />
+                <button class="btn-secondary" id="requestOtpBtn">Request OTP</button>
+                <button class="btn-primary" id="verifyOtpBtn">Verify & Connect</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="auth-card">
+            <div class="auth-card-title">Session</div>
+            <div class="stack">
+              <input id="token" type="password" placeholder="Paste token manually only if needed" />
+              <div class="auth-actions">
+                <button class="btn-primary" id="connectBtn">Connect</button>
+                <button class="btn-secondary" id="reloadBtn">Reload</button>
+                <button class="btn-secondary" id="logoutBtn">Logout</button>
+              </div>
+            </div>
+            <div class="session-row">
+              <div id="sessionLabel">Not connected</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div id="message" class="message"></div>
+
+      <section class="layout">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Requests</h2>
+            <div class="panel-sub">Search the live production queue and open a request to manage it.</div>
+          </div>
+          <div class="panel-body">
+            <div class="filters">
+              <div style="flex: 1">
+                <label for="statusFilter">Status Filter</label>
+                <select id="statusFilter">
+                  <option value="">All requests</option>
+                  <option value="pending">Pending</option>
+                  <option value="awaiting_payment">Awaiting payment</option>
+                  <option value="paid">Paid</option>
+                  <option value="assigned">Assigned</option>
+                  <option value="appointment_scheduled">Appointment scheduled</option>
+                  <option value="calling">Calling</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+              <div style="flex: 1">
+                <label for="searchFilter">Search by Mobile</label>
+                <input id="searchFilter" type="text" placeholder="+9198... or last digits" />
+              </div>
+              <button class="btn-secondary" id="filterBtn">Apply</button>
+            </div>
+
+            <div id="requestList" class="request-list" style="margin-top: 16px"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Request Control</h3>
+            <div class="panel-sub">Open a request to change status, assign a lawyer, schedule, or share details.</div>
+          </div>
+          <div class="panel-body">
+            <div id="selectionEmpty" class="empty">Select a request from the left to manage it.</div>
+
+            <div id="selectionContent" style="display: none">
+              <div class="detail-grid">
+                <div class="info-box">
+                  <div class="info-label">Client</div>
+                  <div class="info-value" id="detailCustomer">-</div>
+                </div>
+                <div class="info-box">
+                  <div class="info-label">Current Status</div>
+                  <div class="info-value" id="detailStatus">-</div>
+                </div>
+                <div class="info-box">
+                  <div class="info-label">Assigned Lawyer</div>
+                  <div class="info-value" id="detailLawyer">-</div>
+                </div>
+                <div class="info-box">
+                  <div class="info-label">Appointment</div>
+                  <div class="info-value" id="detailAppointment">-</div>
+                </div>
+              </div>
+
+              <div class="action-grid">
+                <div class="action-card">
+                  <h4>Status Override</h4>
+                  <div class="stack">
+                    <div>
+                      <label for="statusInput">Set Status</label>
+                      <select id="statusInput">
+                        <option value="pending">Pending</option>
+                        <option value="awaiting_payment">Awaiting payment</option>
+                        <option value="paid">Paid</option>
+                        <option value="assigned">Assigned</option>
+                        <option value="appointment_scheduled">Appointment scheduled</option>
+                        <option value="calling">Calling</option>
+                        <option value="in_progress">In progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="closed">Closed</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                    </div>
+                    <button class="btn-primary" id="statusBtn">Update Status</button>
+                  </div>
+                </div>
+
+                <div class="action-card">
+                  <h4>Assign Lawyer</h4>
+                  <div class="stack">
+                    <div>
+                      <label for="lawyerSelect">Choose Lawyer</label>
+                      <select id="lawyerSelect"></select>
+                    </div>
+                    <button class="btn-primary" id="assignBtn">Assign Lawyer</button>
+                  </div>
+                </div>
+
+                <div class="action-card full">
+                  <h4>Schedule Appointment</h4>
+                  <div class="stack">
+                    <div>
+                      <label for="scheduledFor">Date and Time</label>
+                      <input id="scheduledFor" type="datetime-local" />
+                    </div>
+                    <div>
+                      <label for="appointmentMode">Mode</label>
+                      <select id="appointmentMode">
+                        <option value="call">Call</option>
+                        <option value="video">Video</option>
+                        <option value="in_person">In person</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label for="appointmentNotes">Appointment Notes</label>
+                      <textarea id="appointmentNotes" placeholder="Enter the message you want the client to see."></textarea>
+                    </div>
+                    <button class="btn-primary" id="scheduleBtn">Schedule Appointment</button>
+                  </div>
+                </div>
+
+                <div class="action-card full">
+                  <h4>Share Lawyer Details</h4>
+                  <div class="stack">
+                    <div>
+                      <label for="manualLawyerName">Lawyer Name</label>
+                      <input id="manualLawyerName" type="text" placeholder="Adv. Priya Sharma" />
+                    </div>
+                    <div>
+                      <label for="manualLawyerPhone">Phone</label>
+                      <input id="manualLawyerPhone" type="text" placeholder="+91XXXXXXXXXX" />
+                    </div>
+                    <div>
+                      <label for="manualLawyerEmail">Email</label>
+                      <input id="manualLawyerEmail" type="email" placeholder="lawyer@example.com" />
+                    </div>
+                    <div>
+                      <label for="manualLawyerNote">Client-facing Note</label>
+                      <textarea id="manualLawyerNote" placeholder="Join 10 minutes early. Video link will be shared on WhatsApp."></textarea>
+                    </div>
+                    <button class="btn-primary" id="shareBtn">Share Lawyer Details</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const state = {
+        token: "",
+        me: null,
+        requests: [],
+        filteredRequests: [],
+        lawyers: [],
+        selectedRequestId: null,
+      };
+
+      const messageEl = document.getElementById("message");
+      const requestListEl = document.getElementById("requestList");
+      const selectionEmptyEl = document.getElementById("selectionEmpty");
+      const selectionContentEl = document.getElementById("selectionContent");
+
+      function showMessage(text, kind = "success") {
+        messageEl.textContent = text;
+        messageEl.className = `message ${kind}`;
+      }
+
+      function setSessionLabel() {
+        const label = document.getElementById("sessionLabel");
+        if (!state.me) {
+          label.textContent = "Not connected";
+          return;
+        }
+        label.textContent = `${state.me.phone || "Team user"} • ${state.me.role || "no role"}`;
+      }
+
+      function persistToken() {
+        if (state.token) {
+          localStorage.setItem("casefit_admin_token", state.token);
+        } else {
+          localStorage.removeItem("casefit_admin_token");
+        }
+      }
+
+      function authHeaders() {
+        return {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${state.token}`,
+        };
+      }
+
+      function formatDate(value) {
+        if (!value) return "Not scheduled";
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+      }
+
+      function selectedRequest() {
+        return state.filteredRequests.find((item) => item.id === state.selectedRequestId);
+      }
+
+      function applySearchFilter() {
+        const raw = document.getElementById("searchFilter").value || "";
+        const query = raw.trim().toLowerCase();
+
+        state.filteredRequests = state.requests.filter((item) => {
+          if (!query) return true;
+
+          const phone = (item.customer_phone || "").toLowerCase();
+          const name = (item.customer_name || "").toLowerCase();
+          const category = (item.category || "").toLowerCase();
+          const requestId = (item.id || "").toLowerCase();
+
+          return (
+            phone.includes(query) ||
+            name.includes(query) ||
+            category.includes(query) ||
+            requestId.includes(query)
+          );
+        });
+      }
+
+      function renderSelection() {
+        const item = selectedRequest();
+        if (!item) {
+          selectionEmptyEl.style.display = "block";
+          selectionContentEl.style.display = "none";
+          return;
+        }
+
+        selectionEmptyEl.style.display = "none";
+        selectionContentEl.style.display = "block";
+
+        document.getElementById("detailCustomer").textContent =
+          [item.customer_name, item.customer_phone].filter(Boolean).join(" • ") || "Not available";
+        document.getElementById("detailStatus").textContent = item.status || "-";
+        document.getElementById("detailLawyer").textContent =
+          item.assigned_lawyer_name || "Not assigned";
+        document.getElementById("detailAppointment").textContent =
+          item.scheduled_for ? `${formatDate(item.scheduled_for)} • ${item.appointment_mode || "call"}` : "Being scheduled";
+
+        document.getElementById("statusInput").value = item.status || "pending";
+        document.getElementById("scheduledFor").value = item.scheduled_for
+          ? new Date(item.scheduled_for).toISOString().slice(0, 16)
+          : "";
+        document.getElementById("appointmentMode").value = item.appointment_mode || "call";
+        document.getElementById("appointmentNotes").value = item.appointment_notes || "";
+        document.getElementById("manualLawyerName").value = item.assigned_lawyer_name || "";
+        document.getElementById("manualLawyerPhone").value = item.assigned_lawyer_phone || "";
+        document.getElementById("manualLawyerEmail").value = item.shared_lawyer_email || "";
+        document.getElementById("manualLawyerNote").value = item.shared_lawyer_note || "";
+        if (item.assigned_lawyer) {
+          document.getElementById("lawyerSelect").value = item.assigned_lawyer;
+        }
+      }
+
+      function renderRequests() {
+        requestListEl.innerHTML = "";
+        if (!state.filteredRequests.length) {
+          requestListEl.innerHTML = '<div class="empty">No requests found for this filter.</div>';
+          renderSelection();
+          return;
+        }
+
+        for (const item of state.filteredRequests) {
+          const card = document.createElement("div");
+          card.className = `request-card${item.id === state.selectedRequestId ? " active" : ""}`;
+          card.innerHTML = `
+            <div class="row">
+              <div>
+                <strong>${item.category || "Legal Request"}</strong>
+                <div class="meta">${item.customer_name || "Unknown client"}${item.customer_phone ? ` • ${item.customer_phone}` : ""}</div>
+              </div>
+              <span class="status-chip">${item.status}</span>
+            </div>
+            <div class="meta" style="margin-top: 10px;">${item.description || "No description"}</div>
+            <div class="meta" style="margin-top: 10px;">Lawyer: ${item.assigned_lawyer_name || "Unassigned"} • Appointment: ${item.scheduled_for ? formatDate(item.scheduled_for) : "Pending"}</div>
+          `;
+          card.addEventListener("click", () => {
+            state.selectedRequestId = item.id;
+            renderRequests();
+            renderSelection();
+          });
+          requestListEl.appendChild(card);
+        }
+
+        if (!selectedRequest()) {
+          state.selectedRequestId = state.filteredRequests[0].id;
+        }
+        renderSelection();
+      }
+
+      function renderLawyers() {
+        const select = document.getElementById("lawyerSelect");
+        select.innerHTML = "";
+        if (!state.lawyers.length) {
+          select.innerHTML = '<option value="">No lawyers available</option>';
+          return;
+        }
+        for (const lawyer of state.lawyers) {
+          const option = document.createElement("option");
+          option.value = lawyer.id;
+          option.textContent = `${lawyer.name}${lawyer.specialties?.length ? ` • ${lawyer.specialties.join(", ")}` : ""}`;
+          select.appendChild(option);
+        }
+      }
+
+      async function api(path, options = {}) {
+        const response = await fetch(path, {
+          ...options,
+          headers: { ...authHeaders(), ...(options.headers || {}) },
+        });
+        const text = await response.text();
+        const data = text ? JSON.parse(text) : null;
+        if (!response.ok) {
+          throw new Error(data?.detail || text || `HTTP ${response.status}`);
+        }
+        return data;
+      }
+
+      async function loadMe() {
+        const data = await api("/auth/me", { method: "GET" });
+        state.me = data;
+        setSessionLabel();
+      }
+
+      async function loadRequests() {
+        const status = document.getElementById("statusFilter").value;
+        const qs = status ? `?status=${encodeURIComponent(status)}` : "";
+        const data = await api(`/admin/requests${qs}`, { method: "GET" });
+        state.requests = data.requests || [];
+        applySearchFilter();
+        renderRequests();
+      }
+
+      async function loadLawyers() {
+        const data = await api("/admin/lawyers", { method: "GET" });
+        state.lawyers = data.lawyers || [];
+        renderLawyers();
+      }
+
+      async function reloadAll() {
+        if (!state.token) {
+          showMessage("Log in with phone OTP or paste a valid admin token first.", "error");
+          return;
+        }
+        await Promise.all([loadMe(), loadRequests(), loadLawyers()]);
+        showMessage("Admin data refreshed.");
+      }
+
+      async function updateSelected(path, body) {
+        const item = selectedRequest();
+        if (!item) {
+          showMessage("Choose a request first.", "error");
+          return;
+        }
+        const updated = await api(path.replace("{id}", item.id), {
+          method: "POST",
+          body: JSON.stringify(body),
+        });
+        const index = state.requests.findIndex((req) => req.id === updated.id);
+        if (index >= 0) {
+          state.requests[index] = updated;
+        }
+        applySearchFilter();
+        renderRequests();
+        renderSelection();
+      }
+
+      document.getElementById("connectBtn").addEventListener("click", async () => {
+        try {
+          state.token = document.getElementById("token").value.trim();
+          persistToken();
+          await reloadAll();
+        } catch (error) {
+          showMessage(error.message || "Could not connect.", "error");
+        }
+      });
+
+      document.getElementById("requestOtpBtn").addEventListener("click", async () => {
+        try {
+          const phone = document.getElementById("phone").value.trim();
+          if (!phone) {
+            throw new Error("Phone number is required.");
+          }
+          await fetch("/auth/request-code", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone }),
+          }).then(async (response) => {
+            const text = await response.text();
+            const data = text ? JSON.parse(text) : null;
+            if (!response.ok) {
+              throw new Error(data?.detail || text || `HTTP ${response.status}`);
+            }
+          });
+          showMessage("OTP sent. In local dev, check the backend terminal for the code.");
+        } catch (error) {
+          showMessage(error.message || "Could not request OTP.", "error");
+        }
+      });
+
+      document.getElementById("verifyOtpBtn").addEventListener("click", async () => {
+        try {
+          const phone = document.getElementById("phone").value.trim();
+          const code = document.getElementById("otp").value.trim();
+          if (!phone || !code) {
+            throw new Error("Phone and OTP are required.");
+          }
+          const response = await fetch("/auth/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone, code }),
+          });
+          const text = await response.text();
+          const data = text ? JSON.parse(text) : null;
+          if (!response.ok) {
+            throw new Error(data?.detail || text || `HTTP ${response.status}`);
+          }
+          state.token = data?.token || "";
+          if (!state.token) {
+            throw new Error("Token was missing from login response.");
+          }
+          document.getElementById("token").value = state.token;
+          persistToken();
+          await reloadAll();
+        } catch (error) {
+          showMessage(error.message || "Could not verify OTP.", "error");
+        }
+      });
+
+      document.getElementById("reloadBtn").addEventListener("click", async () => {
+        try {
+          await reloadAll();
+        } catch (error) {
+          showMessage(error.message || "Reload failed.", "error");
+        }
+      });
+
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        state.token = "";
+        state.me = null;
+        state.requests = [];
+        state.filteredRequests = [];
+        state.lawyers = [];
+        state.selectedRequestId = null;
+        document.getElementById("token").value = "";
+        document.getElementById("otp").value = "";
+        persistToken();
+        setSessionLabel();
+        requestListEl.innerHTML = "";
+        renderSelection();
+        showMessage("Logged out.");
+      });
+
+      document.getElementById("filterBtn").addEventListener("click", async () => {
+        try {
+          await loadRequests();
+          showMessage("Filter applied.");
+        } catch (error) {
+          showMessage(error.message || "Could not filter requests.", "error");
+        }
+      });
+
+      document.getElementById("searchFilter").addEventListener("input", () => {
+        applySearchFilter();
+        renderRequests();
+      });
+
+      document.getElementById("statusBtn").addEventListener("click", async () => {
+        try {
+          const item = selectedRequest();
+          const updated = await api(`/admin/requests/${item.id}/status`, {
+            method: "PATCH",
+            body: JSON.stringify({ status: document.getElementById("statusInput").value }),
+          });
+          state.requests = state.requests.map((req) => (req.id === updated.id ? updated : req));
+          applySearchFilter();
+          renderRequests();
+          renderSelection();
+          showMessage("Status updated.");
+        } catch (error) {
+          showMessage(error.message || "Could not update status.", "error");
+        }
+      });
+
+      document.getElementById("assignBtn").addEventListener("click", async () => {
+        try {
+          await updateSelected("/admin/requests/{id}/assign-lawyer", {
+            lawyer_id: document.getElementById("lawyerSelect").value,
+          });
+          showMessage("Lawyer assigned.");
+        } catch (error) {
+          showMessage(error.message || "Could not assign lawyer.", "error");
+        }
+      });
+
+      document.getElementById("scheduleBtn").addEventListener("click", async () => {
+        try {
+          const value = document.getElementById("scheduledFor").value;
+          if (!value) {
+            throw new Error("Choose a date and time first.");
+          }
+          await updateSelected("/admin/requests/{id}/schedule", {
+            scheduled_for: new Date(value).toISOString(),
+            appointment_mode: document.getElementById("appointmentMode").value,
+            appointment_notes: document.getElementById("appointmentNotes").value || null,
+          });
+          showMessage("Appointment scheduled.");
+        } catch (error) {
+          showMessage(error.message || "Could not schedule appointment.", "error");
+        }
+      });
+
+      document.getElementById("shareBtn").addEventListener("click", async () => {
+        try {
+          const lawyerName = document.getElementById("manualLawyerName").value.trim();
+          if (!lawyerName) {
+            throw new Error("Lawyer name is required.");
+          }
+          await updateSelected("/admin/requests/{id}/share-lawyer-details", {
+            lawyer_name: lawyerName,
+            lawyer_phone: document.getElementById("manualLawyerPhone").value || null,
+            lawyer_email: document.getElementById("manualLawyerEmail").value || null,
+            lawyer_note: document.getElementById("manualLawyerNote").value || null,
+          });
+          showMessage("Lawyer details shared.");
+        } catch (error) {
+          showMessage(error.message || "Could not share lawyer details.", "error");
+        }
+      });
+
+      (async function bootstrap() {
+        const saved = localStorage.getItem("casefit_admin_token");
+        if (!saved) {
+          setSessionLabel();
+          return;
+        }
+        state.token = saved;
+        document.getElementById("token").value = saved;
+        try {
+          await reloadAll();
+        } catch (error) {
+          state.token = "";
+          state.me = null;
+          persistToken();
+          setSessionLabel();
+          showMessage("Saved session expired. Log in again.", "error");
+        }
+      })();
+    </script>
+  </body>
+</html>

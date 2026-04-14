@@ -17,6 +17,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 JWT_SECRET = os.getenv("JWT_SECRET", "dev_secret")
 JWT_EXPIRES_MIN = int(os.getenv("JWT_EXPIRES_MIN", "43200"))  # 30 days default
+ADMIN_BOOTSTRAP_KEY = os.getenv("ADMIN_BOOTSTRAP_KEY")
+TEAM_ROLES = {"user", "lawyer", "admin"}
 
 
 class RequestCodeIn(BaseModel):
@@ -26,6 +28,11 @@ class RequestCodeIn(BaseModel):
 class VerifyCodeIn(BaseModel):
     phone: str
     code: str
+
+
+class SetRoleIn(BaseModel):
+    phone: str
+    role: str
 
 
 # simple in-memory store (dev only)
@@ -69,6 +76,34 @@ def get_current_user(
     return _require_user(authorization, db)
 
 
+def require_admin_user(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    if getattr(current_user, "role", None) != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user
+
+
+def _upsert_user_role(db: Session, phone: str, role: str) -> User:
+    if role not in TEAM_ROLES:
+        raise HTTPException(status_code=400, detail="Invalid role")
+
+    clean_phone = phone.strip()
+    if not clean_phone:
+        raise HTTPException(status_code=400, detail="Phone is required")
+
+    user = db.query(User).filter(User.phone == clean_phone).first()
+    if not user:
+        user = User(phone=clean_phone, role=role)
+        db.add(user)
+    else:
+        user.role = role
+
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 @router.post("/request-code")
 def request_code(inp: RequestCodeIn):
     code = f"{random.randint(100000, 999999)}"
@@ -102,6 +137,7 @@ def verify(inp: VerifyCodeIn, db: Session = Depends(get_db)):
             "gender": getattr(user, "gender", None),
             "age": getattr(user, "age", None),
             "area": getattr(user, "area", None),
+            "role": getattr(user, "role", None),
         },
     }
 
@@ -117,6 +153,7 @@ def me(
         "gender": getattr(current_user, "gender", None),
         "age": getattr(current_user, "age", None),
         "area": getattr(current_user, "area", None),
+        "role": getattr(current_user, "role", None),
     }
 
 
@@ -164,4 +201,49 @@ def update_me(
         "gender": current_user.gender,
         "age": current_user.age,
         "area": current_user.area,
+        "role": current_user.role,
+    }
+
+
+@router.post("/admin/bootstrap-role")
+def bootstrap_role(
+    payload: SetRoleIn,
+    db: Session = Depends(get_db),
+    x_admin_bootstrap_key: str | None = Header(None),
+):
+    if not ADMIN_BOOTSTRAP_KEY:
+        raise HTTPException(
+            status_code=500,
+            detail="ADMIN_BOOTSTRAP_KEY is not configured.",
+        )
+
+    if x_admin_bootstrap_key != ADMIN_BOOTSTRAP_KEY:
+        raise HTTPException(status_code=403, detail="Invalid bootstrap key")
+
+    user = _upsert_user_role(db, payload.phone, payload.role)
+    return {
+        "ok": True,
+        "user": {
+            "id": str(user.id),
+            "phone": user.phone,
+            "role": user.role,
+        },
+    }
+
+
+@router.post("/admin/set-role")
+def set_role(
+    payload: SetRoleIn,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_user),
+):
+    user = _upsert_user_role(db, payload.phone, payload.role)
+    return {
+        "ok": True,
+        "updated_by": str(current_user.id),
+        "user": {
+            "id": str(user.id),
+            "phone": user.phone,
+            "role": user.role,
+        },
     }

@@ -24,6 +24,9 @@ class RequestBase(BaseModel):
     category: Optional[str] = None
     description: Optional[str] = None
     preferred_window: Optional[str] = None
+    scheduled_for: Optional[datetime] = None
+    appointment_mode: Optional[str] = None
+    appointment_notes: Optional[str] = None
 
 
 class RequestCreate(BaseModel):
@@ -36,11 +39,29 @@ class RequestOut(RequestBase):
     id: UUID
     user_id: Optional[UUID] = None
     assigned_lawyer: Optional[UUID] = None
+    assigned_lawyer_name: Optional[str] = None
+    assigned_lawyer_phone: Optional[str] = None
+    shared_lawyer_email: Optional[str] = None
+    shared_lawyer_note: Optional[str] = None
+    assigned_lawyer_specialties: Optional[list[str]] = None
     status: str
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class ScheduleAppointmentIn(BaseModel):
+    scheduled_for: datetime
+    appointment_mode: Literal["call", "video", "in_person"] = "call"
+    appointment_notes: Optional[str] = None
+
+
+class ShareLawyerDetailsIn(BaseModel):
+    lawyer_name: str
+    lawyer_phone: Optional[str] = None
+    lawyer_email: Optional[str] = None
+    lawyer_note: Optional[str] = None
 
 
 # ---------- Users / Profile ----------

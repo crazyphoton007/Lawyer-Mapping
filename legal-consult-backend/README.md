@@ -42,3 +42,28 @@ alembic upgrade head
 - Wire Razorpay webhook: `/payments/webhook`
 - Add CORS middleware for your mobile app
 - Set up GitHub Actions for CI (lint/test)
+
+## 6) Admin bootstrap
+To create your first team account without editing the DB manually:
+
+1. Put `ADMIN_BOOTSTRAP_KEY` in `.env`
+2. Start the backend
+3. Call:
+
+```bash
+curl -X POST http://127.0.0.1:8000/auth/admin/bootstrap-role \
+  -H "Content-Type: application/json" \
+  -H "x-admin-bootstrap-key: YOUR_ADMIN_BOOTSTRAP_KEY" \
+  -d '{"phone":"+911234567890","role":"admin"}'
+```
+
+After that, that phone number can log in normally and use the internal admin tool at `/admin`.
+
+To promote more team users later, log in as an admin and call:
+
+```bash
+curl -X POST http://127.0.0.1:8000/auth/admin/set-role \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
+  -d '{"phone":"+919876543210","role":"lawyer"}'
+```
