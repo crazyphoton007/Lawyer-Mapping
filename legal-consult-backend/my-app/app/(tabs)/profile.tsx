@@ -944,6 +944,8 @@ import {
   Linking,
   Modal,
   Platform,
+  Keyboard,
+  KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -1510,87 +1512,150 @@ export default function ProfileScreen() {
 
       {/* Feedback modal */}
       <Modal visible={fbOpen} transparent animationType="slide" onRequestClose={() => setFbOpen(false)}>
-        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" }}>
-          <View
-            style={{
-              backgroundColor: "#fff",
-              borderTopLeftRadius: 20,
-              borderTopRightRadius: 20,
-              padding: 16,
-              gap: 12,
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
+        >
+          <Pressable
+            onPress={() => {
+              Keyboard.dismiss();
+              setFbOpen(false);
             }}
+            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" }}
           >
-            <Text style={{ fontSize: 18, fontWeight: "700", color: INK }}>Leave Feedback</Text>
-            <TextInput
-              value={fbText}
-              onChangeText={setFbText}
-              placeholder="Tell us what went well or what we should improve…"
-              multiline
+            <Pressable
+              onPress={(event) => event.stopPropagation()}
               style={{
-                minHeight: 120,
-                borderWidth: 1,
-                borderColor: BORDER,
-                borderRadius: 12,
-                padding: 12,
-                textAlignVertical: "top",
-                backgroundColor: "#FAFAFA",
+                backgroundColor: "#fff",
+                borderTopLeftRadius: 24,
+                borderTopRightRadius: 24,
+                padding: 16,
+                paddingBottom: Platform.OS === "ios" ? 28 : 20,
+                gap: 12,
+                shadowColor: "#000",
+                shadowOpacity: 0.14,
+                shadowRadius: 18,
+                shadowOffset: { width: 0, height: -6 },
+                elevation: 12,
               }}
-            />
-            <View style={{ flexDirection: "row", gap: 10 }}>
-              <TouchableOpacity
-                onPress={async () => {
-                  const payload = {
-                    message: fbText.trim(),
-                    user_id: form.id ?? user?.id ?? null,
-                    phone: form.phone ?? user?.phone ?? null,
-                    platform: Platform.OS,
-                    at: new Date().toISOString(),
-                  };
+            >
+              <View style={{ alignItems: "center", gap: 12 }}>
+                <View
+                  style={{
+                    width: 44,
+                    height: 5,
+                    borderRadius: 999,
+                    backgroundColor: "#D1D5DB",
+                  }}
+                />
+                <View
+                  style={{
+                    width: "100%",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Text style={{ fontSize: 18, fontWeight: "700", color: INK }}>Leave Feedback</Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      setFbOpen(false);
+                    }}
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: BORDER,
+                      backgroundColor: "#fff",
+                    }}
+                  >
+                    <Text style={{ color: INK, fontWeight: "700" }}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
 
-                  if (!payload.message) return Alert.alert("Please add feedback text.");
-
-                  // Try POST to backend if you implement /feedback/
-                  const posted = await postFeedback(payload);
-
-                  // Also email to support (guaranteed receipt)
-                  const mailBody = `Feedback from ${form.name || "user"} (${form.phone || "phone unknown"})\n\n${payload.message}\n\nDevice: ${payload.platform}\nWhen: ${payload.at}`;
-                  await Linking.openURL(
-                    `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("App Feedback")}&body=${encodeURIComponent(
-                      mailBody
-                    )}`
-                  ).catch(() => {});
-
-                  setFbOpen(false);
-                  setFbText("");
-                  Alert.alert(posted ? "Thanks!" : "Thanks!", "Your feedback has been sent.");
-                }}
+              <TextInput
+                value={fbText}
+                onChangeText={setFbText}
+                placeholder="Tell us what went well or what we should improve…"
+                multiline
+                returnKeyType="done"
+                blurOnSubmit
+                onSubmitEditing={() => Keyboard.dismiss()}
                 style={{
-                  flex: 1,
-                  backgroundColor: INK,
-                  paddingVertical: 14,
-                  borderRadius: 12,
-                  alignItems: "center",
-                }}
-              >
-                <Text style={{ color: "#fff", fontWeight: "700" }}>Send</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => setFbOpen(false)}
-                style={{
-                  paddingVertical: 14,
-                  paddingHorizontal: 16,
-                  borderRadius: 12,
-                  borderColor: BORDER,
+                  minHeight: 140,
                   borderWidth: 1,
-                  backgroundColor: "#fff",
+                  borderColor: BORDER,
+                  borderRadius: 16,
+                  padding: 14,
+                  textAlignVertical: "top",
+                  backgroundColor: "#FAFAFA",
+                  fontSize: 16,
+                  lineHeight: 22,
                 }}
-              >
-                <Text style={{ color: INK, fontWeight: "700" }}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
+              />
+
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <TouchableOpacity
+                  onPress={async () => {
+                    const payload = {
+                      message: fbText.trim(),
+                      user_id: form.id ?? user?.id ?? null,
+                      phone: form.phone ?? user?.phone ?? null,
+                      platform: Platform.OS,
+                      at: new Date().toISOString(),
+                    };
+
+                    if (!payload.message) return Alert.alert("Please add feedback text.");
+
+                    const posted = await postFeedback(payload);
+
+                    const mailBody = `Feedback from ${form.name || "user"} (${form.phone || "phone unknown"})\n\n${payload.message}\n\nDevice: ${payload.platform}\nWhen: ${payload.at}`;
+                    await Linking.openURL(
+                      `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("App Feedback")}&body=${encodeURIComponent(
+                        mailBody
+                      )}`
+                    ).catch(() => {});
+
+                    Keyboard.dismiss();
+                    setFbOpen(false);
+                    setFbText("");
+                    Alert.alert(posted ? "Thanks!" : "Thanks!", "Your feedback has been sent.");
+                  }}
+                  style={{
+                    flex: 1,
+                    backgroundColor: INK,
+                    paddingVertical: 14,
+                    borderRadius: 12,
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontWeight: "700" }}>Send</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    setFbOpen(false);
+                  }}
+                  style={{
+                    paddingVertical: 14,
+                    paddingHorizontal: 16,
+                    borderRadius: 12,
+                    borderColor: BORDER,
+                    borderWidth: 1,
+                    backgroundColor: "#fff",
+                  }}
+                >
+                  <Text style={{ color: INK, fontWeight: "700" }}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );
