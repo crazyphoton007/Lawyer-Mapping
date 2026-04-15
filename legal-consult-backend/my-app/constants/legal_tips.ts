@@ -25,12 +25,11 @@ export const INFO_TOPICS: LegalTip[] = [
         "उपलब्ध सबूत सुरक्षित रखें और FIR की प्रति लें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "If police refuse to file an FIR",
-      body: "You may approach a senior officer in writing or file an application before the Magistrate under Section 156(3) CrPC to direct registration.",
+      body: "You may approach a senior officer in writing or file an application before the Magistrate under Section 175(3) BNSS to direct registration.",
       consider: [
         "Keep written/email proof of refusal and your complaint.",
         "Escalate to SP/DSP or use online grievance portals.",
@@ -39,22 +38,21 @@ export const INFO_TOPICS: LegalTip[] = [
     },
     hi: {
       title: "अगर पुलिस FIR दर्ज करने से मना करे",
-      body: "आप उच्च अधिकारी को लिखित शिकायत दें या मजिस्ट्रेट के समक्ष CrPC धारा 156(3) के तहत आवेदन करें ताकि FIR दर्ज करने का निर्देश दिया जा सके।",
+      body: "आप उच्च अधिकारी को लिखित शिकायत दें या मजिस्ट्रेट के समक्ष BNSS धारा 175(3) के तहत आवेदन करें ताकि FIR दर्ज करने का निर्देश दिया जा सके।",
       consider: [
         "शिकायत/अस्वीकार का लिखित सबूत रखें।",
         "SP/डीएसपी तक मामला बढ़ाएँ या ऑनलाइन पोर्टल का उपयोग करें।",
         "मजिस्ट्रेट FIR दर्ज कराने और जांच की निगरानी का आदेश दे सकते हैं।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Cognizable vs Non‑Cognizable Offence",
       body: "In cognizable offences, police may register FIR and arrest without warrant; in non‑cognizable offences, police need court permission to investigate.",
       consider: [
         "Cognizable: serious nature (e.g., murder, rape, kidnapping).",
-        "Non‑cognizable: police require Magistrate’s order.",
+        "Non‑cognizable: police require Magistrate's order.",
         "Understand your case type to choose the right remedy."
       ]
     },
@@ -67,8 +65,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "मामले की प्रकृति समझना उचित उपचार चुनने में मदद करता है।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "What happens after arrest",
@@ -88,15 +85,14 @@ export const INFO_TOPICS: LegalTip[] = [
         "गैरकानूनी हिरासत संवैधानिक अधिकारों का उल्लंघन है।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Types of Bail",
       body: "Regular bail (post‑arrest), anticipatory bail (pre‑arrest), and interim bail (temporary) are granted subject to conditions ensuring cooperation.",
       consider: [
-        "Regular bail: Sections 437/439 CrPC.",
-        "Anticipatory bail: Section 438 CrPC, before arrest.",
+        "Regular bail: Sections 480/483 BNSS.",
+        "Anticipatory bail: Section 482 BNSS, before arrest.",
         "Comply with conditions; violation can cancel bail."
       ]
     },
@@ -104,13 +100,12 @@ export const INFO_TOPICS: LegalTip[] = [
       title: "जमानत के प्रकार",
       body: "नियमित, अग्रिम और अंतरिम जमानत—कोर्ट सहयोग सुनिश्चित करने हेतु शर्तों के साथ देती है।",
       consider: [
-        "नियमित जमानत: धारा 437/439 CrPC।",
-        "अग्रिम जमानत: धारा 438 CrPC, गिरफ्तारी से पहले।",
+        "नियमित जमानत: धारा 480/483 BNSS।",
+        "अग्रिम जमानत: धारा 482 BNSS, गिरफ्तारी से पहले।",
         "शर्तों का पालन करें; उल्लंघन पर जमानत रद्द हो सकती है।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Bailable vs Non‑Bailable Offence",
@@ -130,12 +125,11 @@ export const INFO_TOPICS: LegalTip[] = [
         "भागने/साक्ष्य से छेड़छाड़ का जोखिम आंका जाता है।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Charge Sheet",
-      body: "Police file a charge sheet under Section 173(2) CrPC after investigation, enclosing evidence and witness lists; it kick‑starts trial proceedings.",
+      body: "Police file a charge sheet under Section 193(2) BNSS after investigation, enclosing evidence and witness lists; it kick‑starts trial proceedings.",
       consider: [
         "Accused is entitled to a copy for defence.",
         "Supplementary charge sheets may follow new evidence.",
@@ -144,18 +138,17 @@ export const INFO_TOPICS: LegalTip[] = [
     },
     hi: {
       title: "चार्जशीट",
-      body: "पुलिस जांच पूरी कर CrPC धारा 173(2) के तहत चार्जशीट दाखिल करती है, जिसमें साक्ष्य/गवाह होते हैं; इससे ट्रायल शुरू होता है।",
+      body: "पुलिस जांच पूरी कर BNSS धारा 193(2) के तहत चार्जशीट दाखिल करती है, जिसमें साक्ष्य/गवाह होते हैं; इससे ट्रायल शुरू होता है।",
       consider: [
         "आरोपी को प्रति मिलती है।",
         "नए साक्ष्य पर पूरक चार्जशीट संभव।",
         "दोषों को ट्रायल में चुनौती दी जा सकती है।"
       ]
     }
-  }
-,
+  },
   {
     en: {
-      title: "Section 41A CrPC Notice",
+      title: "Section 35 BNSS Notice",
       body: "Police may issue a notice for appearance instead of arrest in certain cases. Non‑compliance can lead to arrest with recorded reasons.",
       consider: [
         "Cooperate and appear as directed.",
@@ -164,7 +157,7 @@ export const INFO_TOPICS: LegalTip[] = [
       ]
     },
     hi: {
-      title: "धारा 41A CrPC नोटिस",
+      title: "धारा 35 BNSS नोटिस",
       body: "कुछ मामलों में पुलिस गिरफ्तारी की बजाय उपस्थिति नोटिस जारी करती है। अनुपालन न करने पर कारण दर्ज कर गिरफ्तारी हो सकती है।",
       consider: [
         "निर्दिष्ट समय पर सहयोगपूर्वक उपस्थित हों।",
@@ -172,12 +165,11 @@ export const INFO_TOPICS: LegalTip[] = [
         "नोटिस की प्रति लें और सुरक्षित रखें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
-      title: "Section 164 CrPC Statement",
-      body: "Victim/witness statements may be recorded before a Magistrate to ensure voluntariness and evidentiary value; retraction can be scrutinized.",
+      title: "Section 183 BNSS Statement",
+      body: "Victim/witness statements may be recorded before a Magistrate under Section 183 BNSS (replacing Section 164 CrPC) to ensure voluntariness and evidentiary value; retraction can be scrutinized.",
       consider: [
         "Read carefully before signing; ensure voluntariness.",
         "Request interpreter if needed.",
@@ -185,20 +177,19 @@ export const INFO_TOPICS: LegalTip[] = [
       ]
     },
     hi: {
-      title: "धारा 164 CrPC बयान",
-      body: "पीड़ित/गवाह का बयान मजिस्ट्रेट के समक्ष दर्ज हो सकता है ताकि स्वैच्छिकता और प्रमाणिकता सुनिश्चित हो।",
+      title: "धारा 183 BNSS बयान",
+      body: "पीड़ित/गवाह का बयान BNSS धारा 183 (जो CrPC की धारा 164 का स्थान लेती है) के तहत मजिस्ट्रेट के समक्ष दर्ज हो सकता है ताकि स्वैच्छिकता और प्रमाणिकता सुनिश्चित हो।",
       consider: [
         "हस्ताक्षर से पहले ध्यान से पढ़ें।",
         "आवश्यकता पर अनुवादक माँगें।",
         "झूठे बयान पर perjury की कार्यवाही हो सकती है।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Compounding of Offences",
-      body: "Certain offences can be compounded (settled) by parties with or without court permission under Section 320 CrPC; it results in acquittal.",
+      body: "Certain offences can be compounded (settled) by parties with or without court permission under Section 359 BNSS; it results in acquittal.",
       consider: [
         "Check if the offence is compoundable.",
         "Ensure free consent; record terms clearly.",
@@ -207,36 +198,34 @@ export const INFO_TOPICS: LegalTip[] = [
     },
     hi: {
       title: "अपराधों का समझौता (Compounding)",
-      body: "कुछ अपराध धारा 320 CrPC के तहत पक्षकारों के बीच समझौते से समाप्त किए जा सकते हैं, जिससे बरी हो जाता है।",
+      body: "कुछ अपराध BNSS धारा 359 के तहत पक्षकारों के बीच समझौते से समाप्त किए जा सकते हैं, जिससे बरी हो जाता है।",
       consider: [
         "देखें अपराध समंज्ञ है या नहीं।",
         "स्वेच्छा सुनिश्चित करें; शर्तें लिखित रखें।",
         "उचित मामलों में कोर्ट स्वैच्छिकता जांचती है।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Electronic Evidence Basics",
-      body: "Electronic records (emails, CCTV, chats) are admissible if authenticity is proved. A Section 65B certificate may be necessary for secondary electronic evidence.",
+      body: "Electronic records (emails, CCTV, chats) are admissible if authenticity is proved. A Section 63 BSA (Bharatiya Sakshya Adhiniyam) certificate may be necessary for secondary electronic evidence.",
       consider: [
         "Preserve original devices when possible.",
         "Maintain chain of custody and logs.",
-        "Obtain 65B certificate for secondary data prints."
+        "Obtain Section 63 BSA certificate for secondary electronic evidence."
       ]
     },
     hi: {
       title: "इलेक्ट्रॉनिक साक्ष्य के मूल सिद्धांत",
-      body: "ईमेल, CCTV, चैट जैसे इलेक्ट्रॉनिक रिकॉर्ड प्रमाणिकता सिद्ध होने पर स्वीकार्य हैं। सेकेंडरी साक्ष्य हेतु धारा 65B प्रमाणपत्र आवश्यक हो सकता है।",
+      body: "ईमेल, CCTV, चैट जैसे इलेक्ट्रॉनिक रिकॉर्ड प्रमाणिकता सिद्ध होने पर स्वीकार्य हैं। सेकेंडरी साक्ष्य हेतु धारा 63 BSA (भारतीय साक्ष्य अधिनियम) प्रमाणपत्र आवश्यक हो सकता है।",
       consider: [
         "संभव हो तो मूल डिवाइस सुरक्षित रखें।",
         "कस्टडी और लॉग्स का रिकॉर्ड रखें।",
-        "सेकेंडरी डेटा के लिए 65B प्रमाणपत्र लें।"
+        "सेकेंडरी डेटा के लिए धारा 63 BSA प्रमाणपत्र लें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Cybercrime Complaint",
@@ -256,8 +245,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "धोखाधड़ी/UPI मामलों में बैंक को तुरंत सूचित करें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Consumer Complaint Basics",
@@ -277,8 +265,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "रिफंड/रिप्लेसमेंट/मुआवज़े की मांग करें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Cheque Bounce (Section 138 NI Act)",
@@ -298,8 +285,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "नोटिस की सेवा और बैंक दस्तावेज़ों का सबूत रखें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Banking Fraud Immediate Steps",
@@ -319,8 +305,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "चार्जबैक/रिवर्सल समय-सीमा ट्रैक करें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Domestic Violence Complaint",
@@ -340,8 +325,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "आपातकालीन राहत शीघ्र मिल सकती है।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Maintenance Rights",
@@ -361,8 +345,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "अदायगी न होने पर प्रवर्तन कार्रवाई संभव।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Mutual Consent Divorce",
@@ -382,16 +365,15 @@ export const INFO_TOPICS: LegalTip[] = [
         "उचित शर्तें तय करने में वकील मदद करता है।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Child Custody Basics",
-      body: "Courts decide custody based on the child’s best interests, considering age, welfare, and the capacity of each parent to provide care.",
+      body: "Courts decide custody based on the child's best interests, considering age, welfare, and the capacity of each parent to provide care.",
       consider: [
         "Demonstrate stable, supportive environment.",
         "Respect visitation schedules; avoid alienation.",
-        "Children’s wishes may be considered at suitable age."
+        "Children's wishes may be considered at suitable age."
       ]
     },
     hi: {
@@ -403,8 +385,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "उचित आयु में बच्चे की इच्छा भी देखी जा सकती है।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Property Registration",
@@ -424,8 +405,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "प्रमाणित प्रतियाँ सुरक्षित रखें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Power of Attorney (PoA)",
@@ -445,8 +425,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "लिखित रूप में PoA रद्द कर सूचना दें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Gift Deed vs Sale Deed",
@@ -466,8 +445,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "डीड रजिस्टर करें और रिकॉर्ड अपडेट कराएँ।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Encroachment & Injunction",
@@ -487,8 +465,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "आदेश पालन हेतु पुलिस सहायता मांगी जा सकती है।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Employment Termination Rights",
@@ -508,8 +485,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "समय पर समझौता या कानूनी उपाय तलाशें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Basic Contract Essentials",
@@ -529,8 +505,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "हस्ताक्षर/गवाह लें; मूल दस्तावेज़ रखें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Non‑Disclosure Agreement (NDA)",
@@ -550,12 +525,11 @@ export const INFO_TOPICS: LegalTip[] = [
         "क्षेत्राधिकार और विवाद विधि तय करें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Summons vs Warrant",
-      body: "A summons directs appearance; a warrant authorizes arrest. Non‑appearance after summons may lead to a warrant at court’s discretion.",
+      body: "A summons directs appearance; a warrant authorizes arrest. Non‑appearance after summons may lead to a warrant at court's discretion.",
       consider: [
         "Always respond to summons on time.",
         "Request adjournment in writing if required.",
@@ -571,8 +545,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "वारंट पर तुरंत वकील से सलाह लें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Public Interest Litigation (PIL)",
@@ -592,8 +565,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "तुच्छ/प्रचार आधारित याचिकाओं से बचें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Right to Information (RTI)",
@@ -613,12 +585,11 @@ export const INFO_TOPICS: LegalTip[] = [
         "सूचना न मिलने पर अपील करें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Traffic Challan Rights",
-      body: "You can ask for the officer’s name, ID, and offence details. E‑challans can be checked/paid online; you may contest before authority/court.",
+      body: "You can ask for the officer's name, ID, and offence details. E‑challans can be checked/paid online; you may contest before authority/court.",
       consider: [
         "Carry valid documents or DigiLocker copies.",
         "Do not argue on road; record details calmly.",
@@ -634,8 +605,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "गलत चालान को प्रमाणों के साथ चुनौती दें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Police Verification for Tenants",
@@ -655,8 +625,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "नवीनीकरण पर सत्यापन अपडेट करें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Online Fraud: Safe Practices",
@@ -676,12 +645,11 @@ export const INFO_TOPICS: LegalTip[] = [
         "ट्रांजैक्शन लिमिट/अलर्ट सक्षम करें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Defamation Basics",
-      body: "Defamation is harming someone’s reputation by false statements. Civil suit seeks damages; criminal defamation is also punishable.",
+      body: "Defamation is harming someone's reputation by false statements. Civil suit seeks damages; criminal defamation is also punishable.",
       consider: [
         "Truth and fair comment are defences.",
         "Preserve publications, posts, and witnesses.",
@@ -697,8 +665,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "उचित हो तो पहले लीगल नोटिस भेजें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Rent Agreement Essentials",
@@ -718,8 +685,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "नोटिस अवधि का कड़ाई से पालन करें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Name Change Gazette Process",
@@ -739,8 +705,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "राज्य‑विशिष्ट आवश्यकताएँ/शुल्क जांचें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Sexual Harassment at Workplace (POSH)",
@@ -760,8 +725,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "गोपनीयता और साक्ष्य बनाए रखें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Senior Citizen Rights",
@@ -781,8 +745,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "आदेशों का उल्लंघन दंडनीय है।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Basic Startup Compliance",
@@ -802,8 +765,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "विक्रेता/ग्राहकों से लिखित अनुबंध करें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Lost Document FIR/Report",
@@ -823,8 +785,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "आधिकारिक पोर्टल पर पुनः जारी की स्थिति देखें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Passport Police Verification",
@@ -844,8 +805,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "पासपोर्ट पोर्टल पर स्थिति ट्रैक करें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Aadhaar / PAN Linking & Updates",
@@ -865,8 +825,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "अपडेट की रसीदें सुरक्षित रखें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "E‑Stamp & E‑Registration",
@@ -886,8 +845,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "डिजिटल/प्रिंट प्रतियाँ सुरक्षित रखें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "E‑Court Cause List & Orders",
@@ -907,8 +865,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "आदेश PDF डाउनलोड कर रखें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Notary vs Registration",
@@ -928,8 +885,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "केवल नोटरी से स्वामित्व सुरक्षित नहीं होता।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Court Fees & Court Stamps",
@@ -949,8 +905,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "कमी की सूचना मिलने पर तुरंत सुधार करें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Arbitration Clause Basics",
@@ -970,12 +925,11 @@ export const INFO_TOPICS: LegalTip[] = [
         "अंतरिम राहत/लागत प्रावधान जोड़ें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Mediation Advantage",
-      body: "Mediation is collaborative and faster. Parties control the outcome with the mediator’s help; settlements are enforceable by courts.",
+      body: "Mediation is collaborative and faster. Parties control the outcome with the mediator's help; settlements are enforceable by courts.",
       consider: [
         "Use mediation before/alongside litigation.",
         "Set clear agendas and confidentiality terms.",
@@ -991,8 +945,7 @@ export const INFO_TOPICS: LegalTip[] = [
         "अंतिम समझौता लिखित रूप में दर्ज करें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Stamp Duty Under‑Payment Risk",
@@ -1012,12 +965,11 @@ export const INFO_TOPICS: LegalTip[] = [
         "विलंब से बचने हेतु समय पर नियमित करें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
-      title: "Section 65B Certificate Snapshot",
-      body: "For printouts/screenshots of electronic records, a 65B certificate identifies device, process, and authenticity of the computer output.",
+      title: "Section 63 BSA Certificate Snapshot",
+      body: "For printouts/screenshots of electronic records, a Section 63 BSA (Bharatiya Sakshya Adhiniyam) certificate — replacing the old Section 65B of the Indian Evidence Act — identifies device, process, and authenticity of the computer output.",
       consider: [
         "Include device owner and control details.",
         "Describe the process producing the output.",
@@ -1025,20 +977,19 @@ export const INFO_TOPICS: LegalTip[] = [
       ]
     },
     hi: {
-      title: "धारा 65B प्रमाणपत्र संक्षेप",
-      body: "इलेक्ट्रॉनिक रिकॉर्ड के प्रिंट/स्क्रीनशॉट हेतु 65B प्रमाणपत्र डिवाइस, प्रक्रिया और प्रामाणिकता बताता है।",
+      title: "धारा 63 BSA प्रमाणपत्र संक्षेप",
+      body: "इलेक्ट्रॉनिक रिकॉर्ड के प्रिंट/स्क्रीनशॉट हेतु धारा 63 BSA (भारतीय साक्ष्य अधिनियम) प्रमाणपत्र — जो पुरानी धारा 65B का स्थान लेती है — डिवाइस, प्रक्रिया और प्रामाणिकता बताता है।",
       consider: [
         "डिवाइस स्वामी/नियंत्रण विवरण दें।",
         "आउटपुट बनाने की प्रक्रिया लिखें।",
         "जिम्मेदार व्यक्ति द्वारा दिनांक सहित हस्ताक्षर करें।"
       ]
     }
-  }
-,
+  },
   {
     en: {
       title: "Electronic Evidence Basics — Quick Tip",
-      body: "Electronic records (emails, CCTV, chats) are admissible if authenticity is proved. A Section 65B certificate may be necessary for secondary electronic evidence. This quick tip emphasizes acting promptly and keeping written records to protect your rights.",
+      body: "Electronic records (emails, CCTV, chats) are admissible if authenticity is proved. A Section 63 BSA (Bharatiya Sakshya Adhiniyam) certificate may be necessary for secondary electronic evidence. This quick tip emphasizes acting promptly and keeping written records to protect your rights.",
       consider: [
         "Preserve original devices when possible.",
         "Maintain chain of custody and logs.",
@@ -1047,7 +998,7 @@ export const INFO_TOPICS: LegalTip[] = [
     },
     hi: {
       title: "इलेक्ट्रॉनिक साक्ष्य के मूल सिद्धांत — झटपट सुझाव",
-      body: "ईमेल, CCTV, चैट जैसे इलेक्ट्रॉनिक रिकॉर्ड प्रमाणिकता सिद्ध होने पर स्वीकार्य हैं। सेकेंडरी साक्ष्य हेतु धारा 65B प्रमाणपत्र आवश्यक हो सकता है। यह झटपट सुझाव समय पर कार्रवाई और लिखित रिकॉर्ड रखने पर जोर देता है ताकि आपके अधिकार सुरक्षित रहें।",
+      body: "ईमेल, CCTV, चैट जैसे इलेक्ट्रॉनिक रिकॉर्ड प्रमाणिकता सिद्ध होने पर स्वीकार्य हैं। सेकेंडरी साक्ष्य हेतु धारा 63 BSA (भारतीय साक्ष्य अधिनियम) प्रमाणपत्र आवश्यक हो सकता है। यह झटपट सुझाव समय पर कार्रवाई और लिखित रिकॉर्ड रखने पर जोर देता है ताकि आपके अधिकार सुरक्षित रहें।",
       consider: [
         "संभव हो तो मूल डिवाइस सुरक्षित रखें।",
         "कस्टडी और लॉग्स का रिकॉर्ड रखें।",
