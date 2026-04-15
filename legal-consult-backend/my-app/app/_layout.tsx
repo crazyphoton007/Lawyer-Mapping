@@ -17,18 +17,7 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        {/* Launch splash first */}
-        <Stack initialRouteName="splash">
-          {/* Custom splash screen (no header) */}
-          <Stack.Screen
-            name="splash"
-            options={{
-              headerShown: false,
-              animation: "fade",       // subtle fade in/out
-              gestureEnabled: false,   // prevent swipe back from the splash
-            }}
-          />
-
+        <Stack>
           {/* Tabs hide their own header here; they add the black header in (tabs)/_layout.tsx */}
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 

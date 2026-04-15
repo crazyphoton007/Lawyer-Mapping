@@ -9,8 +9,8 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "androidStatusBar": {
-      "backgroundColor": "#FFFFFF",
-      "barStyle": "dark-content",
+      "backgroundColor": "#000000",
+      "barStyle": "light-content",
       "translucent": false
     },
     "androidNavigationBar": {
@@ -46,7 +46,7 @@
           "image": "./assets/images/splash.png",
           "imageWidth": 220,
           "resizeMode": "contain",
-          "backgroundColor": "#FFFFFF"
+          "backgroundColor": "#000000"
         }
       ],
       "expo-secure-store",
