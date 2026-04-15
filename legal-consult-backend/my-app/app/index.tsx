@@ -5,8 +5,7 @@ import { useAuth } from "../context/auth";
 
 /**
  * App entry point:
- * Always start at /splash first — splash handles app readiness (e.g., API health, assets, etc.)
- * After splash completes, it routes to /login or /requests automatically.
+ * Let the native splash cover startup, then route directly once auth storage is hydrated.
  */
 export default function Index() {
   const { token, hydrated } = useAuth();
@@ -20,6 +19,5 @@ export default function Index() {
     );
   }
 
-  // 🚀 Always begin at splash
-  return <Redirect href="/splash" />;
+  return <Redirect href={token ? "/(tabs)/requests" : "/login"} />;
 }
