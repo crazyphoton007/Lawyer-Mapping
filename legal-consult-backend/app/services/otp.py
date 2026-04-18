@@ -23,6 +23,11 @@ class OtpDeliveryContext:
 OTP_PROVIDER = os.getenv("OTP_PROVIDER", "dev").lower().strip()
 OTP_FALLBACK_PROVIDER = os.getenv("OTP_FALLBACK_PROVIDER", "dev").lower().strip()
 
+WHATSAPP_API_TOKEN = os.getenv("WHATSAPP_API_TOKEN", "").strip()
+WHATSAPP_PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_NUMBER_ID", "").strip()
+WHATSAPP_TEMPLATE_NAME = os.getenv("WHATSAPP_TEMPLATE_NAME", "").strip()
+WHATSAPP_TEMPLATE_LANGUAGE = os.getenv("WHATSAPP_TEMPLATE_LANGUAGE", "en").strip()
+
 MSG91_AUTH_KEY = os.getenv("MSG91_AUTH_KEY", "").strip()
 MSG91_SENDER_ID = os.getenv("MSG91_SENDER_ID", "").strip()
 MSG91_TEMPLATE_ID = os.getenv("MSG91_TEMPLATE_ID", "").strip()
@@ -84,6 +89,61 @@ def _send_otp_via_msg91(ctx: OtpDeliveryContext) -> None:
     typ = str(payload.get("type") or "").lower()
     if typ == "error" or "error" in msg:
         raise HTTPException(status_code=502, detail=f"MSG91 OTP send failed: {payload}")
+
+
+def _send_otp_via_whatsapp(ctx: OtpDeliveryContext) -> None:
+    required = [WHATSAPP_API_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_TEMPLATE_NAME]
+    if not all(required):
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "WhatsApp OTP is selected but WHATSAPP_API_TOKEN, "
+                "WHATSAPP_PHONE_NUMBER_ID, or WHATSAPP_TEMPLATE_NAME is missing."
+            ),
+        )
+
+    url = (
+        f"https://graph.facebook.com/v20.0/"
+        f"{WHATSAPP_PHONE_NUMBER_ID}/messages"
+    )
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": ctx.phone,
+        "type": "template",
+        "template": {
+            "name": WHATSAPP_TEMPLATE_NAME,
+            "language": {"code": WHATSAPP_TEMPLATE_LANGUAGE or "en"},
+            "components": [
+                {
+                    "type": "body",
+                    "parameters": [
+                        {"type": "text", "text": ctx.code},
+                    ],
+                }
+            ],
+        },
+    }
+
+    data = json.dumps(payload).encode("utf-8")
+    request = urllib.request.Request(
+        url,
+        data=data,
+        method="POST",
+        headers={
+            "Authorization": f"Bearer {WHATSAPP_API_TOKEN}",
+            "Content-Type": "application/json",
+        },
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=15) as response:
+            body = response.read().decode("utf-8", errors="replace")
+            response_payload = json.loads(body) if body else {}
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"WhatsApp OTP send failed: {exc}")
+
+    if response_payload.get("error"):
+        raise HTTPException(status_code=502, detail=f"WhatsApp OTP send failed: {response_payload}")
 
 
 def _build_sns_client():
@@ -182,7 +242,9 @@ def dispatch_otp(ctx: OtpDeliveryContext) -> str:
 
     for provider in _provider_chain():
         try:
-            if provider == "msg91":
+            if provider == "whatsapp":
+                _send_otp_via_whatsapp(ctx)
+            elif provider == "msg91":
                 _send_otp_via_msg91(ctx)
             elif provider == "sns":
                 _send_otp_via_sns(ctx)

@@ -92,6 +92,27 @@ curl -X POST http://127.0.0.1:8000/auth/admin/set-role \
 ## 7) Production OTP providers
 To send login OTPs instead of printing them in server logs, configure a primary provider and optional fallback.
 
+### WhatsApp + Email fallback
+```env
+OTP_PROVIDER=whatsapp
+OTP_FALLBACK_PROVIDER=email
+WHATSAPP_API_TOKEN=your_meta_permanent_token
+WHATSAPP_PHONE_NUMBER_ID=your_phone_number_id
+WHATSAPP_TEMPLATE_NAME=casefit_login_otp
+WHATSAPP_TEMPLATE_LANGUAGE=en
+SMTP_HOST=smtp.your-provider.com
+SMTP_PORT=587
+SMTP_USERNAME=your_smtp_username
+SMTP_PASSWORD=your_smtp_password
+SMTP_FROM_EMAIL=no-reply@thecasefit.com
+OTP_EMAIL_SUBJECT=Your caseFit login code
+```
+
+Notes:
+- the WhatsApp template is expected to accept the OTP code as its first body variable
+- if WhatsApp delivery fails, the service can fall back to email
+- the login request must include an email address for email fallback to work
+
 ### AWS SNS
 ```env
 OTP_PROVIDER=sns
@@ -125,7 +146,7 @@ SMTP_FROM_EMAIL=no-reply@thecasefit.com
 
 Notes:
 - keep `OTP_PROVIDER=dev` for local/dev if you want OTPs printed in logs
-- once `OTP_PROVIDER=sns` or `OTP_PROVIDER=msg91` is enabled, `/auth/request-code` will send the OTP through that provider
+- once `OTP_PROVIDER=whatsapp`, `OTP_PROVIDER=sns`, or `OTP_PROVIDER=msg91` is enabled, `/auth/request-code` will send the OTP through that provider
 - if `OTP_FALLBACK_PROVIDER=email` is configured, the backend will try email when the primary channel fails
 - email fallback only works if an email is supplied in `/auth/request-code` or already exists on the user record
 - `/auth/verify` stays the same for the app and admin tool

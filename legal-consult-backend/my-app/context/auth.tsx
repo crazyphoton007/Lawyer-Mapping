@@ -5,7 +5,7 @@ type User = { id: string; phone: string } | null;
 type Ctx = {
   user: User;
   token: string | null;
-  hydrated: boolean;                      // 👈 NEW
+  hydrated: boolean;
   setAuth: (t: string, u: User) => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -13,7 +13,7 @@ type Ctx = {
 const AuthCtx = createContext<Ctx>({
   user: null,
   token: null,
-  hydrated: false,                         //  NEW
+  hydrated: false,
   setAuth: async () => {},
   logout: async () => {},
 });
@@ -21,7 +21,7 @@ const AuthCtx = createContext<Ctx>({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User>(null);
-  const [hydrated, setHydrated] = useState(false);   // 👈 NEW
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(JSON.parse(u));
         }
       } finally {
-        setHydrated(true);                 //  done loading from storage
+        setHydrated(true);
       }
     })();
   }, []);

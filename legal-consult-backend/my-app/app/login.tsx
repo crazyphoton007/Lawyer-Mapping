@@ -89,6 +89,8 @@ export default function LoginScreen() {
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"request" | "verify">("request");
   const [loading, setLoading] = useState(false);
+  const [deliveryMessage, setDeliveryMessage] = useState("");
+  const [deliveryAccent, setDeliveryAccent] = useState<"dark" | "soft">("dark");
 
   // Info modal state
   const [showInfo, setShowInfo] = useState(false);
@@ -105,6 +107,28 @@ export default function LoginScreen() {
     return Math.floor(Math.random() * INFO_TOPICS.length);
   }
 
+  function applyDeliveryState(channel?: string | null) {
+    const normalized = (channel || "").toLowerCase();
+    if (normalized === "whatsapp") {
+      setDeliveryMessage("Code sent to WhatsApp");
+      setDeliveryAccent("dark");
+      return;
+    }
+    if (["sns", "msg91", "sms", "phone"].includes(normalized)) {
+      setDeliveryMessage("Switching to phone OTP");
+      setDeliveryAccent("soft");
+      return;
+    }
+    if (normalized === "email") {
+      setDeliveryMessage("Switching to email OTP");
+      setDeliveryAccent("soft");
+      return;
+    }
+
+    setDeliveryMessage("Code sent securely");
+    setDeliveryAccent("dark");
+  }
+
   async function requestCode() {
     const ph = normalizePhone(phone);
     if (ph.length < 10) {
@@ -118,8 +142,8 @@ export default function LoginScreen() {
       const data = await apiPost("/auth/request-code", { phone: e164 });
       console.log("[requestCode] response:", data);
 
+      applyDeliveryState(data?.delivery_channel);
       setStep("verify");
-      // Alert.alert("OTP sent", "Enter the code you received.");
     } catch (e: any) {
       console.error("[requestCode] error:", e);
       Alert.alert("Error", e?.message || "Failed to request code");
@@ -154,6 +178,7 @@ export default function LoginScreen() {
       };
 
       await setAuth(jwt, userPayload);
+      setDeliveryMessage("");
       await SecureStore.setItemAsync("user_mobile", ph);
       try {
         await SecureStore.deleteItemAsync("my_requests__local__");
@@ -236,7 +261,7 @@ export default function LoginScreen() {
                 textAlign: "left",
               }}
             >
-              No passwords — just a quick OTP!
+              One quick code. Nothing extra.
             </Text>
 
             {/* PHONE card */}
@@ -330,6 +355,36 @@ export default function LoginScreen() {
                   </Text>
                 </TouchableOpacity>
               )}
+
+              {deliveryMessage ? (
+                <View
+                  style={{
+                    borderRadius: 14,
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                    backgroundColor: deliveryAccent === "dark" ? INK : "#F3F4F6",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: deliveryAccent === "dark" ? "#FFFFFF" : INK,
+                      fontSize: 14,
+                      fontWeight: "700",
+                    }}
+                  >
+                    {deliveryMessage}
+                  </Text>
+                  <Text
+                    style={{
+                      color: deliveryAccent === "dark" ? "rgba(255,255,255,0.72)" : MUTED,
+                      fontSize: 12,
+                      marginTop: 4,
+                    }}
+                  >
+                    Didn’t get the code?
+                  </Text>
+                </View>
+              ) : null}
             </View>
 
             {/* CODE card */}
@@ -390,6 +445,16 @@ export default function LoginScreen() {
                     {loading ? "Verifying…" : "Verify & Continue"}
                   </Text>
                 </TouchableOpacity>
+
+                <Text
+                  style={{
+                    color: MUTED,
+                    fontSize: 12,
+                    textAlign: "center",
+                  }}
+                >
+                  Didn’t get the code?
+                </Text>
               </View>
             )}
 
