@@ -324,7 +324,7 @@ export default function RequestDetailsScreen() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/requests/`, {
+      const res = await fetch(`${API_BASE}/requests/${id}`, {
         headers: {
           authorization: `Bearer ${authToken}`,
         },
@@ -336,10 +336,9 @@ export default function RequestDetailsScreen() {
         throw new Error(`HTTP ${res.status}: ${text}`);
       }
 
-      const json = text ? JSON.parse(text) : [];
-      const list: Req[] = Array.isArray(json) ? json : [];
-
-      const found = list.find((req) => String(req.id) === String(id));
+      const json = text ? JSON.parse(text) : null;
+      const found: Req | null =
+        json && typeof json === "object" && !Array.isArray(json) ? (json as Req) : null;
 
       if (!found) {
         setItem(null);
