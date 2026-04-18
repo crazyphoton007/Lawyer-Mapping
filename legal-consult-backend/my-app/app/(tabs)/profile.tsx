@@ -1068,6 +1068,7 @@ export default function ProfileScreen() {
   // Feedback modal
   const [fbOpen, setFbOpen] = useState(false);
   const [fbText, setFbText] = useState("");
+  const [fbSuccessOpen, setFbSuccessOpen] = useState(false);
 
   const scrollRef = useRef<ScrollView>(null);
 
@@ -1091,6 +1092,15 @@ export default function ProfileScreen() {
     if (!n) return "Add name";
     const first = n.split(/\s+/)[0];
     return `Hello, ${first}`;
+  }, [form.name]);
+
+  const feedbackThankYou = useMemo(() => {
+    const n = (form.name || "").trim();
+    if (!n) {
+      return "Thanks. Your feedback has been added to our improvement queue.";
+    }
+    const first = n.split(/\s+/)[0];
+    return `Thanks, ${first}. Your feedback has been added to our improvement queue.`;
   }, [form.name]);
 
   async function getJson(url: string) {
@@ -1680,12 +1690,14 @@ export default function ProfileScreen() {
                       Keyboard.dismiss();
                       setFbOpen(false);
                       setFbText("");
-                      Alert.alert(
-                        posted ? "Feedback received" : "Not sent",
-                        posted
-                          ? "Thank you. Your note has been added to our improvement queue."
-                          : "We couldn’t submit your feedback right now. Please try again in a moment."
-                      );
+                      if (posted) {
+                        setFbSuccessOpen(true);
+                      } else {
+                        Alert.alert(
+                          "Not sent",
+                          "We couldn’t submit your feedback right now. Please try again in a moment."
+                        );
+                      }
                     }}
                     style={{
                       flex: 1,
@@ -1719,6 +1731,107 @@ export default function ProfileScreen() {
             </Pressable>
           </Pressable>
         </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={fbSuccessOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setFbSuccessOpen(false)}
+      >
+        <Pressable
+          onPress={() => setFbSuccessOpen(false)}
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(9,14,24,0.42)",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 24,
+          }}
+        >
+          <Pressable
+            onPress={(event) => event.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: 340,
+              borderRadius: 28,
+              backgroundColor: "#FFFFFF",
+              padding: 24,
+              alignItems: "center",
+              shadowColor: "#000",
+              shadowOpacity: 0.16,
+              shadowRadius: 22,
+              shadowOffset: { width: 0, height: 10 },
+              elevation: 10,
+            }}
+          >
+            <View
+              style={{
+                width: 82,
+                height: 82,
+                borderRadius: 41,
+                backgroundColor: "#F4F1E8",
+                borderWidth: 1,
+                borderColor: "#E7DEC8",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 18,
+              }}
+            >
+              <View
+                style={{
+                  width: 66,
+                  height: 66,
+                  borderRadius: 33,
+                  backgroundColor: INK,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Feather name="check" size={30} color="#F7E7B6" />
+              </View>
+            </View>
+
+            <Text
+              style={{
+                fontSize: 22,
+                fontWeight: "800",
+                color: INK,
+                textAlign: "center",
+              }}
+            >
+              Feedback received
+            </Text>
+            <Text
+              style={{
+                marginTop: 10,
+                fontSize: 15,
+                lineHeight: 23,
+                color: MUTED,
+                textAlign: "center",
+              }}
+            >
+              {feedbackThankYou}
+            </Text>
+
+            <TouchableOpacity
+              onPress={() => setFbSuccessOpen(false)}
+              style={{
+                marginTop: 22,
+                minWidth: 180,
+                backgroundColor: INK,
+                borderRadius: 16,
+                paddingVertical: 14,
+                paddingHorizontal: 22,
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "800" }}>
+                Back to profile
+              </Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
       </Modal>
     </SafeAreaView>
   );
