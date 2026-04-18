@@ -85,3 +85,23 @@ class UserUpdate(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class FeedbackCreate(BaseModel):
+    message: str = Field(min_length=1, max_length=5000)
+    user_id: Optional[UUID] = None
+    phone: Optional[str] = None
+    platform: Optional[str] = None
+    at: Optional[datetime] = None
+
+
+class FeedbackOut(BaseModel):
+    id: UUID
+    user_id: Optional[UUID] = None
+    phone: Optional[str] = None
+    message: str
+    platform: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

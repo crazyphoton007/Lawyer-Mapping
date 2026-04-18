@@ -8,6 +8,7 @@ from .db import Base, engine
 from .routers import admin as admin_router
 from .routers import articles
 from .routers import auth as auth_router
+from .routers import feedback as feedback_router
 from .routers import requests as requests_router
 from .routers.payments import router as payments_router
 
@@ -56,4 +57,5 @@ app.include_router(articles.router)          # /articles
 app.include_router(admin_router.router)      # /admin
 app.include_router(requests_router.router)   # /requests
 app.include_router(auth_router.router)       # /auth  <-- NEW: request-code, verify, me
+app.include_router(feedback_router.router)   # /feedback
 app.include_router(payments_router)
