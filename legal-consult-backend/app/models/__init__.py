@@ -7,4 +7,5 @@ from . import article     # noqa: F401
 from . import request     # noqa: F401
 from . import payment     # noqa: F401
 from . import attachment  # noqa: F401
+from . import feedback    # noqa: F401
 # from app.schemas import RequestCreate, RequestOut
