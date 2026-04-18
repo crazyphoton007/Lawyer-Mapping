@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.models.user import User
 from app.schemas import UserUpdate
+from app.services.otp import OtpDeliveryContext, dispatch_otp
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -23,6 +24,7 @@ TEAM_ROLES = {"user", "lawyer", "admin"}
 
 class RequestCodeIn(BaseModel):
     phone: str
+    email: str | None = None
 
 
 class VerifyCodeIn(BaseModel):
@@ -35,7 +37,7 @@ class SetRoleIn(BaseModel):
     role: str
 
 
-# simple in-memory store (dev only)
+# simple in-memory store (MVP only)
 _otp: dict[str, tuple[str, float]] = {}
 
 
@@ -105,11 +107,25 @@ def _upsert_user_role(db: Session, phone: str, role: str) -> User:
 
 
 @router.post("/request-code")
-def request_code(inp: RequestCodeIn):
+def request_code(inp: RequestCodeIn, db: Session = Depends(get_db)):
     code = f"{random.randint(100000, 999999)}"
     _otp[inp.phone] = (code, time.time() + 600)  # 10 min
-    print(f"[DEV] OTP for {inp.phone}: {code}")
-    return {"ok": True}
+    user = db.query(User).filter(User.phone == inp.phone).first()
+    fallback_email = inp.email or getattr(user, "email", None)
+    if inp.email and user and not getattr(user, "email", None):
+        user.email = str(inp.email)
+        db.add(user)
+        db.commit()
+
+    provider = dispatch_otp(
+        OtpDeliveryContext(
+            phone=inp.phone,
+            code=code,
+            email=fallback_email,
+            name=getattr(user, "name", None) if user else None,
+        )
+    )
+    return {"ok": True, "delivery_channel": provider}
 
 
 @router.post("/verify")

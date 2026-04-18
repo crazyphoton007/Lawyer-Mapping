@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -7,8 +7,6 @@ import {
   RefreshControl,
   Button,
   TouchableOpacity,
-  Linking,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
@@ -76,6 +74,7 @@ export default function RequestsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [myPhone, setMyPhone] = useState<string>("");
+  const hasLoadedOnce = useRef(false);
 
   useEffect(() => {
     (async () => {
@@ -101,7 +100,7 @@ export default function RequestsScreen() {
 
   const authToken = useMemo(() => token || storedToken, [token, storedToken]);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (mode: "initial" | "refresh" | "silent" = "initial") => {
     if (!authToken) {
       setItems([]);
       setLoading(false);
@@ -110,7 +109,9 @@ export default function RequestsScreen() {
     }
 
     setError(null);
-    setLoading(true);
+    if (mode === "initial" && !hasLoadedOnce.current) {
+      setLoading(true);
+    }
 
     try {
       const res = await fetch(`${API_BASE}/requests/`, {
@@ -128,21 +129,28 @@ export default function RequestsScreen() {
       const json = text ? JSON.parse(text) : [];
       const list: Req[] = Array.isArray(json) ? json : [];
       setItems(list);
+      hasLoadedOnce.current = true;
     } catch (e: any) {
       setError(e?.message || "Failed to load requests");
-      setItems([]);
+      if (!hasLoadedOnce.current) {
+        setItems([]);
+      }
     } finally {
-      setLoading(false);
+      if (mode === "initial") {
+        setLoading(false);
+      }
     }
   }, [authToken]);
 
   useEffect(() => {
-    load();
+    load("initial");
   }, [load]);
 
   useFocusEffect(
     useCallback(() => {
-      load();
+      if (hasLoadedOnce.current) {
+        load("silent");
+      }
       return () => {};
     }, [load])
   );
@@ -150,7 +158,7 @@ export default function RequestsScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await reloadPhone();
-    await load();
+    await load("refresh");
     setRefreshing(false);
   }, [reloadPhone, load]);
 
@@ -165,18 +173,44 @@ export default function RequestsScreen() {
             justifyContent: "center",
           }}
         >
-          <Text
+          <View
             style={{
-              fontSize: 20,
-              fontWeight: "700",
-              marginBottom: 8,
-              color: INK,
+              width: "100%",
+              backgroundColor: CARD,
+              borderRadius: 22,
+              borderWidth: 1,
+              borderColor: BORDER,
+              padding: 22,
+              alignItems: "center",
+              gap: 10,
             }}
-          >
-            Please log in
-          </Text>
-          <Button title="Go to Profile" onPress={() => router.push("/profile")} />
-        </View>
+            >
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: "800",
+                  color: INK,
+                }}
+              >
+                Your requests live here
+              </Text>
+              <Text style={{ color: MUTED, textAlign: "center", lineHeight: 20 }}>
+                Log in once to view your timeline, payment status, and assigned counsel.
+              </Text>
+              <TouchableOpacity
+                onPress={() => router.push("/login")}
+                style={{
+                  marginTop: 6,
+                  backgroundColor: INK,
+                  paddingHorizontal: 18,
+                  paddingVertical: 12,
+                  borderRadius: 999,
+                }}
+              >
+                <Text style={{ color: "#fff", fontWeight: "700" }}>Log in</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
       </SafeAreaView>
     );
   }
@@ -210,7 +244,7 @@ export default function RequestsScreen() {
           >
             {error}
           </Text>
-          <Button title="Retry" onPress={load} />
+          <Button title="Retry" onPress={() => load("initial")} />
         </View>
       </SafeAreaView>
     );
@@ -274,61 +308,6 @@ export default function RequestsScreen() {
         <Text style={{ color: "#fff", fontWeight: "800" }}>Start a consult</Text>
       </TouchableOpacity>
 
-      <View style={{ flexDirection: "row", gap: 10, marginTop: 6 }}>
-        <TouchableOpacity
-          onPress={() => router.push("/articles")}
-          style={{
-            paddingVertical: 12,
-            paddingHorizontal: 14,
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: BORDER,
-            backgroundColor: "#fff",
-          }}
-        >
-          <Text style={{ color: INK, fontWeight: "700" }}>Browse articles</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() =>
-            Alert.alert("Contact caseFit", "Choose how you want to reach us.", [
-              {
-                text: "Email",
-                onPress: () =>
-                  Linking.openURL(
-                    `mailto:support@casefit.com?subject=${encodeURIComponent(
-                      "Help with my request"
-                    )}&body=${encodeURIComponent("Hi caseFit team,\n\nI need help with ...")}`
-                  ).catch(() => Alert.alert("Info", "support@casefit.com")),
-              },
-              {
-                text: "WhatsApp",
-                onPress: () => {
-                  const phone = "919807863007";
-                  const deep = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(
-                    "Hi caseFit support, I need help."
-                  )}`;
-                  const web = `https://wa.me/${phone}?text=${encodeURIComponent(
-                    "Hi caseFit support, I need help."
-                  )}`;
-                  Linking.openURL(deep).catch(() => Linking.openURL(web));
-                },
-              },
-              { text: "Cancel", style: "cancel" },
-            ])
-          }
-          style={{
-            paddingVertical: 12,
-            paddingHorizontal: 14,
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: BORDER,
-            backgroundColor: "#fff",
-          }}
-        >
-          <Text style={{ color: INK, fontWeight: "700" }}>Contact support</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 

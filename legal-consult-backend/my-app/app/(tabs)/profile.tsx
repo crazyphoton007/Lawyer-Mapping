@@ -983,19 +983,30 @@ function Section({ title, children }: { title?: string; children: React.ReactNod
     <View
       style={{
         backgroundColor: CARD,
-        borderRadius: 18,
+        borderRadius: 22,
         paddingHorizontal: 16,
-        paddingVertical: 4,
+        paddingVertical: 8,
         borderWidth: 1,
         borderColor: BORDER,
         shadowColor: "#000",
-        shadowOpacity: 0.06,
-        shadowRadius: 10,
+        shadowOpacity: 0.05,
+        shadowRadius: 12,
         elevation: 2,
       }}
     >
       {title ? (
-        <Text style={{ fontSize: 18, fontWeight: "700", color: INK, marginBottom: 8 }}>{title}</Text>
+        <Text
+          style={{
+            fontSize: 12,
+            fontWeight: "800",
+            letterSpacing: 1.2,
+            textTransform: "uppercase",
+            color: MUTED,
+            marginBottom: 8,
+          }}
+        >
+          {title}
+        </Text>
       ) : null}
       {children}
     </View>
@@ -1074,6 +1085,13 @@ export default function ProfileScreen() {
     const p = (user?.phone || "").toString();
     return p ? p.slice(-2) : "•";
   }, [form.name, user?.phone]);
+
+  const displayName = useMemo(() => {
+    const n = (form.name || "").trim();
+    if (!n) return "Add name";
+    const first = n.split(/\s+/)[0];
+    return `Hello, ${first}`;
+  }, [form.name]);
 
   async function getJson(url: string) {
     const res = await fetch(url, {
@@ -1249,8 +1267,6 @@ export default function ProfileScreen() {
     );
   }
 
-  const profileIncomplete = !form.name || !form.gender || !form.age || !form.area;
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
       <ScrollView ref={scrollRef} contentContainerStyle={{ padding: 16, paddingBottom: 24 }}>
@@ -1258,8 +1274,8 @@ export default function ProfileScreen() {
         <View
           style={{
             backgroundColor: CARD,
-            borderRadius: 20,
-            padding: 16,
+            borderRadius: 24,
+            padding: 18,
             flexDirection: "row",
             alignItems: "center",
             gap: 16,
@@ -1273,29 +1289,57 @@ export default function ProfileScreen() {
         >
           <View
             style={{
-              width: 56,
-              height: 56,
-              borderRadius: 28,
-              backgroundColor: INK,
+              width: 70,
+              height: 70,
+              borderRadius: 35,
+              backgroundColor: "#F4F1E8",
+              borderWidth: 1,
+              borderColor: "#E7DEC8",
               alignItems: "center",
               justifyContent: "center",
+              shadowColor: "#000",
+              shadowOpacity: 0.08,
+              shadowRadius: 12,
+              shadowOffset: { width: 0, height: 6 },
             }}
           >
-            <Text style={{ color: "#fff", fontSize: 18, fontWeight: "800" }}>{initials}</Text>
+            <View
+              style={{
+                width: 58,
+                height: 58,
+                borderRadius: 29,
+                backgroundColor: INK,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text style={{ color: "#fff", fontSize: 20, fontWeight: "800", letterSpacing: 0.6 }}>{initials}</Text>
+            </View>
           </View>
 
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 18, fontWeight: "800", color: INK }}>
-              {form.name || "Add your name"}
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text
+              numberOfLines={2}
+              style={{ fontSize: 20, lineHeight: 24, fontWeight: "800", color: INK }}
+            >
+              {displayName}
             </Text>
-            <Text style={{ color: MUTED, marginTop: 2 }}>
-              {form.phone ? form.phone : "Phone not available"}
-            </Text>
-            {profileIncomplete ? (
-              <Text style={{ marginTop: 6, color: "#92400E", fontWeight: "600" }}>
-                
+            <View
+              style={{
+                alignSelf: "flex-start",
+                marginTop: 8,
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                borderRadius: 999,
+                backgroundColor: "#F4F6FA",
+                borderWidth: 1,
+                borderColor: "#E8EBF2",
+              }}
+            >
+              <Text numberOfLines={1} style={{ color: "#4B5563", fontSize: 13, fontWeight: "700", letterSpacing: 0.3 }}>
+                {form.phone ? form.phone : "Phone not available"}
               </Text>
-            ) : null}
+            </View>
           </View>
 
           <TouchableOpacity
@@ -1303,23 +1347,22 @@ export default function ProfileScreen() {
               setEditing(true);
               setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 0);
             }}
-            style={{ backgroundColor: INK, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12 }}
+            style={{
+              backgroundColor: INK,
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: "#2D2D2D",
+              shadowColor: "#000",
+              shadowOpacity: 0.12,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 4 },
+            }}
           >
-            <Text style={{ color: "#fff", fontWeight: "700" }}>Edit profile</Text>
+            <Text style={{ color: "#fff", fontWeight: "800", letterSpacing: 0.2 }}>Edit</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Your Information */}
-        <Section title="Your Information">
-          <Row
-            icon={<Feather name="user" size={22} color={INK} />}
-            label="Personal Information"
-            onPress={() => {
-              setEditing(true);
-              setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 0);
-            }}
-          />
-        </Section>
 
         {/* Community */}
         <Section title="Community">
@@ -1339,7 +1382,7 @@ export default function ProfileScreen() {
         </Section>
 
         {/* Notifications & Help */}
-        <Section title="Notifications & Help">
+        <Section title="Preferences & Help">
           <Row
             icon={<Feather name="bell" size={22} color={INK} />}
             label="Notifications"
@@ -1350,7 +1393,7 @@ export default function ProfileScreen() {
         </Section>
 
         {/* Donate */}
-        <Section title="Donate">
+        <Section title="Support caseFit">
           <Row
             icon={<Feather name="heart" size={22} color={INK} />}
             label="Support caseFit"

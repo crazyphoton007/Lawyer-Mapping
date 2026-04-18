@@ -88,3 +88,65 @@ curl -X POST http://127.0.0.1:8000/auth/admin/set-role \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
   -d '{"phone":"+919876543210","role":"lawyer"}'
 ```
+
+## 7) Production OTP providers
+To send login OTPs instead of printing them in server logs, configure a primary provider and optional fallback.
+
+### WhatsApp + Email fallback
+```env
+OTP_PROVIDER=whatsapp
+OTP_FALLBACK_PROVIDER=email
+WHATSAPP_API_TOKEN=your_meta_permanent_token
+WHATSAPP_PHONE_NUMBER_ID=your_phone_number_id
+WHATSAPP_TEMPLATE_NAME=casefit_login_otp
+WHATSAPP_TEMPLATE_LANGUAGE=en
+SMTP_HOST=smtp.your-provider.com
+SMTP_PORT=587
+SMTP_USERNAME=your_smtp_username
+SMTP_PASSWORD=your_smtp_password
+SMTP_FROM_EMAIL=no-reply@thecasefit.com
+OTP_EMAIL_SUBJECT=Your caseFit login code
+```
+
+Notes:
+- the WhatsApp template is expected to accept the OTP code as its first body variable
+- if WhatsApp delivery fails, the service can fall back to email
+- the login request must include an email address for email fallback to work
+
+### AWS SNS
+```env
+OTP_PROVIDER=sns
+OTP_FALLBACK_PROVIDER=dev
+AWS_REGION=ap-south-1
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+AWS_SNS_SENDER_ID=CASFIT
+AWS_SNS_ENTITY_ID=your_dlt_entity_id
+AWS_SNS_TEMPLATE_ID=your_dlt_template_id
+AWS_SNS_SMS_TYPE=Transactional
+```
+
+Notes:
+- for India delivery, `AWS_SNS_ENTITY_ID` and `AWS_SNS_TEMPLATE_ID` are the DLT values typically required by the local route
+- if your instance already has an IAM role with SNS access, you can omit `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
+
+### MSG91
+```env
+OTP_PROVIDER=msg91
+OTP_FALLBACK_PROVIDER=email
+MSG91_AUTH_KEY=your_msg91_auth_key
+MSG91_SENDER_ID=CASEFT
+MSG91_TEMPLATE_ID=your_msg91_template_id
+SMTP_HOST=smtp.your-provider.com
+SMTP_PORT=587
+SMTP_USERNAME=your_smtp_username
+SMTP_PASSWORD=your_smtp_password
+SMTP_FROM_EMAIL=no-reply@thecasefit.com
+```
+
+Notes:
+- keep `OTP_PROVIDER=dev` for local/dev if you want OTPs printed in logs
+- once `OTP_PROVIDER=whatsapp`, `OTP_PROVIDER=sns`, or `OTP_PROVIDER=msg91` is enabled, `/auth/request-code` will send the OTP through that provider
+- if `OTP_FALLBACK_PROVIDER=email` is configured, the backend will try email when the primary channel fails
+- email fallback only works if an email is supplied in `/auth/request-code` or already exists on the user record
+- `/auth/verify` stays the same for the app and admin tool

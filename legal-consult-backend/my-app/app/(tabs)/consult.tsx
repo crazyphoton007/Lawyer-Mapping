@@ -25,10 +25,20 @@ const CARD = "#FFFFFF";
 const INK = "#000000";
 const BORDER = "#E5E7EB";
 const MUTED = "#6B7280";
+const ACCENT = "#D4A63D";
 
 function normalizePhone(s?: string | null) {
   const n = (s ?? "").toString().replace(/\D/g, "");
   return n.slice(-12);
+}
+
+function deriveCaseNumber(id: string) {
+  const s = String(id);
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  }
+  return String(h % 100000).padStart(5, "0");
 }
 
 export default function ConsultScreen() {
@@ -47,6 +57,7 @@ export default function ConsultScreen() {
   const charCount = useMemo(() => details.trim().length, [details]);
   const minChars = 10;
   const valid = useMemo(() => Boolean(category.trim()) && charCount >= minChars && !!token, [category, charCount, token]);
+  const caseReference = useMemo(() => (newId ? `CF-${deriveCaseNumber(newId)}` : null), [newId]);
 
   async function rememberMyRequestId(id: string | number) {
     try {
@@ -147,16 +158,31 @@ export default function ConsultScreen() {
                 backgroundColor: "#FFFCEB",
                 borderColor: "#FDE68A",
                 borderWidth: 1,
-                borderRadius: 12,
-                padding: 10,
-                marginBottom: 10,
-                flexDirection: "row",
-                gap: 8,
-                alignItems: "center",
+                borderRadius: 16,
+                padding: 14,
+                marginBottom: 12,
+                gap: 10,
               }}
             >
-              <Feather name="alert-triangle" size={18} color="#92400E" />
-              <Text style={{ color: "#92400E" }}>You’re not logged in. Go to Profile → Login to submit.</Text>
+              <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+                <Feather name="alert-triangle" size={18} color="#92400E" />
+                <Text style={{ color: "#92400E", fontWeight: "700" }}>Login needed to continue</Text>
+              </View>
+              <Text style={{ color: "#92400E", lineHeight: 20 }}>
+                You’re not logged in. Go to Profile → Login to submit.
+              </Text>
+              <TouchableOpacity
+                onPress={() => router.push("/login")}
+                style={{
+                  alignSelf: "flex-start",
+                  backgroundColor: INK,
+                  paddingHorizontal: 14,
+                  paddingVertical: 10,
+                  borderRadius: 999,
+                }}
+              >
+                <Text style={{ color: "#fff", fontWeight: "700" }}>Go to login</Text>
+              </TouchableOpacity>
             </View>
           )}
 
@@ -300,8 +326,10 @@ export default function ConsultScreen() {
               backgroundColor: "#fff",
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
-              padding: 18,
-              gap: 12,
+              paddingHorizontal: 20,
+              paddingTop: 18,
+              paddingBottom: 24,
+              gap: 10,
             }}
           >
             <View style={{ alignItems: "center", gap: 8, marginTop: 4 }}>
@@ -318,8 +346,32 @@ export default function ConsultScreen() {
                 <Feather name="check" size={36} color="#fff" />
               </View>
               <Text style={{ fontSize: 20, fontWeight: "800", color: INK }}>Request submitted</Text>
-              <Text style={{ color: MUTED, textAlign: "center" }}>
-                {newId ? `Your Case ID: ${newId}` : "Your request has been received."}
+              {caseReference ? (
+                <View
+                  style={{
+                    marginTop: 2,
+                    backgroundColor: "#F7F1E1",
+                    borderColor: "#E8D5A3",
+                    borderWidth: 1,
+                    borderRadius: 999,
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#8A6410",
+                      fontSize: 13,
+                      fontWeight: "800",
+                      letterSpacing: 1.1,
+                    }}
+                  >
+                    CASE REFERENCE {caseReference}
+                  </Text>
+                </View>
+              ) : null}
+              <Text style={{ color: MUTED, textAlign: "center", lineHeight: 20, marginTop: 4 }}>
+                Your consultation request is in. Track updates and next steps from your requests timeline.
               </Text>
             </View>
 
@@ -329,14 +381,21 @@ export default function ConsultScreen() {
                 router.replace("/(tabs)/requests");
               }}
               style={{
-                marginTop: 6,
-                backgroundColor: INK,
-                paddingVertical: 14,
-                borderRadius: 14,
+                marginTop: 10,
+                backgroundColor: ACCENT,
+                paddingVertical: 16,
+                borderRadius: 16,
                 alignItems: "center",
+                shadowColor: ACCENT,
+                shadowOpacity: 0.28,
+                shadowRadius: 14,
+                shadowOffset: { width: 0, height: 8 },
+                elevation: 6,
               }}
             >
-              <Text style={{ color: "#fff", fontWeight: "800" }}>Go to My Requests</Text>
+              <Text style={{ color: "#1F1400", fontSize: 16, fontWeight: "900", letterSpacing: 0.4 }}>
+                Open My Case Brief
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
