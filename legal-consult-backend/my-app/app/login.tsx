@@ -1,5 +1,5 @@
 ﻿// app/login.tsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
   Image,
   Modal,
   ActivityIndicator,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter, Link } from "expo-router";
@@ -102,6 +103,22 @@ export default function LoginScreen() {
   const normalizePhone = (s: string) => s.replace(/\D/g, "").slice(0, 10);
   const digits = normalizePhone(phone);
   const isValidIndian = digits.length === 10;
+
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (step === "verify") {
+        setStep("request");
+        setCode("");
+        setDeliveryMessage("");
+        return true;
+      }
+      return false;
+    });
+
+    return () => sub.remove();
+  }, [step]);
 
   function pickRandomTip() {
     return Math.floor(Math.random() * INFO_TOPICS.length);

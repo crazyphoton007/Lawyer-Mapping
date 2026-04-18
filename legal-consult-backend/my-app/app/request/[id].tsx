@@ -350,7 +350,7 @@ export default function RequestDetailsScreen() {
       setItem(found);
       setError(null);
     } catch (e: any) {
-      if (!item) {
+      if (mode === "initial") {
         setItem(null);
       }
       setError(e?.message || "Failed to load request details.");
@@ -361,7 +361,7 @@ export default function RequestDetailsScreen() {
         setRefreshing(false);
       }
     }
-  }, [authToken, id, item]);
+  }, [authToken, id]);
 
   useEffect(() => {
     load("initial");
@@ -369,9 +369,7 @@ export default function RequestDetailsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (item) {
-        load("silent");
-      }
+      load(item ? "silent" : "initial");
       return () => {};
     }, [item, load])
   );
