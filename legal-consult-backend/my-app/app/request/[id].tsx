@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
@@ -283,6 +284,7 @@ export default function RequestDetailsScreen() {
   const [storedToken, setStoredToken] = useState<string | null>(null);
   const [item, setItem] = useState<Req | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
   const [checkingPayment, setCheckingPayment] = useState(false);
@@ -297,11 +299,12 @@ export default function RequestDetailsScreen() {
 
   const authToken = useMemo(() => token || storedToken, [token, storedToken]);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (mode: "initial" | "refresh" | "silent" = "initial") => {
     if (!authToken) {
       setError("Please log in first.");
       setItem(null);
       setLoading(false);
+      setRefreshing(false);
       return;
     }
 
@@ -309,11 +312,16 @@ export default function RequestDetailsScreen() {
       setError("Invalid request id.");
       setItem(null);
       setLoading(false);
+      setRefreshing(false);
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    if (mode === "initial") {
+      setLoading(true);
+      setError(null);
+    } else if (mode === "refresh") {
+      setRefreshing(true);
+    }
 
     try {
       const res = await fetch(`${API_BASE}/requests/`, {
@@ -340,23 +348,32 @@ export default function RequestDetailsScreen() {
       }
 
       setItem(found);
+      setError(null);
     } catch (e: any) {
-      setItem(null);
+      if (!item) {
+        setItem(null);
+      }
       setError(e?.message || "Failed to load request details.");
     } finally {
-      setLoading(false);
+      if (mode === "initial") {
+        setLoading(false);
+      } else if (mode === "refresh") {
+        setRefreshing(false);
+      }
     }
-  }, [authToken, id]);
+  }, [authToken, id, item]);
 
   useEffect(() => {
-    load();
+    load("initial");
   }, [load]);
 
   useFocusEffect(
     useCallback(() => {
-      load();
+      if (item) {
+        load("silent");
+      }
       return () => {};
-    }, [load])
+    }, [item, load])
   );
 
   useEffect(() => {
@@ -428,7 +445,7 @@ export default function RequestDetailsScreen() {
 
         const data: VerifyPaymentResponse = text ? JSON.parse(text) : {};
 
-        await load();
+        await load("silent");
 
         const isPaid =
           data.request_status === "paid" ||
@@ -509,7 +526,7 @@ export default function RequestDetailsScreen() {
       await SecureStore.setItemAsync(storageKey, data.payment_link_id);
       setLatestPaymentLinkId(data.payment_link_id);
 
-      await load();
+      await load("silent");
       await WebBrowser.openBrowserAsync(data.payment_link_url);
 
       for (let attempt = 0; attempt < 3; attempt++) {
@@ -601,7 +618,7 @@ export default function RequestDetailsScreen() {
           </Text>
 
           <TouchableOpacity
-            onPress={load}
+            onPress={() => load("initial")}
             style={{
               marginTop: 16,
               backgroundColor: INK,
@@ -680,7 +697,12 @@ export default function RequestDetailsScreen() {
         <View style={{ width: 44 }} />
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 28 }}>
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => load("refresh")} />
+        }
+        contentContainerStyle={{ padding: 16, paddingBottom: 28 }}
+      >
         <View
           style={{
             backgroundColor: CARD,
