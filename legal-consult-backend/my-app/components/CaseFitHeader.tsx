@@ -54,10 +54,10 @@ export default function CaseFitHeader({ showBack, showHelp }: Props) {
           {showBack ? (
             <TouchableOpacity
               onPress={() => router.back()}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              style={{ width: 56, height: 56, alignItems: "center", justifyContent: "center" }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={{ width: 56, height: 56, alignItems: "flex-start", justifyContent: "center", paddingLeft: 6 }}
             >
-              <Text style={{ color: WHITE, fontSize: 24, lineHeight: 24 }}>‹</Text>
+              <Text style={{ color: WHITE, fontSize: 42, lineHeight: 40, fontWeight: "600" }}>‹</Text>
             </TouchableOpacity>
           ) : null}
         </View>

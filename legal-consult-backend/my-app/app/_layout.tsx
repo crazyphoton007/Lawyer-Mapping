@@ -39,6 +39,13 @@ export default function RootLayout() {
               header: () => <CaseFitHeader showBack />,
             }}
           />
+
+          <Stack.Screen
+            name="legal"
+            options={{
+              headerShown: false,
+            }}
+          />
         </Stack>
 
         <StatusBar style="auto" />
