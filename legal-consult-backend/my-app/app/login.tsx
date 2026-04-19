@@ -278,7 +278,7 @@ export default function LoginScreen() {
                 textAlign: "left",
               }}
             >
-              One quick code. Nothing extra.
+              One quick code. Nothing extra!
             </Text>
 
             {/* PHONE card */}
@@ -476,32 +476,44 @@ export default function LoginScreen() {
             )}
 
             {/* AGREEMENTS + SUPPORT (must be inside <Text>) */}
-            <Text
-              style={{
-                marginTop: 16,
-                color: "#6b7280",
-                lineHeight: 20,
-                textAlign: "center",
-              }}
-            >
-              By proceeding, you agree to caseFit’s{" "}
-              <Link href="/legal/privacy" asChild>
-                <Text style={{ textDecorationLine: "underline" }}>Privacy Policy</Text>
-              </Link>{" "}
-              &{" "}
-              <Link href="/legal/terms" asChild>
-                <Text style={{ textDecorationLine: "underline" }}>
-                  Terms &amp; Conditions
-                </Text>
-              </Link>
-              .
-              {"\n\n"}
-              Need help?{" "}
-              <Link href="mailto:support@thecasefit.com" asChild>
-                <Text style={{ textDecorationLine: "underline" }}>Tap here</Text>
-              </Link>{" "}
-              to email support.
-            </Text>
+            <View style={{ marginTop: 18, alignItems: "center", gap: 12 }}>
+              <Text
+                style={{
+                  color: "#6b7280",
+                  lineHeight: 20,
+                  textAlign: "center",
+                }}
+              >
+                By proceeding, you agree to caseFit&apos;s{" "}
+                <Link href="/legal/privacy" asChild>
+                  <Text style={{ textDecorationLine: "underline", color: "#4B5563" }}>
+                    Privacy Policy
+                  </Text>
+                </Link>
+                ,{" "}
+                <Link href="/legal/terms" asChild>
+                  <Text style={{ textDecorationLine: "underline", color: "#4B5563" }}>
+                    Terms &amp; Conditions
+                  </Text>
+                </Link>
+              </Text>
+
+              <Text
+                style={{
+                  color: "#6b7280",
+                  lineHeight: 20,
+                  textAlign: "center",
+                }}
+              >
+                Need help?{" "}
+                <Link href="mailto:support@thecasefit.com" asChild>
+                  <Text style={{ textDecorationLine: "underline", color: "#4B5563", fontWeight: "600" }}>
+                    Tap here
+                  </Text>
+                </Link>
+                {" "}to email support
+              </Text>
+            </View>
           </View>
           {/* END: main content wrapper */}
 
