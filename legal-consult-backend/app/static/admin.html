@@ -633,12 +633,14 @@
           const name = (item.customer_name || "").toLowerCase();
           const category = (item.category || "").toLowerCase();
           const requestId = (item.id || "").toLowerCase();
+          const caseReference = (item.case_reference || "").toLowerCase();
 
           return (
             phone.includes(query) ||
             name.includes(query) ||
             category.includes(query) ||
-            requestId.includes(query)
+            requestId.includes(query) ||
+            caseReference.includes(query)
           );
         });
       }
@@ -655,7 +657,7 @@
         selectionContentEl.style.display = "block";
 
         document.getElementById("detailCustomer").textContent =
-          [item.customer_name, item.customer_phone].filter(Boolean).join(" • ") || "Not available";
+          [item.customer_name, item.case_reference, item.customer_phone].filter(Boolean).join(" • ") || "Not available";
         document.getElementById("detailStatus").textContent = item.status || "-";
         document.getElementById("detailLawyer").textContent =
           item.assigned_lawyer_name || "Not assigned";
@@ -692,7 +694,7 @@
             <div class="row">
               <div>
                 <strong>${item.category || "Legal Request"}</strong>
-                <div class="meta">${item.customer_name || "Unknown client"}${item.customer_phone ? ` • ${item.customer_phone}` : ""}</div>
+                <div class="meta">${item.customer_name || "Unknown client"}${item.case_reference ? ` • ${item.case_reference}` : ""}${item.customer_phone ? ` • ${item.customer_phone}` : ""}</div>
               </div>
               <span class="status-chip">${item.status}</span>
             </div>

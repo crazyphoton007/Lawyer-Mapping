@@ -58,10 +58,19 @@ def load_request(db: Session, request_id: UUID) -> Request | None:
     return db.execute(stmt).scalars().first()
 
 
+def derive_case_reference(request_id: UUID) -> str:
+    value = str(request_id)
+    hashed = 0
+    for char in value:
+        hashed = (hashed * 31 + ord(char)) & 0xFFFFFFFF
+    return f"CF-{str(hashed % 100000).zfill(5)}"
+
+
 def serialize_request(req: Request) -> dict:
     user = getattr(req, "user", None)
     return {
         "id": str(req.id),
+        "case_reference": derive_case_reference(req.id),
         "status": req.status,
         "category": req.category,
         "description": req.description,
