@@ -229,12 +229,14 @@ export default function LoginScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 8}
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={{ padding: 0, paddingBottom: 32 }}
+          contentContainerStyle={{ padding: 0, paddingBottom: 160, flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
         >
           {/* Brand bar */}
           <CaseFitHero tagline="Legal help, done right." />

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -44,6 +44,7 @@ function deriveCaseNumber(id: string) {
 export default function ConsultScreen() {
   const router = useRouter();
   const { token, user } = useAuth();
+  const scrollRef = useRef<ScrollView>(null);
 
   const [category, setCategory] = useState<string>("");
   const [details, setDetails] = useState<string>("");
@@ -151,6 +152,7 @@ export default function ConsultScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView
+          ref={scrollRef}
           contentContainerStyle={{ padding: 16, paddingBottom: 140, flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
@@ -294,6 +296,11 @@ export default function ConsultScreen() {
               <TextInput
                 value={preferredWindow}
                 onChangeText={setPreferredWindow}
+                onFocus={() => {
+                  requestAnimationFrame(() => {
+                    scrollRef.current?.scrollToEnd({ animated: true });
+                  });
+                }}
                 placeholder="Example: Weekdays after 6 PM or Saturday morning"
                 style={{
                   borderWidth: 1,
