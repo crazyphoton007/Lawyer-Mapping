@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -278,10 +278,9 @@ function SummaryRow({
 
 export default function RequestDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { token } = useAuth();
+  const { token, hydrated } = useAuth();
   const router = useRouter();
 
-  const [storedToken, setStoredToken] = useState<string | null>(null);
   const [item, setItem] = useState<Req | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -289,17 +288,16 @@ export default function RequestDetailsScreen() {
   const [paying, setPaying] = useState(false);
   const [checkingPayment, setCheckingPayment] = useState(false);
   const [latestPaymentLinkId, setLatestPaymentLinkId] = useState<string | null>(null);
+  const hasLoadedOnce = useRef(false);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      const t = await SecureStore.getItemAsync("token");
-      setStoredToken(t);
-    })();
-  }, []);
-
-  const authToken = useMemo(() => token || storedToken, [token, storedToken]);
+  const authToken = token;
 
   const load = useCallback(async (mode: "initial" | "refresh" | "silent" = "initial") => {
+    if (!hydrated) {
+      return;
+    }
+
     if (!authToken) {
       setError("Please log in first.");
       setItem(null);
@@ -347,6 +345,7 @@ export default function RequestDetailsScreen() {
       }
 
       setItem(found);
+      hasLoadedOnce.current = true;
       setError(null);
     } catch (e: any) {
       if (mode === "initial") {
@@ -360,17 +359,36 @@ export default function RequestDetailsScreen() {
         setRefreshing(false);
       }
     }
-  }, [authToken, id]);
+  }, [authToken, hydrated, id]);
 
   useEffect(() => {
+    if (!hydrated) {
+      return;
+    }
     load("initial");
-  }, [load]);
+  }, [hydrated, load]);
 
   useFocusEffect(
     useCallback(() => {
-      load(item ? "silent" : "initial");
-      return () => {};
-    }, [item, load])
+      if (!hydrated || !authToken || !id || Array.isArray(id)) {
+        return () => {};
+      }
+
+      if (hasLoadedOnce.current) {
+        load("silent");
+      }
+
+      pollIntervalRef.current = setInterval(() => {
+        load("silent");
+      }, 10000);
+
+      return () => {
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+          pollIntervalRef.current = null;
+        }
+      };
+    }, [authToken, hydrated, id, load])
   );
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -65,23 +65,16 @@ function normalizePhone(s?: string | null) {
 }
 
 export default function RequestsScreen() {
-  const { token } = useAuth();
+  const { token, hydrated } = useAuth();
   const router = useRouter();
 
-  const [storedToken, setStoredToken] = useState<string | null>(null);
   const [items, setItems] = useState<Req[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [myPhone, setMyPhone] = useState<string>("");
   const hasLoadedOnce = useRef(false);
-
-  useEffect(() => {
-    (async () => {
-      const t = await SecureStore.getItemAsync("token");
-      setStoredToken(t);
-    })();
-  }, []);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const reloadPhone = useCallback(async () => {
     const rawPhone = await SecureStore.getItemAsync("user_mobile");
@@ -98,9 +91,13 @@ export default function RequestsScreen() {
     }, [reloadPhone])
   );
 
-  const authToken = useMemo(() => token || storedToken, [token, storedToken]);
+  const authToken = token;
 
   const load = useCallback(async (mode: "initial" | "refresh" | "silent" = "initial") => {
+    if (!hydrated) {
+      return;
+    }
+
     if (!authToken) {
       setItems([]);
       setLoading(false);
@@ -140,19 +137,36 @@ export default function RequestsScreen() {
         setLoading(false);
       }
     }
-  }, [authToken]);
+  }, [authToken, hydrated]);
 
   useEffect(() => {
+    if (!hydrated) {
+      return;
+    }
     load("initial");
-  }, [load]);
+  }, [hydrated, load]);
 
   useFocusEffect(
     useCallback(() => {
+      if (!hydrated || !authToken) {
+        return () => {};
+      }
+
       if (hasLoadedOnce.current) {
         load("silent");
       }
-      return () => {};
-    }, [load])
+
+      pollIntervalRef.current = setInterval(() => {
+        load("silent");
+      }, 10000);
+
+      return () => {
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+          pollIntervalRef.current = null;
+        }
+      };
+    }, [authToken, hydrated, load])
   );
 
   const onRefresh = useCallback(async () => {

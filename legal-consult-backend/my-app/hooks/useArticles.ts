@@ -17,9 +17,7 @@ export function useArticles() {
     (async () => {
       setLoading(true); setError(null);
 
-      // FORCE absolute URL (never becomes localhost:8082)
       const url = new URL("/articles/", API_BASE.replace(/\/$/, "")).toString();
-      console.log("[useArticles] URL =", url);
 
       try {
         const res = await fetch(url);

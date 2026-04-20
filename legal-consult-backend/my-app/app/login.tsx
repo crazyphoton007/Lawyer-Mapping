@@ -51,7 +51,6 @@ const DIGIT_TEXT = {
 // ---------- small helper: POST with default headers ----------
 async function apiPost(path: string, body: unknown) {
   const url = `${API_BASE}${path}`;
-  console.log("[apiPost] POST", url, "body =", body);
 
   const res = await fetch(url, {
     method: "POST",
@@ -157,7 +156,6 @@ export default function LoginScreen() {
     try {
       const e164 = `+91${ph}`;
       const data = await apiPost("/auth/request-code", { phone: e164 });
-      console.log("[requestCode] response:", data);
 
       applyDeliveryState(data?.delivery_channel);
       setStep("verify");
@@ -183,7 +181,6 @@ export default function LoginScreen() {
         phone: e164,
         code: code.trim(),
       });
-      console.log("[verifyCode] response:", data);
 
       const jwt = data.token || data.access_token || data.jwt;
       if (!jwt) throw new Error("No token returned from server");
