@@ -64,6 +64,62 @@ Recommended domain structure:
 - Backend API: `https://api.thecasefit.com`
 - Admin tool: `https://api.thecasefit.com/admin`
 
+## 5B) Lightsail deployment
+If you are deploying on AWS Lightsail, you do not need Docker.
+Run the backend as a persistent `systemd` service and put `nginx` in front of it.
+
+Templates included in this repo:
+- `deploy/lightsail/casefit-backend.service`
+- `deploy/lightsail/nginx-casefit.conf`
+
+Suggested server layout:
+```bash
+/home/ubuntu/legal-consult-backend
+/home/ubuntu/legal-consult-backend/.venv
+/home/ubuntu/legal-consult-backend/.env
+```
+
+One-time setup on Lightsail:
+```bash
+cd /home/ubuntu
+git clone <your-repo-url> legal-consult-backend
+cd legal-consult-backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+```
+
+Install the service:
+```bash
+sudo cp deploy/lightsail/casefit-backend.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable casefit-backend
+sudo systemctl start casefit-backend
+sudo systemctl status casefit-backend
+```
+
+Install the nginx site:
+```bash
+sudo cp deploy/lightsail/nginx-casefit.conf /etc/nginx/sites-available/casefit
+sudo ln -s /etc/nginx/sites-available/casefit /etc/nginx/sites-enabled/casefit
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+Recommended production backend settings:
+```env
+APP_ENV=production
+ENABLE_DOCS=0
+RUN_SYNC_DDL=0
+CORS_ALLOW_ORIGINS=https://thecasefit.com,https://api.thecasefit.com
+```
+
+How this affects your app:
+- your Expo app uses `https://api.thecasefit.com` by default
+- that means the app keeps working when your local laptop backend is off
+- if the Lightsail backend goes down, the app UI may still open, but login, requests, payments, articles, and admin data calls will fail
+
 ## 6) Admin bootstrap
 To create your first team account without editing the DB manually:
 
