@@ -34,6 +34,8 @@ const MUTED = "#6B7280";
 const BORDER = "#E5E7EB";
 const SOFT = "#EEF2FF";
 const SOFT_GOLD = "#F9EBC8";
+const GUEST_TOKEN_KEY = "guest_token";
+const GUEST_USER_KEY = "guest_user";
 
 // Visual tweaks
 const LOGO_SIZE = 38;
@@ -82,6 +84,39 @@ async function apiPost(path: string, body: unknown) {
   }
 
   return json ?? {};
+}
+
+async function readStoredGuestSession() {
+  try {
+    const [storedToken, storedUser] = await Promise.all([
+      SecureStore.getItemAsync(GUEST_TOKEN_KEY),
+      SecureStore.getItemAsync(GUEST_USER_KEY),
+    ]);
+
+    if (!storedToken || !storedUser) {
+      return null;
+    }
+
+    const parsedUser = JSON.parse(storedUser);
+    if (!parsedUser?.id) {
+      throw new Error("Guest profile is incomplete");
+    }
+
+    return {
+      token: storedToken,
+      user: {
+        ...parsedUser,
+        role: parsedUser.role ?? "guest",
+        is_guest: true,
+      },
+    };
+  } catch {
+    await Promise.all([
+      SecureStore.deleteItemAsync(GUEST_TOKEN_KEY),
+      SecureStore.deleteItemAsync(GUEST_USER_KEY),
+    ]);
+    return null;
+  }
 }
 
 export default function LoginScreen() {
@@ -151,6 +186,16 @@ export default function LoginScreen() {
   async function continueAsGuest() {
     setLoading(true);
     try {
+      const savedGuest = await readStoredGuestSession();
+      if (savedGuest) {
+        await setAuth(savedGuest.token, savedGuest.user);
+        try {
+          await SecureStore.deleteItemAsync("user_mobile");
+        } catch {}
+        router.replace("/(tabs)/consult");
+        return;
+      }
+
       const data = await apiPost("/auth/guest", { name: "Guest User" });
       const jwt = data.token || data.access_token || data.jwt;
       if (!jwt) throw new Error("No token returned from server");
@@ -309,104 +354,8 @@ export default function LoginScreen() {
                 textAlign: "left",
               }}
             >
-              Choose the flow that feels right. Secure OTP for saved progress, or a premium guest path to book fast.
+              Choose the flow that feels right!
             </Text>
-
-            {step === "request" ? (
-              <LinearGradient
-                colors={[SOFT, "#F8FAFC", SOFT_GOLD]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{
-                  marginTop: 18,
-                  borderRadius: 24,
-                  padding: 18,
-                  borderWidth: 1,
-                  borderColor: "#D8E1F8",
-                  overflow: "hidden",
-                }}
-              >
-                <View style={{ gap: 14 }}>
-                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                    <View style={{ flex: 1, gap: 6 }}>
-                      <View
-                        style={{
-                          alignSelf: "flex-start",
-                          paddingHorizontal: 10,
-                          paddingVertical: 6,
-                          borderRadius: 999,
-                          backgroundColor: "rgba(11,18,32,0.08)",
-                        }}
-                      >
-                        <Text style={{ color: INK, fontSize: 11, fontWeight: "900", letterSpacing: 1 }}>
-                          EXPRESS ENTRY
-                        </Text>
-                      </View>
-                      <Text style={{ fontSize: 20, lineHeight: 26, fontWeight: "800", color: INK }}>
-                        Continue as a guest and book in seconds
-                      </Text>
-                      <Text style={{ color: "#475569", lineHeight: 21, fontSize: 14 }}>
-                        Ideal for first-time visitors who want to raise a consultation request before creating a full account.
-                      </Text>
-                    </View>
-                    <View
-                      style={{
-                        width: 52,
-                        height: 52,
-                        borderRadius: 26,
-                        backgroundColor: INK,
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Text style={{ color: "#fff", fontSize: 24 }}>✦</Text>
-                    </View>
-                  </View>
-
-                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                    {[
-                      "Book without OTP",
-                      "Upgrade later",
-                      "Fastest way to consult",
-                    ].map((item) => (
-                      <View
-                        key={item}
-                        style={{
-                          paddingHorizontal: 12,
-                          paddingVertical: 8,
-                          borderRadius: 999,
-                          backgroundColor: "rgba(255,255,255,0.82)",
-                          borderWidth: 1,
-                          borderColor: "#E2E8F0",
-                        }}
-                      >
-                        <Text style={{ color: INK, fontSize: 12, fontWeight: "700" }}>{item}</Text>
-                      </View>
-                    ))}
-                  </View>
-
-                  <TouchableOpacity
-                    onPress={continueAsGuest}
-                    disabled={loading}
-                    style={{
-                      backgroundColor: INK,
-                      borderRadius: 16,
-                      paddingVertical: 15,
-                      paddingHorizontal: 16,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 10,
-                    }}
-                  >
-                    <Text style={{ color: "#fff", fontSize: 16, fontWeight: "800" }}>
-                      {loading ? "Preparing guest access…" : "Continue as Guest"}
-                    </Text>
-                    {!loading ? <Text style={{ color: "#fff", fontSize: 16, fontWeight: "800" }}>→</Text> : null}
-                  </TouchableOpacity>
-                </View>
-              </LinearGradient>
-            ) : null}
 
             {/* PHONE card */}
             <View
@@ -532,6 +481,77 @@ export default function LoginScreen() {
                 </View>
               ) : null}
             </View>
+
+            {step === "request" ? (
+              <LinearGradient
+                colors={[SOFT, "#F8FAFC", SOFT_GOLD]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  marginTop: 18,
+                  borderRadius: 24,
+                  padding: 18,
+                  borderWidth: 1,
+                  borderColor: "#D8E1F8",
+                  overflow: "hidden",
+                }}
+              >
+                <View style={{ gap: 14 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                    <View style={{ flex: 1, gap: 6 }}>
+                      <View
+                        style={{
+                          alignSelf: "flex-start",
+                          paddingHorizontal: 10,
+                          paddingVertical: 6,
+                          borderRadius: 999,
+                          backgroundColor: "rgba(11,18,32,0.08)",
+                        }}
+                      >
+                        <Text style={{ color: INK, fontSize: 11, fontWeight: "900", letterSpacing: 1 }}>
+                          EXPRESS ENTRY
+                        </Text>
+                      </View>
+                      <Text style={{ fontSize: 20, lineHeight: 26, fontWeight: "800", color: INK }}>
+                        Continue as a guest and book in seconds
+                      </Text>
+                    </View>
+                    <View
+                      style={{
+                        width: 52,
+                        height: 52,
+                        borderRadius: 26,
+                        backgroundColor: INK,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontSize: 24 }}>✦</Text>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={continueAsGuest}
+                    disabled={loading}
+                    style={{
+                      backgroundColor: INK,
+                      borderRadius: 16,
+                      paddingVertical: 15,
+                      paddingHorizontal: 16,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                    }}
+                  >
+                    <Text style={{ color: "#fff", fontSize: 16, fontWeight: "800" }}>
+                      {loading ? "Preparing guest access…" : "Continue as Guest"}
+                    </Text>
+                    {!loading ? <Text style={{ color: "#fff", fontSize: 16, fontWeight: "800" }}>→</Text> : null}
+                  </TouchableOpacity>
+                </View>
+              </LinearGradient>
+            ) : null}
 
             {/* CODE card */}
             {step === "verify" && (
