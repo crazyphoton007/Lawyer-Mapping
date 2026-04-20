@@ -949,6 +949,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../../context/auth";
 import { API_BASE } from "../../constants/config";
 import { Feather } from "@expo/vector-icons";
@@ -977,6 +979,11 @@ const WHATSAPP_E164 = "919807863007"; // country code + number (e.g., +91 980786
 const PROFILE_GET = `${API_BASE}/auth/me`;
 const PROFILE_PATCH = `${API_BASE}/auth/me`;
 const FEEDBACK_POST = `${API_BASE}/feedback/`; // optional backend you can add
+const CLAIM_GUEST = `${API_BASE}/auth/claim-guest`;
+
+function normalizeIndianPhone(input: string) {
+  return input.replace(/\D/g, "").slice(0, 10);
+}
 
 function Section({ title, children }: { title?: string; children: React.ReactNode }) {
   return (
@@ -1069,6 +1076,11 @@ export default function ProfileScreen() {
   const [fbOpen, setFbOpen] = useState(false);
   const [fbText, setFbText] = useState("");
   const [fbSuccessOpen, setFbSuccessOpen] = useState(false);
+  const [claimOpen, setClaimOpen] = useState(false);
+  const [claimPhone, setClaimPhone] = useState("");
+  const [claimCode, setClaimCode] = useState("");
+  const [claimStep, setClaimStep] = useState<"phone" | "code">("phone");
+  const [claimLoading, setClaimLoading] = useState(false);
 
   const scrollRef = useRef<ScrollView>(null);
 
@@ -1102,6 +1114,11 @@ export default function ProfileScreen() {
     const first = n.split(/\s+/)[0];
     return `Thanks, ${first}. Your feedback has been added to our improvement queue.`;
   }, [form.name]);
+
+  const isGuestUser = !!user?.is_guest || user?.role === "guest";
+  const claimDigits = normalizeIndianPhone(claimPhone);
+  const canRequestClaimCode = claimDigits.length === 10 && !claimLoading;
+  const canConfirmClaim = claimDigits.length === 10 && claimCode.trim().length > 0 && !claimLoading;
 
   async function getJson(url: string) {
     const res = await fetch(url, {
@@ -1265,6 +1282,97 @@ export default function ProfileScreen() {
     );
   }
 
+  function openClaimModal() {
+    setClaimPhone("");
+    setClaimCode("");
+    setClaimStep("phone");
+    setClaimOpen(true);
+  }
+
+  async function requestClaimCode() {
+    if (!canRequestClaimCode) {
+      Alert.alert("Invalid number", "Enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    setClaimLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/request-code`, {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify({ phone: `+91${claimDigits}` }),
+      });
+      const text = await res.text();
+      const json = text ? JSON.parse(text) : {};
+      if (!res.ok) {
+        throw new Error(json?.detail || `HTTP ${res.status}`);
+      }
+      setClaimStep("code");
+    } catch (e: any) {
+      Alert.alert("Could not send OTP", e?.message || "Please try again.");
+    } finally {
+      setClaimLoading(false);
+    }
+  }
+
+  async function claimGuestAccount() {
+    if (!token) {
+      Alert.alert("Session missing", "Please log in again and try once more.");
+      return;
+    }
+    if (!canConfirmClaim) {
+      Alert.alert("Missing details", "Enter the OTP sent to your mobile number.");
+      return;
+    }
+
+    setClaimLoading(true);
+    try {
+      const res = await fetch(CLAIM_GUEST, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+          authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ phone: `+91${claimDigits}`, code: claimCode.trim() }),
+      });
+      const text = await res.text();
+      const json = text ? JSON.parse(text) : {};
+      if (!res.ok) {
+        throw new Error(json?.detail || `HTTP ${res.status}`);
+      }
+
+      const nextToken = json.token || json.access_token || json.jwt;
+      if (!nextToken) {
+        throw new Error("No token returned from server");
+      }
+
+      const nextUser = {
+        id: String(json?.user?.id ?? user?.id ?? ""),
+        phone: String(json?.user?.phone ?? `+91${claimDigits}`),
+        name: json?.user?.name ?? form.name ?? user?.name ?? "",
+        role: json?.user?.role ?? "user",
+        is_guest: false,
+      };
+
+      await setAuth(nextToken, nextUser);
+      await SecureStore.setItemAsync("user_mobile", claimDigits);
+      setForm((current) => ({
+        ...current,
+        phone: nextUser.phone,
+        name: nextUser.name || current.name,
+      }));
+      setClaimOpen(false);
+      setClaimPhone("");
+      setClaimCode("");
+      setClaimStep("phone");
+    } catch (e: any) {
+      Alert.alert("Could not secure account", e?.message || "Please try again.");
+    } finally {
+      setClaimLoading(false);
+    }
+  }
+
   if (!token) return null;
 
   if (loading) {
@@ -1373,6 +1481,80 @@ export default function ProfileScreen() {
             <Text style={{ color: "#fff", fontWeight: "800", letterSpacing: 0.2 }}>Edit</Text>
           </TouchableOpacity>
         </View>
+
+        {isGuestUser ? (
+          <LinearGradient
+            colors={["#111827", "#1F2937", "#D4A63D"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              marginTop: 16,
+              borderRadius: 24,
+              padding: 18,
+              overflow: "hidden",
+              shadowColor: "#000",
+              shadowOpacity: 0.16,
+              shadowRadius: 16,
+              shadowOffset: { width: 0, height: 10 },
+            }}
+          >
+            <View style={{ gap: 14 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <View style={{ flex: 1, gap: 8 }}>
+                  <View
+                    style={{
+                      alignSelf: "flex-start",
+                      backgroundColor: "rgba(255,255,255,0.12)",
+                      borderWidth: 1,
+                      borderColor: "rgba(255,255,255,0.15)",
+                      borderRadius: 999,
+                      paddingHorizontal: 10,
+                      paddingVertical: 6,
+                    }}
+                  >
+                    <Text style={{ color: "#F8E9BF", fontSize: 11, fontWeight: "900", letterSpacing: 1 }}>
+                      GUEST ACCESS
+                    </Text>
+                  </View>
+                  <Text style={{ color: "#FFFFFF", fontSize: 22, lineHeight: 28, fontWeight: "800" }}>
+                    Secure this case with your mobile number
+                  </Text>
+                  <Text style={{ color: "rgba(255,255,255,0.74)", fontSize: 14, lineHeight: 20 }}>
+                    Claim this guest account once and keep the same consultation history every time you log in.
+                  </Text>
+                </View>
+
+                <View
+                  style={{
+                    width: 54,
+                    height: 54,
+                    borderRadius: 27,
+                    backgroundColor: "rgba(255,255,255,0.14)",
+                    borderWidth: 1,
+                    borderColor: "rgba(255,255,255,0.2)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Feather name="shield" size={24} color="#F8E9BF" />
+                </View>
+              </View>
+
+              <TouchableOpacity
+                onPress={openClaimModal}
+                style={{
+                  backgroundColor: "#FFFFFF",
+                  borderRadius: 16,
+                  paddingVertical: 15,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={{ color: INK, fontSize: 16, fontWeight: "800" }}>Secure with Mobile OTP</Text>
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+        ) : null}
 
         {/* Community */}
         <Section title="Community">
@@ -1728,6 +1910,159 @@ export default function ProfileScreen() {
                   </TouchableOpacity>
                 </View>
               </ScrollView>
+            </Pressable>
+          </Pressable>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal visible={claimOpen} transparent animationType="slide" onRequestClose={() => setClaimOpen(false)}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 8}
+        >
+          <Pressable
+            onPress={() => {
+              Keyboard.dismiss();
+              setClaimOpen(false);
+            }}
+            style={{ flex: 1, backgroundColor: "rgba(11,18,32,0.45)", justifyContent: "flex-end" }}
+          >
+            <Pressable
+              onPress={(event) => event.stopPropagation()}
+              style={{
+                backgroundColor: "#FFFFFF",
+                borderTopLeftRadius: 28,
+                borderTopRightRadius: 28,
+                padding: 18,
+                paddingBottom: Platform.OS === "ios" ? 28 : 22,
+                gap: 14,
+              }}
+            >
+              <View style={{ gap: 8 }}>
+                <Text style={{ color: INK, fontSize: 24, lineHeight: 30, fontWeight: "800" }}>
+                  Secure your guest account
+                </Text>
+                <Text style={{ color: MUTED, fontSize: 14, lineHeight: 20 }}>
+                  Link this case history to your mobile number so you can return anytime with OTP.
+                </Text>
+              </View>
+
+              <View
+                style={{
+                  borderRadius: 18,
+                  borderWidth: 1,
+                  borderColor: BORDER,
+                  backgroundColor: "#FAFBFD",
+                  padding: 14,
+                  gap: 12,
+                }}
+              >
+                <Text style={{ color: MUTED, fontSize: 12, fontWeight: "800", letterSpacing: 1, textTransform: "uppercase" }}>
+                  Mobile Number
+                </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
+                    borderWidth: 1,
+                    borderColor: BORDER,
+                    borderRadius: 14,
+                    backgroundColor: "#FFFFFF",
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                  }}
+                >
+                  <Text style={{ color: INK, fontSize: 18, fontWeight: "800" }}>+91</Text>
+                  <TextInput
+                    value={claimDigits}
+                    onChangeText={(value) => setClaimPhone(normalizeIndianPhone(value))}
+                    keyboardType="number-pad"
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="mobile number"
+                    placeholderTextColor="#9CA3AF"
+                    style={{ flex: 1, color: INK, fontSize: 18, fontWeight: "700", paddingVertical: 8 }}
+                  />
+                </View>
+
+                {claimStep === "code" ? (
+                  <>
+                    <Text style={{ color: MUTED, fontSize: 12, fontWeight: "800", letterSpacing: 1, textTransform: "uppercase" }}>
+                      One-Time Password
+                    </Text>
+                    <TextInput
+                      value={claimCode}
+                      onChangeText={setClaimCode}
+                      keyboardType="number-pad"
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="Enter OTP"
+                      placeholderTextColor="#9CA3AF"
+                      style={{
+                        borderWidth: 1,
+                        borderColor: BORDER,
+                        borderRadius: 14,
+                        backgroundColor: "#FFFFFF",
+                        color: INK,
+                        fontSize: 18,
+                        fontWeight: "700",
+                        paddingHorizontal: 12,
+                        paddingVertical: 14,
+                      }}
+                    />
+                  </>
+                ) : null}
+              </View>
+
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                {claimStep === "code" ? (
+                  <TouchableOpacity
+                    onPress={() => setClaimStep("phone")}
+                    style={{
+                      paddingHorizontal: 16,
+                      borderRadius: 14,
+                      borderWidth: 1,
+                      borderColor: BORDER,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text style={{ color: INK, fontWeight: "700" }}>Back</Text>
+                  </TouchableOpacity>
+                ) : null}
+
+                <TouchableOpacity
+                  onPress={claimStep === "phone" ? requestClaimCode : claimGuestAccount}
+                  disabled={claimStep === "phone" ? !canRequestClaimCode : !canConfirmClaim}
+                  style={{
+                    flex: 1,
+                    backgroundColor:
+                      claimStep === "phone"
+                        ? canRequestClaimCode
+                          ? INK
+                          : "#9CA3AF"
+                        : canConfirmClaim
+                        ? INK
+                        : "#9CA3AF",
+                    borderRadius: 16,
+                    paddingVertical: 15,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800" }}>
+                    {claimLoading
+                      ? claimStep === "phone"
+                        ? "Sending OTP…"
+                        : "Securing account…"
+                      : claimStep === "phone"
+                      ? "Send OTP"
+                      : "Secure My Account"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </Pressable>
           </Pressable>
         </KeyboardAvoidingView>

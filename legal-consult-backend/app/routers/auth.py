@@ -36,6 +36,11 @@ class GuestLoginIn(BaseModel):
     name: str | None = None
 
 
+class ClaimGuestIn(BaseModel):
+    phone: str
+    code: str
+
+
 class SetRoleIn(BaseModel):
     phone: str
     role: str
@@ -184,6 +189,56 @@ def guest_login(inp: GuestLoginIn, db: Session = Depends(get_db)):
             "area": getattr(user, "area", None),
             "role": getattr(user, "role", None),
             "is_guest": True,
+        },
+    }
+
+
+@router.post("/claim-guest")
+def claim_guest_account(
+    inp: ClaimGuestIn,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if getattr(current_user, "role", None) != "guest":
+        raise HTTPException(status_code=400, detail="Only guest accounts can be secured")
+
+    clean_phone = inp.phone.strip()
+    if not clean_phone:
+        raise HTTPException(status_code=400, detail="Phone is required")
+
+    rec = _otp.get(clean_phone)
+    if not rec or rec[0] != inp.code or rec[1] < time.time():
+        raise HTTPException(status_code=400, detail="Invalid or expired code")
+
+    existing = db.query(User).filter(User.phone == clean_phone).first()
+    if existing and existing.id != current_user.id:
+        raise HTTPException(
+            status_code=409,
+            detail="This mobile number is already linked to another caseFit account",
+        )
+
+    current_user.phone = clean_phone
+    current_user.role = "user"
+
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+
+    _otp.pop(clean_phone, None)
+
+    token = _make_jwt(str(current_user.id), current_user.phone)
+
+    return {
+        "token": token,
+        "user": {
+            "id": str(current_user.id),
+            "phone": current_user.phone,
+            "name": getattr(current_user, "name", None),
+            "gender": getattr(current_user, "gender", None),
+            "age": getattr(current_user, "age", None),
+            "area": getattr(current_user, "area", None),
+            "role": getattr(current_user, "role", None),
+            "is_guest": False,
         },
     }
 
