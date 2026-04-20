@@ -18,6 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter, Link } from "expo-router";
 import * as SecureStore from "expo-secure-store";
+import { LinearGradient } from "expo-linear-gradient";
 import { API_BASE } from "../constants/config";
 import { useAuth } from "../context/auth";
 
@@ -31,6 +32,8 @@ const CARD = "#FFFFFF";
 const INK = "#0B1220";
 const MUTED = "#6B7280";
 const BORDER = "#E5E7EB";
+const SOFT = "#EEF2FF";
+const SOFT_GOLD = "#F9EBC8";
 
 // Visual tweaks
 const LOGO_SIZE = 38;
@@ -143,6 +146,35 @@ export default function LoginScreen() {
 
     setDeliveryMessage("Code sent securely");
     setDeliveryAccent("dark");
+  }
+
+  async function continueAsGuest() {
+    setLoading(true);
+    try {
+      const data = await apiPost("/auth/guest", { name: "Guest User" });
+      const jwt = data.token || data.access_token || data.jwt;
+      if (!jwt) throw new Error("No token returned from server");
+
+      const userFromApi = data.user ?? {};
+      const userPayload = {
+        id: String(userFromApi.id ?? `guest-${Date.now()}`),
+        phone: userFromApi.phone ?? null,
+        name: String(userFromApi.name ?? "Guest User"),
+        role: String(userFromApi.role ?? "guest"),
+        is_guest: true,
+      };
+
+      await setAuth(jwt, userPayload);
+      try {
+        await SecureStore.deleteItemAsync("user_mobile");
+      } catch {}
+
+      router.replace("/(tabs)/consult");
+    } catch (e: any) {
+      Alert.alert("Could not continue as guest", e?.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function requestCode() {
@@ -277,8 +309,104 @@ export default function LoginScreen() {
                 textAlign: "left",
               }}
             >
-              One quick code. Nothing extra!
+              Choose the flow that feels right. Secure OTP for saved progress, or a premium guest path to book fast.
             </Text>
+
+            {step === "request" ? (
+              <LinearGradient
+                colors={[SOFT, "#F8FAFC", SOFT_GOLD]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  marginTop: 18,
+                  borderRadius: 24,
+                  padding: 18,
+                  borderWidth: 1,
+                  borderColor: "#D8E1F8",
+                  overflow: "hidden",
+                }}
+              >
+                <View style={{ gap: 14 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                    <View style={{ flex: 1, gap: 6 }}>
+                      <View
+                        style={{
+                          alignSelf: "flex-start",
+                          paddingHorizontal: 10,
+                          paddingVertical: 6,
+                          borderRadius: 999,
+                          backgroundColor: "rgba(11,18,32,0.08)",
+                        }}
+                      >
+                        <Text style={{ color: INK, fontSize: 11, fontWeight: "900", letterSpacing: 1 }}>
+                          EXPRESS ENTRY
+                        </Text>
+                      </View>
+                      <Text style={{ fontSize: 20, lineHeight: 26, fontWeight: "800", color: INK }}>
+                        Continue as a guest and book in seconds
+                      </Text>
+                      <Text style={{ color: "#475569", lineHeight: 21, fontSize: 14 }}>
+                        Ideal for first-time visitors who want to raise a consultation request before creating a full account.
+                      </Text>
+                    </View>
+                    <View
+                      style={{
+                        width: 52,
+                        height: 52,
+                        borderRadius: 26,
+                        backgroundColor: INK,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontSize: 24 }}>✦</Text>
+                    </View>
+                  </View>
+
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                    {[
+                      "Book without OTP",
+                      "Upgrade later",
+                      "Fastest way to consult",
+                    ].map((item) => (
+                      <View
+                        key={item}
+                        style={{
+                          paddingHorizontal: 12,
+                          paddingVertical: 8,
+                          borderRadius: 999,
+                          backgroundColor: "rgba(255,255,255,0.82)",
+                          borderWidth: 1,
+                          borderColor: "#E2E8F0",
+                        }}
+                      >
+                        <Text style={{ color: INK, fontSize: 12, fontWeight: "700" }}>{item}</Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={continueAsGuest}
+                    disabled={loading}
+                    style={{
+                      backgroundColor: INK,
+                      borderRadius: 16,
+                      paddingVertical: 15,
+                      paddingHorizontal: 16,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                    }}
+                  >
+                    <Text style={{ color: "#fff", fontSize: 16, fontWeight: "800" }}>
+                      {loading ? "Preparing guest access…" : "Continue as Guest"}
+                    </Text>
+                    {!loading ? <Text style={{ color: "#fff", fontSize: 16, fontWeight: "800" }}>→</Text> : null}
+                  </TouchableOpacity>
+                </View>
+              </LinearGradient>
+            ) : null}
 
             {/* PHONE card */}
             <View
@@ -297,7 +425,9 @@ export default function LoginScreen() {
                 elevation: 2,
               }}
             >
-              <Text style={{ fontSize: 13, color: MUTED }}>Enter mobile number</Text>
+              <Text style={{ fontSize: 13, color: MUTED }}>
+                Enter mobile number for your full caseFit account
+              </Text>
 
               {/* Input row with 🇮🇳 +91 pill */}
               <View

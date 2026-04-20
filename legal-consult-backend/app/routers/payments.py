@@ -102,12 +102,19 @@ def create_payment_link(
     amount_paise = payload.amount_rupees * 100
 
     customer_name = getattr(current_user, "name", None) or "caseFit User"
-    customer_contact = getattr(current_user, "phone", None) or ""
+    customer_contact = (getattr(current_user, "phone", None) or "").strip()
+
+    customer_payload = {
+        "name": customer_name,
+    }
+    if customer_contact:
+        customer_payload["contact"] = customer_contact
 
     notes = {
         "request_id": str(req.id),
         "user_id": str(getattr(current_user, "id", "")),
         "category": payload.category or "",
+        "role": getattr(current_user, "role", "") or "",
     }
 
     try:
@@ -117,12 +124,9 @@ def create_payment_link(
                 "currency": "INR",
                 "accept_partial": False,
                 "description": f"{payload.category or 'Legal Consultation'} | {payload.description or ''}".strip(),
-                "customer": {
-                    "name": customer_name,
-                    "contact": customer_contact,
-                },
+                "customer": customer_payload,
                 "notify": {
-                    "sms": True,
+                    "sms": bool(customer_contact),
                     "email": False,
                 },
                 "reminder_enable": True,

@@ -32,6 +32,10 @@ class VerifyCodeIn(BaseModel):
     code: str
 
 
+class GuestLoginIn(BaseModel):
+    name: str | None = None
+
+
 class SetRoleIn(BaseModel):
     phone: str
     role: str
@@ -158,6 +162,32 @@ def verify(inp: VerifyCodeIn, db: Session = Depends(get_db)):
     }
 
 
+@router.post("/guest")
+def guest_login(inp: GuestLoginIn, db: Session = Depends(get_db)):
+    guest_name = (inp.name or "").strip() or "Guest"
+
+    user = User(name=guest_name, role="guest")
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    token = _make_jwt(str(user.id), user.phone or "")
+
+    return {
+        "token": token,
+        "user": {
+            "id": str(user.id),
+            "phone": user.phone,
+            "name": user.name,
+            "gender": getattr(user, "gender", None),
+            "age": getattr(user, "age", None),
+            "area": getattr(user, "area", None),
+            "role": getattr(user, "role", None),
+            "is_guest": True,
+        },
+    }
+
+
 @router.get("/me")
 def me(
     current_user: User = Depends(get_current_user),
@@ -170,6 +200,7 @@ def me(
         "age": getattr(current_user, "age", None),
         "area": getattr(current_user, "area", None),
         "role": getattr(current_user, "role", None),
+        "is_guest": getattr(current_user, "role", None) == "guest",
     }
 
 
@@ -218,6 +249,7 @@ def update_me(
         "age": current_user.age,
         "area": current_user.area,
         "role": current_user.role,
+        "is_guest": current_user.role == "guest",
     }
 
 

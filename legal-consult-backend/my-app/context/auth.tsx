@@ -1,7 +1,13 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import * as SecureStore from "expo-secure-store";
 
-type User = { id: string; phone: string } | null;
+type User = {
+  id: string;
+  phone?: string | null;
+  name?: string | null;
+  role?: string | null;
+  is_guest?: boolean;
+} | null;
 type Ctx = {
   user: User;
   token: string | null;
