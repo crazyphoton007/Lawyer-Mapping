@@ -1,5 +1,6 @@
 import { Stack, router } from "expo-router";
-import { Pressable, Text } from "react-native";
+import { Pressable } from "react-native";
+import { Feather } from "@expo/vector-icons";
 
 export default function LegalLayout() {
   return (
@@ -20,7 +21,7 @@ export default function LegalLayout() {
             hitSlop={10}
             style={{ paddingHorizontal: 8, paddingVertical: 6 }}
           >
-            <Text style={{ color: "#FFFFFF", fontSize: 28, lineHeight: 28 }}>←</Text>
+            <Feather name="arrow-left" size={24} color="#FFFFFF" />
           </Pressable>
         ),
       }}
