@@ -7,6 +7,8 @@ import {
   RefreshControl,
   Button,
   TouchableOpacity,
+  Animated,
+  Easing,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
@@ -63,6 +65,107 @@ function stepFromStatus(status?: string | null) {
 function normalizePhone(s?: string | null) {
   const n = (s ?? "").toString().replace(/\D/g, "");
   return n.slice(-12);
+}
+
+function FlashingNeonButton({
+  onPress,
+  children,
+}: {
+  onPress: () => void;
+  children: React.ReactNode;
+}) {
+  const colorAnim = useRef(new Animated.Value(0)).current;
+  const shadowAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(colorAnim, {
+            toValue: 1,
+            duration: 800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: false,
+          }),
+          Animated.timing(shadowAnim, {
+            toValue: 1,
+            duration: 800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: false,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(colorAnim, {
+            toValue: 0,
+            duration: 800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: false,
+          }),
+          Animated.timing(shadowAnim, {
+            toValue: 0,
+            duration: 800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: false,
+          }),
+        ]),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [colorAnim, shadowAnim]);
+
+  const borderColor = colorAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["rgba(59, 130, 246, 0.4)", "rgba(59, 130, 246, 1)"],
+  });
+
+  const shadowOpacity = shadowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.2, 0.8],
+  });
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={{
+        marginTop: 12,
+        alignSelf: "flex-start",
+      }}
+    >
+      <Animated.View
+        style={{
+          borderColor: borderColor,
+          borderWidth: 1.5,
+          borderRadius: 10,
+          paddingVertical: 8,
+          paddingHorizontal: 12,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 6,
+          shadowColor: "#3B82F6",
+          shadowOpacity: shadowOpacity,
+          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 0 },
+          elevation: 5,
+        }}
+      >
+        <Feather name="arrow-right-circle" size={16} color="#3B82F6" />
+        <Animated.Text
+          style={[
+            { fontWeight: "600", fontSize: 14 },
+            {
+              color: colorAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: ["rgba(59, 130, 246, 0.6)", "#3B82F6"],
+              }),
+            },
+          ]}
+        >
+          View details
+        </Animated.Text>
+      </Animated.View>
+    </TouchableOpacity>
+  );
 }
 
 export default function RequestsScreen() {
@@ -506,26 +609,13 @@ export default function RequestsScreen() {
                 </Text>
               ) : null}
 
-              <TouchableOpacity
-                style={{
-                  marginTop: 12,
-                  alignSelf: "flex-start",
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  borderRadius: 10,
-                  borderWidth: 1,
-                  borderColor: BORDER,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 6,
-                }}
+              <FlashingNeonButton
                 onPress={() => {
                   router.push(`/request/${item.id}`);
                 }}
               >
-                <Feather name="arrow-right-circle" size={16} color={INK} />
-                <Text style={{ color: INK, fontWeight: "600" }}>View details</Text>
-              </TouchableOpacity>
+                <></>
+              </FlashingNeonButton>
             </View>
           );
         }}
