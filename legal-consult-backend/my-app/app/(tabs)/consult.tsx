@@ -553,6 +553,7 @@ export default function ConsultScreen() {
                 value={details}
                 onChangeText={setDetails}
                 placeholder="Write a few details about your situation (optional)..."
+                placeholderTextColor="#6B7280"
                 multiline
                 numberOfLines={6}
                 style={{
@@ -634,6 +635,7 @@ export default function ConsultScreen() {
                 value={preferredCity}
                 onChangeText={setPreferredCity}
                 placeholder="e.g. Lucknow, Delhi, Noida etc."
+                placeholderTextColor="#6B7280"
                 style={{
                   borderWidth: 1,
                   borderColor: preferredCity.trim() ? "#D6C18A" : BORDER,
@@ -691,6 +693,7 @@ export default function ConsultScreen() {
                   });
                 }}
                 placeholder="e.g. weekdays or weekends after 6"
+                placeholderTextColor="#6B7280"
                 style={{
                   borderWidth: 1,
                   borderColor: BORDER,

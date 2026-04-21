@@ -22,28 +22,8 @@ export default function CourtConnectHome() {
   const lowerCourtRows = useMemo(() => lowerCourt.courts, [lowerCourt]);
 
   return (
-    <>
-      {/* Clean header: custom black back chevron, no title, no "(tabs)" */}
-      <Stack.Screen
-        options={{
-          headerTitle: "",                // hide "court-connect/index"
-          headerBackVisible: false,       // hide default back (prevents "(tabs)")
-          headerShadowVisible: false,
-          headerStyle: { backgroundColor: "#fff" },
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={{ paddingHorizontal: 12, paddingVertical: 8, marginLeft: -18 }}
-              accessibilityLabel="Go back"
-            >
-              <Feather name="chevron-left" size={32} color="#000" />
-            </TouchableOpacity>
-          ),
-        }}
-      />
-
-      <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
-        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
           {/* Header */}
           <View style={{ marginBottom: 10 }}>
             <Text style={{ fontSize: 24, fontWeight: "800", color: INK }}>Court Connect</Text>
@@ -82,7 +62,6 @@ export default function CourtConnectHome() {
           </View>
         </ScrollView>
       </SafeAreaView>
-    </>
   );
 }
 
