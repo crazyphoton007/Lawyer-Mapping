@@ -81,6 +81,7 @@ def create_request(
         category=payload.category,
         description=payload.details,
         preferred_window=payload.preferred_window,
+        preferred_city=payload.preferred_city.strip() if payload.preferred_city else None,
         status="pending",
     )
     db.add(rec)

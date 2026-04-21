@@ -39,6 +39,7 @@ class Request(Base):
     shared_lawyer_email: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     shared_lawyer_note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     preferred_window: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    preferred_city: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     __table_args__ = (

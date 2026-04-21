@@ -22,6 +22,7 @@ type Req = {
   category?: string | null;
   description?: string | null;
   preferred_window?: string | null;
+  preferred_city?: string | null;
   status?: string | null;
   created_at?: string | null;
   user_id?: string | null;
@@ -1406,6 +1407,7 @@ export default function RequestDetailsScreen() {
                 }}
               >
                 <SummaryRow label="Category" value={item.category} />
+                <SummaryRow label="Preferred City" value={item.preferred_city} />
                 <SummaryRow label="Current Status" value={formatStatus(item.status)} />
                 <SummaryRow label="Assigned Lawyer" value={lawyerName || item.assigned_lawyer} />
                 <SummaryRow

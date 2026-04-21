@@ -75,6 +75,7 @@ def serialize_request(req: Request) -> dict:
         "category": req.category,
         "description": req.description,
         "preferred_window": req.preferred_window,
+        "preferred_city": req.preferred_city,
         "created_at": req.created_at.isoformat() if req.created_at else None,
         "scheduled_for": req.scheduled_for.isoformat() if req.scheduled_for else None,
         "appointment_mode": req.appointment_mode,

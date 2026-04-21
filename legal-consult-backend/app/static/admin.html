@@ -632,6 +632,7 @@
           const phone = (item.customer_phone || "").toLowerCase();
           const name = (item.customer_name || "").toLowerCase();
           const category = (item.category || "").toLowerCase();
+          const preferredCity = (item.preferred_city || "").toLowerCase();
           const requestId = (item.id || "").toLowerCase();
           const caseReference = (item.case_reference || "").toLowerCase();
 
@@ -639,6 +640,7 @@
             phone.includes(query) ||
             name.includes(query) ||
             category.includes(query) ||
+            preferredCity.includes(query) ||
             requestId.includes(query) ||
             caseReference.includes(query)
           );
@@ -657,7 +659,14 @@
         selectionContentEl.style.display = "block";
 
         document.getElementById("detailCustomer").textContent =
-          [item.customer_name, item.case_reference, item.customer_phone].filter(Boolean).join(" • ") || "Not available";
+          [
+            item.customer_name,
+            item.case_reference,
+            item.customer_phone,
+            item.preferred_city ? `Preferred city: ${item.preferred_city}` : "",
+          ]
+            .filter(Boolean)
+            .join(" • ") || "Not available";
         document.getElementById("detailStatus").textContent = item.status || "-";
         document.getElementById("detailLawyer").textContent =
           item.assigned_lawyer_name || "Not assigned";
@@ -699,6 +708,7 @@
               <span class="status-chip">${item.status}</span>
             </div>
             <div class="meta" style="margin-top: 10px;">${item.description || "No description"}</div>
+            <div class="meta" style="margin-top: 10px;">Preferred city: ${item.preferred_city || "Not specified"}</div>
             <div class="meta" style="margin-top: 10px;">Lawyer: ${item.assigned_lawyer_name || "Unassigned"} • Appointment: ${item.scheduled_for ? formatDate(item.scheduled_for) : "Pending"}</div>
           `;
           card.addEventListener("click", () => {
