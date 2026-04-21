@@ -39,6 +39,12 @@ export default function CourtConnectHome() {
               <Feather name="chevron-left" size={32} color="#000" />
             </TouchableOpacity>
           ),
+          headerRight: () => (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginRight: 16 }}>
+              <Text style={{ fontSize: 18, fontWeight: '900', color: '#000' }}>Case</Text>
+              <Text style={{ fontSize: 18, fontWeight: '900', color: '#D4A63D' }}>Fit</Text>
+            </View>
+          ),
         }}
       />
 

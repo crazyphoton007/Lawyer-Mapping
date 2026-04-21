@@ -83,13 +83,13 @@ function FlashingNeonButton({
         Animated.parallel([
           Animated.timing(colorAnim, {
             toValue: 1,
-            duration: 800,
+            duration: 1000,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: false,
           }),
           Animated.timing(shadowAnim, {
             toValue: 1,
-            duration: 800,
+            duration: 1000,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: false,
           }),
@@ -97,13 +97,13 @@ function FlashingNeonButton({
         Animated.parallel([
           Animated.timing(colorAnim, {
             toValue: 0,
-            duration: 800,
+            duration: 1000,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: false,
           }),
           Animated.timing(shadowAnim, {
             toValue: 0,
-            duration: 800,
+            duration: 1000,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: false,
           }),
@@ -116,12 +116,17 @@ function FlashingNeonButton({
 
   const borderColor = colorAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ["rgba(59, 130, 246, 0.4)", "rgba(59, 130, 246, 1)"],
+    outputRange: ["rgba(59, 130, 246, 0.5)", "rgba(59, 130, 246, 1)"],
   });
 
   const shadowOpacity = shadowAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.2, 0.8],
+    outputRange: [0.3, 0.9],
+  });
+
+  const elevation = shadowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [3, 8],
   });
 
   return (
@@ -144,9 +149,10 @@ function FlashingNeonButton({
           gap: 6,
           shadowColor: "#3B82F6",
           shadowOpacity: shadowOpacity,
-          shadowRadius: 8,
+          shadowRadius: 6,
           shadowOffset: { width: 0, height: 0 },
-          elevation: 5,
+          elevation: elevation,
+          backgroundColor: "rgba(255, 255, 255, 0.95)",
         }}
       >
         <Feather name="arrow-right-circle" size={16} color="#3B82F6" />
@@ -156,7 +162,7 @@ function FlashingNeonButton({
             {
               color: colorAnim.interpolate({
                 inputRange: [0, 1],
-                outputRange: ["rgba(59, 130, 246, 0.6)", "#3B82F6"],
+                outputRange: ["rgba(59, 130, 246, 0.7)", "#3B82F6"],
               }),
             },
           ]}
