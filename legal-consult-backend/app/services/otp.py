@@ -31,6 +31,7 @@ WHATSAPP_TEMPLATE_LANGUAGE = os.getenv("WHATSAPP_TEMPLATE_LANGUAGE", "en").strip
 MSG91_AUTH_KEY = os.getenv("MSG91_AUTH_KEY", "").strip()
 MSG91_SENDER_ID = os.getenv("MSG91_SENDER_ID", "").strip()
 MSG91_TEMPLATE_ID = os.getenv("MSG91_TEMPLATE_ID", "").strip()
+MSG91_TEMPLATE_OTP_KEY = os.getenv("MSG91_TEMPLATE_OTP_KEY", "OTP").strip() or "OTP"
 
 AWS_REGION = os.getenv("AWS_REGION", "").strip() or os.getenv("AWS_DEFAULT_REGION", "").strip()
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "").strip()
@@ -59,24 +60,41 @@ def _provider_chain() -> Iterable[str]:
 
 
 def _send_otp_via_msg91(ctx: OtpDeliveryContext) -> None:
-    if not MSG91_AUTH_KEY or not MSG91_SENDER_ID:
+    if not MSG91_AUTH_KEY or not MSG91_SENDER_ID or not MSG91_TEMPLATE_ID:
         raise HTTPException(
             status_code=500,
-            detail="MSG91 is selected but MSG91_AUTH_KEY or MSG91_SENDER_ID is missing.",
+            detail=(
+                "MSG91 is selected but MSG91_AUTH_KEY, MSG91_SENDER_ID, "
+                "or MSG91_TEMPLATE_ID is missing."
+            ),
         )
 
-    params = {
-        "authkey": MSG91_AUTH_KEY,
-        "mobile": ctx.phone,
+    mobile = "".join(ch for ch in ctx.phone if ch.isdigit())
+    if not mobile:
+        raise HTTPException(status_code=400, detail="MSG91 requires a valid phone number.")
+
+    payload = {
+        "flow_id": MSG91_TEMPLATE_ID,
         "sender": MSG91_SENDER_ID,
-        "otp": ctx.code,
+        "recipients": [
+            {
+                "mobiles": mobile,
+                MSG91_TEMPLATE_OTP_KEY: ctx.code,
+            }
+        ],
     }
 
-    if MSG91_TEMPLATE_ID:
-        params["template_id"] = MSG91_TEMPLATE_ID
-
-    url = f"https://control.msg91.com/api/v5/otp?{urllib.parse.urlencode(params)}"
-    request = urllib.request.Request(url, method="GET")
+    data = json.dumps(payload).encode("utf-8")
+    request = urllib.request.Request(
+        "https://api.msg91.com/api/v5/flow/",
+        data=data,
+        method="POST",
+        headers={
+            "authkey": MSG91_AUTH_KEY,
+            "content-type": "application/json",
+            "accept": "application/json",
+        },
+    )
 
     try:
         with urllib.request.urlopen(request, timeout=15) as response:
