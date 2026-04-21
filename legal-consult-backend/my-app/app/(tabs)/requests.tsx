@@ -54,19 +54,6 @@ function deriveCaseNumber(id: string) {
   return String(h % 100000).padStart(5, "0");
 }
 
-function stepFromStatus(status?: string | null) {
-  const st = (status || "pending").toLowerCase();
-  if (st === "paid" || st === "payment_confirmed") return 2;
-  if (["calling", "scheduled", "booked", "completed"].includes(st)) return 3;
-  if (st === "cancelled") return 0;
-  return 1;
-}
-
-function normalizePhone(s?: string | null) {
-  const n = (s ?? "").toString().replace(/\D/g, "");
-  return n.slice(-12);
-}
-
 function FlashingNeonButton({
   onPress,
   children,
@@ -74,59 +61,47 @@ function FlashingNeonButton({
   onPress: () => void;
   children: React.ReactNode;
 }) {
-  const colorAnim = useRef(new Animated.Value(0)).current;
-  const shadowAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.parallel([
-          Animated.timing(colorAnim, {
-            toValue: 1,
-            duration: 1000,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: false,
-          }),
-          Animated.timing(shadowAnim, {
-            toValue: 1,
-            duration: 1000,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: false,
-          }),
-        ]),
-        Animated.parallel([
-          Animated.timing(colorAnim, {
-            toValue: 0,
-            duration: 1000,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: false,
-          }),
-          Animated.timing(shadowAnim, {
-            toValue: 0,
-            duration: 1000,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: false,
-          }),
-        ]),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 950,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: false,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0,
+          duration: 950,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: false,
+        }),
       ])
     );
     loop.start();
     return () => loop.stop();
-  }, [colorAnim, shadowAnim]);
+  }, [pulseAnim]);
 
-  const borderColor = colorAnim.interpolate({
+  const borderColor = pulseAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ["rgba(59, 130, 246, 0.5)", "rgba(59, 130, 246, 1)"],
+    outputRange: ["#93C5FD", "#2563EB"],
   });
 
-  const shadowOpacity = shadowAnim.interpolate({
+  const backgroundColor = pulseAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.3, 0.9],
+    outputRange: ["#FFFFFF", "#EFF6FF"],
   });
 
-  const elevation = shadowAnim.interpolate({
+  const textColor = pulseAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [3, 8],
+    outputRange: ["#1D4ED8", "#0F3FB8"],
+  });
+
+  const scale = pulseAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.03],
   });
 
   return (
@@ -139,39 +114,43 @@ function FlashingNeonButton({
     >
       <Animated.View
         style={{
+          transform: [{ scale }],
           borderColor: borderColor,
           borderWidth: 1.5,
-          borderRadius: 10,
-          paddingVertical: 8,
-          paddingHorizontal: 12,
+          borderRadius: 12,
+          paddingVertical: 10,
+          paddingHorizontal: 14,
           flexDirection: "row",
           alignItems: "center",
           gap: 6,
-          shadowColor: "#3B82F6",
-          shadowOpacity: shadowOpacity,
-          shadowRadius: 6,
-          shadowOffset: { width: 0, height: 0 },
-          elevation: elevation,
-          backgroundColor: "rgba(255, 255, 255, 0.95)",
+          backgroundColor: backgroundColor,
         }}
       >
-        <Feather name="arrow-right-circle" size={16} color="#3B82F6" />
+        <Feather name="arrow-right-circle" size={16} color="#2563EB" />
         <Animated.Text
           style={[
             { fontWeight: "600", fontSize: 14 },
-            {
-              color: colorAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: ["rgba(59, 130, 246, 0.7)", "#3B82F6"],
-              }),
-            },
+            { color: textColor },
           ]}
         >
-          View details
+          {children}
         </Animated.Text>
       </Animated.View>
     </TouchableOpacity>
   );
+}
+
+function stepFromStatus(status?: string | null) {
+  const st = (status || "pending").toLowerCase();
+  if (st === "paid" || st === "payment_confirmed") return 2;
+  if (["calling", "scheduled", "booked", "completed"].includes(st)) return 3;
+  if (st === "cancelled") return 0;
+  return 1;
+}
+
+function normalizePhone(s?: string | null) {
+  const n = (s ?? "").toString().replace(/\D/g, "");
+  return n.slice(-12);
 }
 
 export default function RequestsScreen() {
@@ -445,7 +424,7 @@ export default function RequestsScreen() {
       </View>
 
       <TouchableOpacity
-        onPress={() => router.push("/court-connect")}
+        onPress={() => router.push("/(tabs)/court-connect")}
         activeOpacity={0.9}
         style={{
           marginHorizontal: 16,
@@ -583,6 +562,20 @@ export default function RequestsScreen() {
               </Text>
 
               <Text style={{ marginTop: 2, color: "#374151" }}>{title}</Text>
+              {details ? (
+                <Text
+                  numberOfLines={3}
+                  style={{ marginTop: 8, color: "#374151", lineHeight: 20 }}
+                >
+                  {details}
+                </Text>
+              ) : null}
+
+              {item.preferred_city ? (
+                <Text style={{ marginTop: details ? 8 : 4, color: MUTED, fontWeight: "700" }}>
+                  Preferred city: {item.preferred_city}
+                </Text>
+              ) : null}
 
               {status === "cancelled" ? (
                 <Text style={{ marginTop: 10, color: "#EF4444", fontWeight: "700" }}>
@@ -600,27 +593,12 @@ export default function RequestsScreen() {
                 </View>
               )}
 
-              {details ? (
-                <Text
-                  numberOfLines={3}
-                  style={{ marginTop: 8, color: "#374151", lineHeight: 20 }}
-                >
-                  {details}
-                </Text>
-              ) : null}
-
-              {item.preferred_city ? (
-                <Text style={{ marginTop: 8, color: INK, fontWeight: "600" }}>
-                  Preferred city: {item.preferred_city}
-                </Text>
-              ) : null}
-
               <FlashingNeonButton
                 onPress={() => {
                   router.push(`/request/${item.id}`);
                 }}
               >
-                <></>
+                View details
               </FlashingNeonButton>
             </View>
           );

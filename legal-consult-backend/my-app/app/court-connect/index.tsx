@@ -7,7 +7,6 @@ import { Feather } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
 import { Stack, useRouter } from "expo-router"; // ← add useRouter
 import { COURT_CATALOG } from "../../constants/courtLinks";
-import CaseFitHeader from "../../components/CaseFitHeader";
 
 const BG = "#F7F8FA",
   INK = "#0B1220",
@@ -23,18 +22,12 @@ export default function CourtConnectHome() {
   const lowerCourtRows = useMemo(() => lowerCourt.courts, [lowerCourt]);
 
   return (
-    <>
-      {/* Use consistent CaseFit header with back button */}
-      <CaseFitHeader showBack={true} />
-
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32, backgroundColor: BG }}>
-        {/* Header */}
-        <View style={{ marginBottom: 10 }}>
-          <Text style={{ fontSize: 24, fontWeight: "800", color: INK }}>Court Connect</Text>
-          <Text style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>
-            Access court websites and legal resources instantly
-          </Text>
-        </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+          {/* Header */}
+          <View style={{ marginBottom: 10 }}>
+            <Text style={{ fontSize: 24, fontWeight: "800", color: INK }}>Court Connect</Text>
+            <Text style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>
               Quick access to court case status portals
             </Text>
           </View>
@@ -68,7 +61,7 @@ export default function CourtConnectHome() {
             </Text>
           </View>
         </ScrollView>
-    </>
+      </SafeAreaView>
   );
 }
 
