@@ -52,73 +52,6 @@ function deriveCaseNumber(id: string) {
   return String(h % 100000).padStart(5, "0");
 }
 
-function FlashingButton({
-  onPress,
-  disabled,
-  children,
-}: {
-  onPress: () => void;
-  disabled?: boolean;
-  children: React.ReactNode;
-}) {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const opacityAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    if (disabled) return;
-    const pulse = Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 1.08,
-        duration: 600,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: false,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 600,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: false,
-      }),
-    ]);
-
-    const opacityPulse = Animated.sequence([
-      Animated.timing(opacityAnim, {
-        toValue: 0.7,
-        duration: 600,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: false,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 1,
-        duration: 600,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: false,
-      }),
-    ]);
-
-    const loop = Animated.loop(
-      Animated.parallel([pulse, opacityPulse], { stopTogether: true })
-    );
-
-    loop.start();
-
-    return () => loop.stop();
-  }, [disabled, scaleAnim, opacityAnim]);
-
-  return (
-    <Animated.View
-      style={{
-        transform: [{ scale: scaleAnim }],
-        opacity: opacityAnim,
-      }}
-    >
-      <TouchableOpacity onPress={onPress} disabled={disabled}>
-        {children}
-      </TouchableOpacity>
-    </Animated.View>
-  );
-}
-
 function PerimeterGlowCard({
   active,
   onLayout,
@@ -692,7 +625,7 @@ export default function ConsultScreen() {
                     Preferred lawyer city
                   </Text>
                   <Text style={{ fontSize: 12, color: MUTED, marginTop: 2, flexShrink: 1, width: "100%" }}>
-                    Tell us where you want the assigned lawyer to be based.
+                    Tell us where you want the assigned lawyer to be based
                   </Text>
                 </View>
               </View>
@@ -744,7 +677,7 @@ export default function ConsultScreen() {
                     Preferred time
                   </Text>
                   <Text style={{ fontSize: 12, color: MUTED, marginTop: 2, flexShrink: 1, width: "100%" }}>
-                    Share your availability so our team can schedule more smoothly.
+                    Share your availability so our team can schedule more smoothly
                   </Text>
                 </View>
               </View>
@@ -786,7 +719,7 @@ export default function ConsultScreen() {
                   <Text style={{ color: "rgba(255,255,255,0.72)", marginTop: 4, lineHeight: 19 }}>
                     {valid
                       ? "Your intake is ready for review by the matching desk."
-                      : "Choose a category and city to continue."}
+                      : "Choose a category and city to continue"}
                   </Text>
                 </View>
                 <View
@@ -879,31 +812,28 @@ export default function ConsultScreen() {
               </Text>
             </View>
 
-            <FlashingButton
+            <TouchableOpacity
               onPress={() => {
                 setOkOpen(false);
                 router.replace("/(tabs)/requests");
               }}
+              style={{
+                marginTop: 10,
+                backgroundColor: ACCENT,
+                paddingVertical: 16,
+                borderRadius: 16,
+                alignItems: "center",
+                shadowColor: ACCENT,
+                shadowOpacity: 0.28,
+                shadowRadius: 14,
+                shadowOffset: { width: 0, height: 8 },
+                elevation: 6,
+              }}
             >
-              <View
-                style={{
-                  marginTop: 10,
-                  backgroundColor: ACCENT,
-                  paddingVertical: 16,
-                  borderRadius: 16,
-                  alignItems: "center",
-                  shadowColor: ACCENT,
-                  shadowOpacity: 0.28,
-                  shadowRadius: 14,
-                  shadowOffset: { width: 0, height: 8 },
-                  elevation: 6,
-                }}
-              >
-                <Text style={{ color: "#1F1400", fontSize: 16, fontWeight: "900", letterSpacing: 0.4 }}>
-                  View Details
-                </Text>
-              </View>
-            </FlashingButton>
+              <Text style={{ color: "#1F1400", fontSize: 16, fontWeight: "900", letterSpacing: 0.4 }}>
+                Open My Case Brief
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
