@@ -1,11 +1,8 @@
-// my-app/app/court-connect/index.tsx
-
 import { useMemo } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert, Platform } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import * as WebBrowser from "expo-web-browser";
-import { Stack, useRouter } from "expo-router"; // ← add useRouter
+import { useRouter } from "expo-router";
 import { COURT_CATALOG } from "../../constants/courtLinks";
 
 const BG = "#F7F8FA",
@@ -15,7 +12,7 @@ const BG = "#F7F8FA",
   CARD = "#FFFFFF";
 
 export default function CourtConnectHome() {
-  const router = useRouter(); // ← for custom back
+  const router = useRouter();
   const { highCourt, lowerCourt } = COURT_CATALOG;
 
   const highCourtRows = useMemo(() => highCourt.courts, [highCourt]);
@@ -40,7 +37,12 @@ export default function CourtConnectHome() {
                   {court.name}
                 </Text>
                 {(court.benches ?? []).map((b) => (
-                  <RowLink key={b.name} label={b.name} url={b.url} />
+                  <RowLink key={b.name} label={b.name} url={b.url} onPressUrl={(nextUrl) => {
+                    router.push({
+                      pathname: "/court-connect/view",
+                      params: { title: b.name, url: nextUrl },
+                    });
+                  }} />
                 ))}
               </View>
             ))}
@@ -49,7 +51,12 @@ export default function CourtConnectHome() {
           {/* Lower Court card */}
           <SectionCard title={lowerCourt.title} icon="layers">
             {lowerCourtRows.map((c) => (
-              <RowLink key={c.name} label={c.name} url={c.url ?? null} />
+              <RowLink key={c.name} label={c.name} url={c.url ?? null} onPressUrl={(nextUrl) => {
+                router.push({
+                  pathname: "/court-connect/view",
+                  params: { title: c.name, url: nextUrl },
+                });
+              }} />
             ))}
           </SectionCard>
 
@@ -110,32 +117,23 @@ function SectionCard({
   );
 }
 
-function RowLink({ label, url }: { label: string; url: string | null }) {
+function RowLink({
+  label,
+  url,
+  onPressUrl,
+}: {
+  label: string;
+  url: string | null;
+  onPressUrl: (url: string) => void;
+}) {
   const disabled = !url;
-
-  const openInAppBrowser = async () => {
-    if (!url) return;
-    try {
-      await WebBrowser.openBrowserAsync(url, {
-        enableBarCollapsing: true,
-        showTitle: true,
-        // iOS
-        dismissButtonStyle: "done",
-        presentationStyle: "pageSheet",
-        // Android Custom Tabs hints
-        toolbarColor: "#ffffff",
-        controlsColor: "#0B1220",
-        secondaryToolbarColor: "#f2f3f5",
-      });
-    } catch (e) {
-      Alert.alert("Couldn’t open link", "Please try again or use another network.");
-    }
-  };
 
   return (
     <TouchableOpacity
       disabled={disabled}
-      onPress={openInAppBrowser}
+      onPress={() => {
+        if (url) onPressUrl(url);
+      }}
       style={{
         flexDirection: "row",
         alignItems: "center",
@@ -155,11 +153,7 @@ function RowLink({ label, url }: { label: string; url: string | null }) {
           {disabled ? "Coming soon" : "Open status portal"}
         </Text>
       </View>
-      <Feather
-        name={Platform.OS === "ios" ? "external-link" : "chevron-right"}
-        size={20}
-        color={INK}
-      />
+      <Feather name="chevron-right" size={20} color={INK} />
     </TouchableOpacity>
   );
 }
