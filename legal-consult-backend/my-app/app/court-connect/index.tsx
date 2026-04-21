@@ -7,6 +7,7 @@ import { Feather } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
 import { Stack, useRouter } from "expo-router"; // ← add useRouter
 import { COURT_CATALOG } from "../../constants/courtLinks";
+import CaseFitHeader from "../../components/CaseFitHeader";
 
 const BG = "#F7F8FA",
   INK = "#0B1220",
@@ -23,37 +24,17 @@ export default function CourtConnectHome() {
 
   return (
     <>
-      {/* Clean header: custom black back chevron, no title, no "(tabs)" */}
-      <Stack.Screen
-        options={{
-          headerTitle: "",                // hide "court-connect/index"
-          headerBackVisible: false,       // hide default back (prevents "(tabs)")
-          headerShadowVisible: false,
-          headerStyle: { backgroundColor: "#fff" },
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={{ paddingHorizontal: 12, paddingVertical: 8, marginLeft: -18 }}
-              accessibilityLabel="Go back"
-            >
-              <Feather name="chevron-left" size={32} color="#000" />
-            </TouchableOpacity>
-          ),
-          headerRight: () => (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginRight: 16 }}>
-              <Text style={{ fontSize: 18, fontWeight: '900', color: '#000' }}>Case</Text>
-              <Text style={{ fontSize: 18, fontWeight: '900', color: '#D4A63D' }}>Fit</Text>
-            </View>
-          ),
-        }}
-      />
+      {/* Use consistent CaseFit header with back button */}
+      <CaseFitHeader showBack={true} />
 
-      <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
-        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
-          {/* Header */}
-          <View style={{ marginBottom: 10 }}>
-            <Text style={{ fontSize: 24, fontWeight: "800", color: INK }}>Court Connect</Text>
-            <Text style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32, backgroundColor: BG }}>
+        {/* Header */}
+        <View style={{ marginBottom: 10 }}>
+          <Text style={{ fontSize: 24, fontWeight: "800", color: INK }}>Court Connect</Text>
+          <Text style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>
+            Access court websites and legal resources instantly
+          </Text>
+        </View>
               Quick access to court case status portals
             </Text>
           </View>
@@ -87,7 +68,6 @@ export default function CourtConnectHome() {
             </Text>
           </View>
         </ScrollView>
-      </SafeAreaView>
     </>
   );
 }
