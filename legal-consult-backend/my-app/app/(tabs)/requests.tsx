@@ -20,6 +20,7 @@ type Req = {
   category?: string | null;
   description?: string | null;
   preferred_window?: string | null;
+  preferred_city?: string | null;
   status?: string | null;
   created_at?: string | null;
   user_id?: string | null;
@@ -496,6 +497,12 @@ export default function RequestsScreen() {
                   style={{ marginTop: 8, color: "#374151", lineHeight: 20 }}
                 >
                   {details}
+                </Text>
+              ) : null}
+
+              {item.preferred_city ? (
+                <Text style={{ marginTop: 8, color: INK, fontWeight: "600" }}>
+                  Preferred city: {item.preferred_city}
                 </Text>
               ) : null}
 

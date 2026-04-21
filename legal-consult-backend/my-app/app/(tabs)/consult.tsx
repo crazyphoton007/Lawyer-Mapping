@@ -48,6 +48,7 @@ export default function ConsultScreen() {
 
   const [category, setCategory] = useState<string>("");
   const [details, setDetails] = useState<string>("");
+  const [preferredCity, setPreferredCity] = useState<string>("");
   const [preferredWindow, setPreferredWindow] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
@@ -57,7 +58,10 @@ export default function ConsultScreen() {
 
   const charCount = useMemo(() => details.trim().length, [details]);
   const minChars = 10;
-  const valid = useMemo(() => Boolean(category.trim()) && charCount >= minChars && !!token, [category, charCount, token]);
+  const valid = useMemo(
+    () => Boolean(category.trim()) && Boolean(preferredCity.trim()) && charCount >= minChars && !!token,
+    [category, preferredCity, charCount, token]
+  );
   const caseReference = useMemo(() => (newId ? `CF-${deriveCaseNumber(newId)}` : null), [newId]);
 
   async function rememberMyRequestId(id: string | number) {
@@ -96,7 +100,7 @@ export default function ConsultScreen() {
       return;
     }
     if (!valid) {
-      Alert.alert("Missing fields", "Pick a category and write at least 10 characters.");
+      Alert.alert("Missing fields", "Pick a category, choose a city, and write at least 10 characters.");
       return;
     }
 
@@ -111,6 +115,7 @@ export default function ConsultScreen() {
         body: JSON.stringify({
           category: category.trim(),
           details: details.trim(),
+          preferred_city: preferredCity.trim(),
           preferred_window: preferredWindow.trim() || null,
         }),
       });
@@ -133,6 +138,7 @@ export default function ConsultScreen() {
       // reset form
       setCategory("");
       setDetails("");
+      setPreferredCity("");
       setPreferredWindow("");
 
       // show success sheet
@@ -283,6 +289,30 @@ export default function ConsultScreen() {
                   </View>
                 ))}
               </View>
+            </View>
+
+            <View>
+              <Text style={{ fontSize: 14, fontWeight: "700", color: INK }}>
+                Preferred lawyer city
+              </Text>
+              <Text style={{ fontSize: 12, color: MUTED, marginTop: 4 }}>
+                Tell us which city you want the assigned lawyer to be from.
+              </Text>
+
+              <TextInput
+                value={preferredCity}
+                onChangeText={setPreferredCity}
+                placeholder="Example: Delhi, Mumbai, Noida"
+                style={{
+                  borderWidth: 1,
+                  borderColor: BORDER,
+                  borderRadius: 12,
+                  padding: 12,
+                  fontSize: 15,
+                  backgroundColor: "#FAFAFA",
+                  marginTop: 8,
+                }}
+              />
             </View>
 
             <View>

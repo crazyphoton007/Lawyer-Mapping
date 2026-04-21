@@ -10,12 +10,14 @@ class RequestBase(BaseModel):
     category: Optional[str] = None
     description: Optional[str] = None
     preferred_window: Optional[str] = None
+    preferred_city: Optional[str] = None
 
 
 class RequestCreate(BaseModel):
     category: str
     details: str
     preferred_window: Optional[str] = None
+    preferred_city: Optional[str] = None
 
 
 class RequestOut(RequestBase):

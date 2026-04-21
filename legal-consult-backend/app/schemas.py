@@ -24,6 +24,7 @@ class RequestBase(BaseModel):
     category: Optional[str] = None
     description: Optional[str] = None
     preferred_window: Optional[str] = None
+    preferred_city: Optional[str] = None
     scheduled_for: Optional[datetime] = None
     appointment_mode: Optional[str] = None
     appointment_notes: Optional[str] = None
@@ -33,6 +34,7 @@ class RequestCreate(BaseModel):
     category: str
     details: str
     preferred_window: Optional[str] = None
+    preferred_city: Optional[str] = None
 
 
 class RequestOut(RequestBase):
