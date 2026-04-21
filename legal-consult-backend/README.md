@@ -203,7 +203,7 @@ SMTP_FROM_EMAIL=no-reply@thecasefit.com
 
 Notes:
 - this integration uses MSG91's SMS flow API so `MSG91_TEMPLATE_ID` should be the approved MSG91 flow/template id from the panel
-- `MSG91_TEMPLATE_OTP_KEY` must match the variable name you created in the MSG91 template; for a template like `Your CaseFit OTP is ##OTP## ...`, keep it as `OTP`
+- `MSG91_TEMPLATE_OTP_KEY` must match the variable name you created in the MSG91 template; for a template like `Your caseFit OTP is ##OTP## ...`, keep it as `OTP`
 - phone numbers are sent to MSG91 in international format digits only, e.g. `919807863007`
 - keep `OTP_PROVIDER=dev` for local/dev if you want OTPs printed in logs
 - once `OTP_PROVIDER=whatsapp`, `OTP_PROVIDER=sns`, or `OTP_PROVIDER=msg91` is enabled, `/auth/request-code` will send the OTP through that provider
