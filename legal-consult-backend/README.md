@@ -191,7 +191,7 @@ Notes:
 OTP_PROVIDER=msg91
 OTP_FALLBACK_PROVIDER=email
 MSG91_AUTH_KEY=your_msg91_auth_key
-MSG91_SENDER_ID=caseFit007
+MSG91_SENDER_ID=CASEFT
 MSG91_TEMPLATE_ID=your_msg91_flow_or_template_id
 MSG91_TEMPLATE_OTP_KEY=OTP
 SMTP_HOST=smtp.your-provider.com
