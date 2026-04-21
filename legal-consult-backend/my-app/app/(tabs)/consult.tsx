@@ -52,6 +52,73 @@ function deriveCaseNumber(id: string) {
   return String(h % 100000).padStart(5, "0");
 }
 
+function FlashingButton({
+  onPress,
+  disabled,
+  children,
+}: {
+  onPress: () => void;
+  disabled?: boolean;
+  children: React.ReactNode;
+}) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const opacityAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (disabled) return;
+    const pulse = Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 1.08,
+        duration: 600,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 600,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: false,
+      }),
+    ]);
+
+    const opacityPulse = Animated.sequence([
+      Animated.timing(opacityAnim, {
+        toValue: 0.7,
+        duration: 600,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 600,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: false,
+      }),
+    ]);
+
+    const loop = Animated.loop(
+      Animated.parallel([pulse, opacityPulse], { stopTogether: true })
+    );
+
+    loop.start();
+
+    return () => loop.stop();
+  }, [disabled, scaleAnim, opacityAnim]);
+
+  return (
+    <Animated.View
+      style={{
+        transform: [{ scale: scaleAnim }],
+        opacity: opacityAnim,
+      }}
+    >
+      <TouchableOpacity onPress={onPress} disabled={disabled}>
+        {children}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+}
+
 function PerimeterGlowCard({
   active,
   onLayout,
@@ -812,28 +879,31 @@ export default function ConsultScreen() {
               </Text>
             </View>
 
-            <TouchableOpacity
+            <FlashingButton
               onPress={() => {
                 setOkOpen(false);
                 router.replace("/(tabs)/requests");
               }}
-              style={{
-                marginTop: 10,
-                backgroundColor: ACCENT,
-                paddingVertical: 16,
-                borderRadius: 16,
-                alignItems: "center",
-                shadowColor: ACCENT,
-                shadowOpacity: 0.28,
-                shadowRadius: 14,
-                shadowOffset: { width: 0, height: 8 },
-                elevation: 6,
-              }}
             >
-              <Text style={{ color: "#1F1400", fontSize: 16, fontWeight: "900", letterSpacing: 0.4 }}>
-                Open My Case Brief
-              </Text>
-            </TouchableOpacity>
+              <View
+                style={{
+                  marginTop: 10,
+                  backgroundColor: ACCENT,
+                  paddingVertical: 16,
+                  borderRadius: 16,
+                  alignItems: "center",
+                  shadowColor: ACCENT,
+                  shadowOpacity: 0.28,
+                  shadowRadius: 14,
+                  shadowOffset: { width: 0, height: 8 },
+                  elevation: 6,
+                }}
+              >
+                <Text style={{ color: "#1F1400", fontSize: 16, fontWeight: "900", letterSpacing: 0.4 }}>
+                  View Details
+                </Text>
+              </View>
+            </FlashingButton>
           </View>
         </View>
       </Modal>
