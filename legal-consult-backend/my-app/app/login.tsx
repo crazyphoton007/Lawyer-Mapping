@@ -36,6 +36,19 @@ const SOFT = "#EEF2FF";
 const SOFT_GOLD = "#F9EBC8";
 const GUEST_TOKEN_KEY = "guest_token";
 const GUEST_USER_KEY = "guest_user";
+const OTP_LIMIT_TITLE = "Your OTP vault is cooling down";
+const OTP_LIMIT_MESSAGE =
+  "You’ve requested OTP too many times. Please try again after 1 hour.";
+
+class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
 
 // Visual tweaks
 const LOGO_SIZE = 38;
@@ -80,7 +93,7 @@ async function apiPost(path: string, body: unknown) {
     const message =
       (json && (json.detail || json.error || json.message)) ||
       `HTTP ${res.status}: ${text.slice(0, 200)}`;
-    throw new Error(message);
+    throw new ApiError(message, res.status);
   }
 
   return json ?? {};
@@ -238,6 +251,10 @@ export default function LoginScreen() {
       setStep("verify");
     } catch (e: any) {
       console.error("[requestCode] error:", e);
+      if (e?.status === 429) {
+        Alert.alert(OTP_LIMIT_TITLE, OTP_LIMIT_MESSAGE);
+        return;
+      }
       Alert.alert("Error", e?.message || "Failed to request code");
     } finally {
       setLoading(false);
