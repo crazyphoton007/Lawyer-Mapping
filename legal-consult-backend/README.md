@@ -191,9 +191,10 @@ Notes:
 OTP_PROVIDER=msg91
 OTP_FALLBACK_PROVIDER=email
 MSG91_AUTH_KEY=your_msg91_auth_key
-MSG91_SENDER_ID=CASEFT
-MSG91_TEMPLATE_ID=your_msg91_flow_or_template_id
+MSG91_TEMPLATE_ID=your_msg91_sendotp_template_id
 MSG91_TEMPLATE_OTP_KEY=OTP
+MSG91_OTP_EXPIRY_MINUTES=5
+OTP_EXPIRES_SECONDS=300
 SMTP_HOST=smtp.your-provider.com
 SMTP_PORT=587
 SMTP_USERNAME=your_smtp_username
@@ -202,8 +203,8 @@ SMTP_FROM_EMAIL=no-reply@thecasefit.com
 ```
 
 Notes:
-- this integration uses MSG91's SMS flow API so `MSG91_TEMPLATE_ID` should be the approved MSG91 flow/template id from the panel
-- `MSG91_TEMPLATE_OTP_KEY` must match the variable name you created in the MSG91 template; for a template like `Your caseFit OTP is ##OTP## ...`, keep it as `OTP`
+- this integration uses MSG91's SendOTP API so `MSG91_TEMPLATE_ID` should be the template id from the MSG91 OTP template panel
+- `MSG91_TEMPLATE_OTP_KEY` is kept for compatibility with older flow-based config; the SendOTP API expects the template to use `##OTP##`
 - phone numbers are sent to MSG91 in international format digits only, e.g. `919807863007`
 - keep `OTP_PROVIDER=dev` for local/dev if you want OTPs printed in logs
 - once `OTP_PROVIDER=whatsapp`, `OTP_PROVIDER=sns`, or `OTP_PROVIDER=msg91` is enabled, `/auth/request-code` will send the OTP through that provider

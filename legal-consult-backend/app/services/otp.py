@@ -32,6 +32,7 @@ MSG91_AUTH_KEY = os.getenv("MSG91_AUTH_KEY", "").strip()
 MSG91_SENDER_ID = os.getenv("MSG91_SENDER_ID", "").strip()
 MSG91_TEMPLATE_ID = os.getenv("MSG91_TEMPLATE_ID", "").strip()
 MSG91_TEMPLATE_OTP_KEY = os.getenv("MSG91_TEMPLATE_OTP_KEY", "OTP").strip() or "OTP"
+MSG91_OTP_EXPIRY_MINUTES = int(os.getenv("MSG91_OTP_EXPIRY_MINUTES", "5"))
 
 AWS_REGION = os.getenv("AWS_REGION", "").strip() or os.getenv("AWS_DEFAULT_REGION", "").strip()
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "").strip()
@@ -60,12 +61,12 @@ def _provider_chain() -> Iterable[str]:
 
 
 def _send_otp_via_msg91(ctx: OtpDeliveryContext) -> None:
-    if not MSG91_AUTH_KEY or not MSG91_SENDER_ID or not MSG91_TEMPLATE_ID:
+    if not MSG91_AUTH_KEY or not MSG91_TEMPLATE_ID:
         raise HTTPException(
             status_code=500,
             detail=(
-                "MSG91 is selected but MSG91_AUTH_KEY, MSG91_SENDER_ID, "
-                "or MSG91_TEMPLATE_ID is missing."
+                "MSG91 is selected but MSG91_AUTH_KEY or MSG91_TEMPLATE_ID "
+                "is missing."
             ),
         )
 
@@ -73,25 +74,21 @@ def _send_otp_via_msg91(ctx: OtpDeliveryContext) -> None:
     if not mobile:
         raise HTTPException(status_code=400, detail="MSG91 requires a valid phone number.")
 
-    payload = {
-        "flow_id": MSG91_TEMPLATE_ID,
-        "sender": MSG91_SENDER_ID,
-        "recipients": [
-            {
-                "mobiles": mobile,
-                MSG91_TEMPLATE_OTP_KEY: ctx.code,
-            }
-        ],
-    }
-
-    data = json.dumps(payload).encode("utf-8")
+    query = urllib.parse.urlencode(
+        {
+            "template_id": MSG91_TEMPLATE_ID,
+            "mobile": mobile,
+            "authkey": MSG91_AUTH_KEY,
+            "otp": ctx.code,
+            "otp_expiry": MSG91_OTP_EXPIRY_MINUTES,
+        }
+    )
     request = urllib.request.Request(
-        "https://api.msg91.com/api/v5/flow/",
-        data=data,
+        f"https://control.msg91.com/api/v5/otp?{query}",
+        data=b"{}",
         method="POST",
         headers={
-            "authkey": MSG91_AUTH_KEY,
-            "content-type": "application/json",
+            "content-type": "application/JSON",
             "accept": "application/json",
         },
     )

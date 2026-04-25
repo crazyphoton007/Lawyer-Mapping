@@ -18,6 +18,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 JWT_SECRET = os.getenv("JWT_SECRET", "dev_secret")
 JWT_EXPIRES_MIN = int(os.getenv("JWT_EXPIRES_MIN", "43200"))  # 30 days default
+OTP_EXPIRES_SECONDS = int(os.getenv("OTP_EXPIRES_SECONDS", "300"))
 ADMIN_BOOTSTRAP_KEY = os.getenv("ADMIN_BOOTSTRAP_KEY")
 TEAM_ROLES = {"user", "lawyer", "admin"}
 
@@ -118,7 +119,7 @@ def _upsert_user_role(db: Session, phone: str, role: str) -> User:
 @router.post("/request-code")
 def request_code(inp: RequestCodeIn, db: Session = Depends(get_db)):
     code = f"{random.randint(100000, 999999)}"
-    _otp[inp.phone] = (code, time.time() + 600)  # 10 min
+    _otp[inp.phone] = (code, time.time() + OTP_EXPIRES_SECONDS)
     user = db.query(User).filter(User.phone == inp.phone).first()
     fallback_email = inp.email or getattr(user, "email", None)
     if inp.email and user and not getattr(user, "email", None):
