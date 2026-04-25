@@ -19,6 +19,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 JWT_SECRET = os.getenv("JWT_SECRET", "dev_secret")
 JWT_EXPIRES_MIN = int(os.getenv("JWT_EXPIRES_MIN", "43200"))  # 30 days default
 OTP_EXPIRES_SECONDS = int(os.getenv("OTP_EXPIRES_SECONDS", "300"))
+OTP_RATE_LIMIT_COUNT = int(os.getenv("OTP_RATE_LIMIT_COUNT", "2"))
+OTP_RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("OTP_RATE_LIMIT_WINDOW_SECONDS", "3600"))
 ADMIN_BOOTSTRAP_KEY = os.getenv("ADMIN_BOOTSTRAP_KEY")
 TEAM_ROLES = {"user", "lawyer", "admin"}
 
@@ -49,6 +51,7 @@ class SetRoleIn(BaseModel):
 
 # simple in-memory store (MVP only)
 _otp: dict[str, tuple[str, float]] = {}
+_otp_request_log: dict[str, list[float]] = {}
 
 
 def _make_jwt(user_id: str, phone: str) -> str:
@@ -116,8 +119,39 @@ def _upsert_user_role(db: Session, phone: str, role: str) -> User:
     return user
 
 
+def _normalize_phone_key(phone: str) -> str:
+    digits = "".join(ch for ch in phone if ch.isdigit())
+    return digits or phone.strip()
+
+
+def _check_otp_rate_limit(phone: str) -> None:
+    now = time.time()
+    cutoff = now - OTP_RATE_LIMIT_WINDOW_SECONDS
+    key = _normalize_phone_key(phone)
+    recent_requests = [
+        requested_at
+        for requested_at in _otp_request_log.get(key, [])
+        if requested_at >= cutoff
+    ]
+
+    if len(recent_requests) >= OTP_RATE_LIMIT_COUNT:
+        oldest_request = min(recent_requests)
+        retry_after = max(1, int((oldest_request + OTP_RATE_LIMIT_WINDOW_SECONDS) - now))
+        raise HTTPException(
+            status_code=429,
+            detail=(
+                "Too many OTP requests. Please wait before requesting another code."
+            ),
+            headers={"Retry-After": str(retry_after)},
+        )
+
+    recent_requests.append(now)
+    _otp_request_log[key] = recent_requests
+
+
 @router.post("/request-code")
 def request_code(inp: RequestCodeIn, db: Session = Depends(get_db)):
+    _check_otp_rate_limit(inp.phone)
     code = f"{random.randint(100000, 999999)}"
     _otp[inp.phone] = (code, time.time() + OTP_EXPIRES_SECONDS)
     user = db.query(User).filter(User.phone == inp.phone).first()
