@@ -176,14 +176,16 @@ OTP_FALLBACK_PROVIDER=dev
 AWS_REGION=ap-south-1
 AWS_ACCESS_KEY_ID=your_access_key
 AWS_SECRET_ACCESS_KEY=your_secret_key
-AWS_SNS_SENDER_ID=CASFIT
-AWS_SNS_ENTITY_ID=your_dlt_entity_id
-AWS_SNS_TEMPLATE_ID=your_dlt_template_id
+AWS_SNS_SENDER_ID=CASEFT
+AWS_SNS_ENTITY_ID=1201177648995021460
+AWS_SNS_TEMPLATE_ID=1207177704313400010
 AWS_SNS_SMS_TYPE=Transactional
+AWS_SNS_MESSAGE_TEMPLATE=Your caseFit OTP is {code}. It is valid for 5 minutes. Do not share it with anyone.
 ```
 
 Notes:
-- for India delivery, `AWS_SNS_ENTITY_ID` and `AWS_SNS_TEMPLATE_ID` are the DLT values typically required by the local route
+- for India delivery, `AWS_SNS_ENTITY_ID` should be the PE ID and `AWS_SNS_TEMPLATE_ID` should be the DLT template ID
+- `AWS_SNS_MESSAGE_TEMPLATE` should match the approved DLT template text exactly, with `{code}` where the OTP should be inserted
 - if your instance already has an IAM role with SNS access, you can omit `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
 
 ### MSG91

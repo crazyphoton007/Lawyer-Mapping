@@ -42,6 +42,10 @@ AWS_SNS_SENDER_ID = os.getenv("AWS_SNS_SENDER_ID", "").strip()
 AWS_SNS_ENTITY_ID = os.getenv("AWS_SNS_ENTITY_ID", "").strip()
 AWS_SNS_TEMPLATE_ID = os.getenv("AWS_SNS_TEMPLATE_ID", "").strip()
 AWS_SNS_SMS_TYPE = os.getenv("AWS_SNS_SMS_TYPE", "Transactional").strip()
+AWS_SNS_MESSAGE_TEMPLATE = os.getenv(
+    "AWS_SNS_MESSAGE_TEMPLATE",
+    "Your caseFit OTP is {code}. It is valid for 5 minutes. Do not share it with anyone.",
+).strip()
 
 SMTP_HOST = os.getenv("SMTP_HOST", "").strip()
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
@@ -204,7 +208,7 @@ def _send_otp_via_sns(ctx: OtpDeliveryContext) -> None:
             "StringValue": AWS_SNS_TEMPLATE_ID,
         }
 
-    message = f"{ctx.code} is your caseFit login OTP. It expires in 10 minutes."
+    message = AWS_SNS_MESSAGE_TEMPLATE.format(code=ctx.code)
 
     try:
         client.publish(
