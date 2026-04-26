@@ -1,5 +1,5 @@
 ﻿// app/login.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -36,6 +36,17 @@ const SOFT = "#EEF2FF";
 const SOFT_GOLD = "#F9EBC8";
 const GUEST_TOKEN_KEY = "guest_token";
 const GUEST_USER_KEY = "guest_user";
+const OTP_INVALID_MESSAGE = "That code did not match. Check the SMS and try again.";
+
+class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
 
 // Visual tweaks
 const LOGO_SIZE = 38;
@@ -80,7 +91,7 @@ async function apiPost(path: string, body: unknown) {
     const message =
       (json && (json.detail || json.error || json.message)) ||
       `HTTP ${res.status}: ${text.slice(0, 200)}`;
-    throw new Error(message);
+    throw new ApiError(message, res.status);
   }
 
   return json ?? {};
@@ -129,6 +140,8 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [deliveryMessage, setDeliveryMessage] = useState("");
   const [deliveryAccent, setDeliveryAccent] = useState<"dark" | "soft">("dark");
+  const [otpError, setOtpError] = useState("");
+  const verifyingCodeRef = useRef("");
 
   // Info modal state
   const [showInfo, setShowInfo] = useState(false);
@@ -149,6 +162,8 @@ export default function LoginScreen() {
         setStep("request");
         setCode("");
         setDeliveryMessage("");
+        setOtpError("");
+        verifyingCodeRef.current = "";
         return true;
       }
       return false;
@@ -185,6 +200,8 @@ export default function LoginScreen() {
 
   async function continueAsGuest() {
     setLoading(true);
+    setOtpError("");
+    verifyingCodeRef.current = "";
     try {
       const savedGuest = await readStoredGuestSession();
       if (savedGuest) {
@@ -230,11 +247,14 @@ export default function LoginScreen() {
     }
 
     setLoading(true);
+    setOtpError("");
+    verifyingCodeRef.current = "";
     try {
       const e164 = `+91${ph}`;
       const data = await apiPost("/auth/request-code", { phone: e164 });
 
       applyDeliveryState(data?.delivery_channel);
+      setCode("");
       setStep("verify");
     } catch (e: any) {
       console.error("[requestCode] error:", e);
@@ -244,19 +264,25 @@ export default function LoginScreen() {
     }
   }
 
-  async function verifyCode() {
+  async function verifyCode(codeOverride?: string) {
     const ph = normalizePhone(phone);
-    if (ph.length < 10 || code.trim().length === 0) {
+    const nextCode = (codeOverride ?? code).trim();
+    if (ph.length < 10 || nextCode.length === 0) {
       Alert.alert("Missing info", "Enter your mobile and the OTP code.");
+      return;
+    }
+    if (loading || verifyingCodeRef.current === nextCode) {
       return;
     }
 
     setLoading(true);
+    setOtpError("");
+    verifyingCodeRef.current = nextCode;
     try {
       const e164 = `+91${ph}`;
       const data = await apiPost("/auth/verify", {
         phone: e164,
-        code: code.trim(),
+        code: nextCode,
       });
 
       const jwt = data.token || data.access_token || data.jwt;
@@ -279,9 +305,24 @@ export default function LoginScreen() {
       router.replace("/(tabs)/requests");
     } catch (e: any) {
       console.error("[verifyCode] error:", e);
-      Alert.alert("Error", e?.message || "Failed to verify code");
+      verifyingCodeRef.current = "";
+      if (e?.status === 400) {
+        setOtpError(OTP_INVALID_MESSAGE);
+        return;
+      }
+      setOtpError(e?.message || "We could not verify that code. Please try again.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  function handleCodeChange(value: string) {
+    const next = value.replace(/\D/g, "").slice(0, 6);
+    setCode(next);
+    setOtpError("");
+
+    if (next.length === 6) {
+      setTimeout(() => verifyCode(next), 80);
     }
   }
 
@@ -575,7 +616,7 @@ export default function LoginScreen() {
 
                 <TextInput
                   value={code}
-                  onChangeText={(t) => setCode(t.replace(/\D/g, "").slice(0, 6))}
+                  onChangeText={handleCodeChange}
                   maxLength={6}
                   keyboardType="number-pad"
                   inputMode="numeric"
@@ -584,43 +625,74 @@ export default function LoginScreen() {
                   placeholderTextColor="#9CA3AF"
                   style={{
                     borderWidth: 1,
-                    borderColor: BORDER,
+                    borderColor: otpError ? "#DC2626" : BORDER,
                     borderRadius: 12,
                     padding: 12,
-                    backgroundColor: "#FAFAFA",
+                    backgroundColor: otpError ? "#FEF2F2" : "#FAFAFA",
                     fontSize: 18,
-                    color: INK,
+                    color: otpError ? "#991B1B" : INK,
                     fontWeight: "700", // BOLD OTP
                     letterSpacing: 2, // subtle spacing to look like code boxes
                     textAlign: "center",
                   }}
                 />
 
+                {otpError ? (
+                  <Text
+                    style={{
+                      color: "#B91C1C",
+                      fontSize: 12,
+                      lineHeight: 17,
+                      textAlign: "center",
+                      fontWeight: "700",
+                    }}
+                  >
+                    {otpError}
+                  </Text>
+                ) : (
+                  <Text
+                    style={{
+                      color: MUTED,
+                      fontSize: 12,
+                      textAlign: "center",
+                    }}
+                  >
+                    Enter the 6-digit code. We’ll take you in automatically.
+                  </Text>
+                )}
+
                 <TouchableOpacity
-                  onPress={verifyCode}
-                  disabled={loading || code.trim().length === 0}
+                  onPress={() => verifyCode()}
+                  disabled={loading || code.trim().length < 6}
                   style={{
                     backgroundColor:
-                      code.trim().length === 0 ? "#9CA3AF" : loading ? "#11182799" : INK,
+                      code.trim().length < 6 ? "#9CA3AF" : loading ? "#11182799" : INK,
                     paddingVertical: 14,
                     borderRadius: 12,
                     alignItems: "center",
                   }}
                 >
                   <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>
-                    {loading ? "Verifying…" : "Verify & Continue"}
+                    {loading ? "Checking code…" : "Enter caseFit"}
                   </Text>
                 </TouchableOpacity>
 
-                <Text
-                  style={{
-                    color: MUTED,
-                    fontSize: 12,
-                    textAlign: "center",
-                  }}
+                <TouchableOpacity
+                  onPress={requestCode}
+                  disabled={loading}
+                  style={{ alignSelf: "center", paddingVertical: 4, paddingHorizontal: 8 }}
                 >
-                  Didn’t get the code?
-                </Text>
+                  <Text
+                    style={{
+                      color: loading ? "#9CA3AF" : "#2563EB",
+                      fontSize: 12,
+                      textAlign: "center",
+                      fontWeight: "800",
+                    }}
+                  >
+                    Didn’t get it? Send a fresh code
+                  </Text>
+                </TouchableOpacity>
               </View>
             )}
 
