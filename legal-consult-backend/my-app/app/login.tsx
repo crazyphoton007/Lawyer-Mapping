@@ -612,8 +612,6 @@ export default function LoginScreen() {
                   elevation: 2,
                 }}
               >
-                <Text style={{ fontSize: 13, color: MUTED }}>OTP Code</Text>
-
                 <TextInput
                   value={code}
                   onChangeText={handleCodeChange}
@@ -649,33 +647,7 @@ export default function LoginScreen() {
                   >
                     {otpError}
                   </Text>
-                ) : (
-                  <Text
-                    style={{
-                      color: MUTED,
-                      fontSize: 12,
-                      textAlign: "center",
-                    }}
-                  >
-                    Enter the 6-digit code. We’ll take you in automatically.
-                  </Text>
-                )}
-
-                <TouchableOpacity
-                  onPress={() => verifyCode()}
-                  disabled={loading || code.trim().length < 6}
-                  style={{
-                    backgroundColor:
-                      code.trim().length < 6 ? "#9CA3AF" : loading ? "#11182799" : INK,
-                    paddingVertical: 14,
-                    borderRadius: 12,
-                    alignItems: "center",
-                  }}
-                >
-                  <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>
-                    {loading ? "Checking code…" : "Enter caseFit"}
-                  </Text>
-                </TouchableOpacity>
+                ) : null}
 
                 <TouchableOpacity
                   onPress={requestCode}
