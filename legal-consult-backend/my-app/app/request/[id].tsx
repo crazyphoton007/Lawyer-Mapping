@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
-import { Feather } from "@expo/vector-icons";
+import { Feather, FontAwesome } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
 
 import { API_BASE } from "../../constants/config";
@@ -63,6 +63,25 @@ const BORDER = "#E5E7EB";
 const MUTED = "#6B7280";
 const GOLD = "#C89B3C";
 const GOLD_LIGHT = "#F6E7C1";
+
+function BackIconButton({ onPress }: { onPress: () => void }) {
+  return (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel="Go back"
+      onPress={onPress}
+      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      style={{
+        width: 44,
+        height: 44,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <FontAwesome name="arrow-left" size={22} color={INK} />
+    </TouchableOpacity>
+  );
+}
 
 const STATUS_COLOR: Record<string, string> = {
   pending: "#F59E0B",
@@ -587,19 +606,7 @@ export default function RequestDetailsScreen() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
         <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 }}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={{
-              alignSelf: "flex-start",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-              paddingVertical: 8,
-            }}
-          >
-            <Feather name="arrow-left" size={18} color={INK} />
-            <Text style={{ color: INK, fontWeight: "700" }}>Back</Text>
-          </TouchableOpacity>
+          <BackIconButton onPress={() => router.back()} />
         </View>
 
         <View
@@ -693,18 +700,7 @@ export default function RequestDetailsScreen() {
           justifyContent: "space-between",
         }}
       >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 6,
-            paddingVertical: 8,
-          }}
-        >
-          <Feather name="arrow-left" size={18} color={INK} />
-          <Text style={{ color: INK, fontWeight: "700" }}>Back</Text>
-        </TouchableOpacity>
+        <BackIconButton onPress={() => router.back()} />
 
         <Text style={{ fontSize: 18, fontWeight: "800", color: INK }}>
           Request Details
