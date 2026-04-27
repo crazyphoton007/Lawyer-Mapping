@@ -1,5 +1,5 @@
 ﻿// app/login.tsx
-import { useEffect, useState } from "react";
+import { type ElementRef, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -18,7 +18,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter, Link } from "expo-router";
 import * as SecureStore from "expo-secure-store";
+import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
+import { Feather, FontAwesome } from "@expo/vector-icons";
 import { API_BASE } from "../constants/config";
 import { useAuth } from "../context/auth";
 
@@ -36,6 +38,8 @@ const SOFT = "#EEF2FF";
 const SOFT_GOLD = "#F9EBC8";
 const GUEST_TOKEN_KEY = "guest_token";
 const GUEST_USER_KEY = "guest_user";
+const SUPPORT_EMAIL = "support@thecasefit.com";
+const WHATSAPP_E164 = "919807863007";
 const OTP_LIMIT_TITLE = "Your OTP vault is cooling down";
 const OTP_LIMIT_MESSAGE =
   "You’ve requested OTP too many times. Please try again after 1 hour.";
@@ -142,6 +146,9 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [deliveryMessage, setDeliveryMessage] = useState("");
   const [deliveryAccent, setDeliveryAccent] = useState<"dark" | "soft">("dark");
+  const [otpError, setOtpError] = useState("");
+  const verifyingCodeRef = useRef("");
+  const otpInputRef = useRef<ElementRef<typeof TextInput>>(null);
 
   // Info modal state
   const [showInfo, setShowInfo] = useState(false);
@@ -162,12 +169,26 @@ export default function LoginScreen() {
         setStep("request");
         setCode("");
         setDeliveryMessage("");
+        setOtpError("");
+        verifyingCodeRef.current = "";
         return true;
       }
       return false;
     });
 
     return () => sub.remove();
+  }, [step]);
+
+  useEffect(() => {
+    if (step !== "verify") {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      otpInputRef.current?.focus();
+    }, 250);
+
+    return () => clearTimeout(timer);
   }, [step]);
 
   function pickRandomTip() {
@@ -198,6 +219,8 @@ export default function LoginScreen() {
 
   async function continueAsGuest() {
     setLoading(true);
+    setOtpError("");
+    verifyingCodeRef.current = "";
     try {
       const savedGuest = await readStoredGuestSession();
       if (savedGuest) {
@@ -243,11 +266,14 @@ export default function LoginScreen() {
     }
 
     setLoading(true);
+    setOtpError("");
+    verifyingCodeRef.current = "";
     try {
       const e164 = `+91${ph}`;
       const data = await apiPost("/auth/request-code", { phone: e164 });
 
       applyDeliveryState(data?.delivery_channel);
+      setCode("");
       setStep("verify");
     } catch (e: any) {
       console.error("[requestCode] error:", e);
@@ -261,19 +287,25 @@ export default function LoginScreen() {
     }
   }
 
-  async function verifyCode() {
+  async function verifyCode(codeOverride?: string) {
     const ph = normalizePhone(phone);
-    if (ph.length < 10 || code.trim().length === 0) {
+    const nextCode = (codeOverride ?? code).trim();
+    if (ph.length < 10 || nextCode.length === 0) {
       Alert.alert("Missing info", "Enter your mobile and the OTP code.");
+      return;
+    }
+    if (loading || verifyingCodeRef.current === nextCode) {
       return;
     }
 
     setLoading(true);
+    setOtpError("");
+    verifyingCodeRef.current = nextCode;
     try {
       const e164 = `+91${ph}`;
       const data = await apiPost("/auth/verify", {
         phone: e164,
-        code: code.trim(),
+        code: nextCode,
       });
 
       const jwt = data.token || data.access_token || data.jwt;
@@ -295,19 +327,47 @@ export default function LoginScreen() {
       // Alert.alert("Logged in", "You’re signed in.");
       router.replace("/(tabs)/requests");
     } catch (e: any) {
+      verifyingCodeRef.current = "";
+      if (e?.status === 400) {
+        setOtpError("invalid");
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+        return;
+      }
       console.error("[verifyCode] error:", e);
-      Alert.alert("Error", e?.message || "Failed to verify code");
+      Alert.alert("Error", e?.message || "We could not verify that code. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
-  function openHelp() {
+  function handleCodeChange(value: string) {
+    const next = value.replace(/\D/g, "").slice(0, 6);
+    setCode(next);
+    setOtpError("");
+
+    if (next.length === 6) {
+      setTimeout(() => verifyCode(next), 80);
+    }
+  }
+
+  function openSupportEmail() {
     const mailto =
-      "mailto:support@thecasefit.com?subject=" +
+      `mailto:${SUPPORT_EMAIL}?subject=` +
       encodeURIComponent("Help with caseFit login");
     Linking.openURL(mailto).catch(() => {
       Alert.alert("Error", "Could not open email app.");
+    });
+  }
+
+  function openSupportWhatsApp() {
+    const text = encodeURIComponent("Hi caseFit team, I need help with login.");
+    const deep = `whatsapp://send?phone=${WHATSAPP_E164}&text=${text}`;
+    const web = `https://wa.me/${WHATSAPP_E164}?text=${text}`;
+
+    Linking.openURL(deep).catch(() => {
+      Linking.openURL(web).catch(() => {
+        Alert.alert("Error", "Could not open WhatsApp.");
+      });
     });
   }
 
@@ -588,25 +648,26 @@ export default function LoginScreen() {
                   elevation: 2,
                 }}
               >
-                <Text style={{ fontSize: 13, color: MUTED }}>OTP Code</Text>
-
                 <TextInput
+                  ref={otpInputRef}
                   value={code}
-                  onChangeText={(t) => setCode(t.replace(/\D/g, "").slice(0, 6))}
+                  onChangeText={handleCodeChange}
                   maxLength={6}
                   keyboardType="number-pad"
                   inputMode="numeric"
                   textContentType="oneTimeCode"
                   placeholder="Enter OTP"
                   placeholderTextColor="#9CA3AF"
+                  selectionColor={INK}
+                  cursorColor={INK}
                   style={{
                     borderWidth: 1,
-                    borderColor: BORDER,
+                    borderColor: otpError ? "#DC2626" : BORDER,
                     borderRadius: 12,
                     padding: 12,
-                    backgroundColor: "#FAFAFA",
+                    backgroundColor: otpError ? "#FEF2F2" : "#FAFAFA",
                     fontSize: 18,
-                    color: INK,
+                    color: otpError ? "#991B1B" : INK,
                     fontWeight: "700", // BOLD OTP
                     letterSpacing: 2, // subtle spacing to look like code boxes
                     textAlign: "center",
@@ -614,30 +675,21 @@ export default function LoginScreen() {
                 />
 
                 <TouchableOpacity
-                  onPress={verifyCode}
-                  disabled={loading || code.trim().length === 0}
-                  style={{
-                    backgroundColor:
-                      code.trim().length === 0 ? "#9CA3AF" : loading ? "#11182799" : INK,
-                    paddingVertical: 14,
-                    borderRadius: 12,
-                    alignItems: "center",
-                  }}
+                  onPress={requestCode}
+                  disabled={loading}
+                  style={{ alignSelf: "center", paddingVertical: 4, paddingHorizontal: 8 }}
                 >
-                  <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>
-                    {loading ? "Verifying…" : "Verify & Continue"}
+                  <Text
+                    style={{
+                      color: loading ? "#9CA3AF" : "#2563EB",
+                      fontSize: 12,
+                      textAlign: "center",
+                      fontWeight: "800",
+                    }}
+                  >
+                    Didn’t get it? Send a fresh code
                   </Text>
                 </TouchableOpacity>
-
-                <Text
-                  style={{
-                    color: MUTED,
-                    fontSize: 12,
-                    textAlign: "center",
-                  }}
-                >
-                  Didn’t get the code?
-                </Text>
               </View>
             )}
 
@@ -664,21 +716,46 @@ export default function LoginScreen() {
                 </Link>
               </Text>
 
-              <Text
+              <View
                 style={{
-                  color: "#6b7280",
-                  lineHeight: 20,
-                  textAlign: "center",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 12,
                 }}
               >
-                Need help?{" "}
-                <Link href="mailto:support@thecasefit.com" asChild>
-                  <Text style={{ textDecorationLine: "underline", color: "#4B5563", fontWeight: "600" }}>
-                    Tap here
-                  </Text>
-                </Link>
-                {" "}to email support
-              </Text>
+                <Text
+                  style={{
+                    color: "#6b7280",
+                    lineHeight: 20,
+                    textAlign: "center",
+                  }}
+                >
+                  Need help?
+                </Text>
+
+                <TouchableOpacity
+                  onPress={openSupportWhatsApp}
+                  style={{
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 6,
+                  }}
+                >
+                  <FontAwesome name="whatsapp" size={22} color="#16A34A" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={openSupportEmail}
+                  style={{
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 6,
+                  }}
+                >
+                  <Feather name="mail" size={22} color="#2563EB" />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
           {/* END: main content wrapper */}
