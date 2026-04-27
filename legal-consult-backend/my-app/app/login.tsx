@@ -702,45 +702,27 @@ export default function LoginScreen() {
                   Need help?
                 </Text>
 
-                <View style={{ flexDirection: "row", gap: 10, justifyContent: "center" }}>
+                <View style={{ flexDirection: "row", gap: 20, justifyContent: "center" }}>
                   <TouchableOpacity
                     onPress={openSupportWhatsApp}
                     style={{
-                      flexDirection: "row",
                       alignItems: "center",
-                      gap: 6,
-                      borderWidth: 1,
-                      borderColor: "#BBF7D0",
-                      backgroundColor: "#F0FDF4",
-                      borderRadius: 999,
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
+                      justifyContent: "center",
+                      padding: 8,
                     }}
                   >
-                    <FontAwesome name="whatsapp" size={15} color="#16A34A" />
-                    <Text style={{ color: "#166534", fontWeight: "800", fontSize: 13 }}>
-                      WhatsApp
-                    </Text>
+                    <FontAwesome name="whatsapp" size={22} color="#16A34A" />
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     onPress={openSupportEmail}
                     style={{
-                      flexDirection: "row",
                       alignItems: "center",
-                      gap: 6,
-                      borderWidth: 1,
-                      borderColor: "#BFDBFE",
-                      backgroundColor: "#EFF6FF",
-                      borderRadius: 999,
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
+                      justifyContent: "center",
+                      padding: 8,
                     }}
                   >
-                    <Feather name="mail" size={15} color="#2563EB" />
-                    <Text style={{ color: "#1D4ED8", fontWeight: "800", fontSize: 13 }}>
-                      Email
-                    </Text>
+                    <Feather name="mail" size={22} color="#2563EB" />
                   </TouchableOpacity>
                 </View>
               </View>
