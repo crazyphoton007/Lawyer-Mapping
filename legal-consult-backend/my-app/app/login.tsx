@@ -19,6 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter, Link } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { LinearGradient } from "expo-linear-gradient";
+import { Feather, FontAwesome } from "@expo/vector-icons";
 import { API_BASE } from "../constants/config";
 import { useAuth } from "../context/auth";
 
@@ -36,6 +37,8 @@ const SOFT = "#EEF2FF";
 const SOFT_GOLD = "#F9EBC8";
 const GUEST_TOKEN_KEY = "guest_token";
 const GUEST_USER_KEY = "guest_user";
+const SUPPORT_EMAIL = "support@thecasefit.com";
+const WHATSAPP_E164 = "919807863007";
 
 class ApiError extends Error {
   status: number;
@@ -325,12 +328,24 @@ export default function LoginScreen() {
     }
   }
 
-  function openHelp() {
+  function openSupportEmail() {
     const mailto =
-      "mailto:support@thecasefit.com?subject=" +
+      `mailto:${SUPPORT_EMAIL}?subject=` +
       encodeURIComponent("Help with caseFit login");
     Linking.openURL(mailto).catch(() => {
       Alert.alert("Error", "Could not open email app.");
+    });
+  }
+
+  function openSupportWhatsApp() {
+    const text = encodeURIComponent("Hi caseFit team, I need help with login.");
+    const deep = `whatsapp://send?phone=${WHATSAPP_E164}&text=${text}`;
+    const web = `https://wa.me/${WHATSAPP_E164}?text=${text}`;
+
+    Linking.openURL(deep).catch(() => {
+      Linking.openURL(web).catch(() => {
+        Alert.alert("Error", "Could not open WhatsApp.");
+      });
     });
   }
 
@@ -676,21 +691,59 @@ export default function LoginScreen() {
                 </Link>
               </Text>
 
-              <Text
-                style={{
-                  color: "#6b7280",
-                  lineHeight: 20,
-                  textAlign: "center",
-                }}
-              >
-                Need help?{" "}
-                <Link href="mailto:support@thecasefit.com" asChild>
-                  <Text style={{ textDecorationLine: "underline", color: "#4B5563", fontWeight: "600" }}>
-                    Tap here
-                  </Text>
-                </Link>
-                {" "}to email support
-              </Text>
+              <View style={{ alignItems: "center", gap: 10 }}>
+                <Text
+                  style={{
+                    color: "#6b7280",
+                    lineHeight: 20,
+                    textAlign: "center",
+                  }}
+                >
+                  Need help?
+                </Text>
+
+                <View style={{ flexDirection: "row", gap: 10, justifyContent: "center" }}>
+                  <TouchableOpacity
+                    onPress={openSupportWhatsApp}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                      borderWidth: 1,
+                      borderColor: "#BBF7D0",
+                      backgroundColor: "#F0FDF4",
+                      borderRadius: 999,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                    }}
+                  >
+                    <FontAwesome name="whatsapp" size={15} color="#16A34A" />
+                    <Text style={{ color: "#166534", fontWeight: "800", fontSize: 13 }}>
+                      WhatsApp
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={openSupportEmail}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                      borderWidth: 1,
+                      borderColor: "#BFDBFE",
+                      backgroundColor: "#EFF6FF",
+                      borderRadius: 999,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                    }}
+                  >
+                    <Feather name="mail" size={15} color="#2563EB" />
+                    <Text style={{ color: "#1D4ED8", fontWeight: "800", fontSize: 13 }}>
+                      Email
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
           </View>
           {/* END: main content wrapper */}
