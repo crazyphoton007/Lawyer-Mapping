@@ -651,6 +651,8 @@ export default function LoginScreen() {
                   textContentType="oneTimeCode"
                   placeholder="Enter OTP"
                   placeholderTextColor="#9CA3AF"
+                  selectionColor={INK}
+                  cursorColor={INK}
                   style={{
                     borderWidth: 1,
                     borderColor: otpError ? "#DC2626" : BORDER,
