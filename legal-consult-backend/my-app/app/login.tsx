@@ -691,7 +691,14 @@ export default function LoginScreen() {
                 </Link>
               </Text>
 
-              <View style={{ alignItems: "center", gap: 10 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 12,
+                }}
+              >
                 <Text
                   style={{
                     color: "#6b7280",
@@ -702,29 +709,27 @@ export default function LoginScreen() {
                   Need help?
                 </Text>
 
-                <View style={{ flexDirection: "row", gap: 20, justifyContent: "center" }}>
-                  <TouchableOpacity
-                    onPress={openSupportWhatsApp}
-                    style={{
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: 8,
-                    }}
-                  >
-                    <FontAwesome name="whatsapp" size={22} color="#16A34A" />
-                  </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={openSupportWhatsApp}
+                  style={{
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 6,
+                  }}
+                >
+                  <FontAwesome name="whatsapp" size={22} color="#16A34A" />
+                </TouchableOpacity>
 
-                  <TouchableOpacity
-                    onPress={openSupportEmail}
-                    style={{
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: 8,
-                    }}
-                  >
-                    <Feather name="mail" size={22} color="#2563EB" />
-                  </TouchableOpacity>
-                </View>
+                <TouchableOpacity
+                  onPress={openSupportEmail}
+                  style={{
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 6,
+                  }}
+                >
+                  <Feather name="mail" size={22} color="#2563EB" />
+                </TouchableOpacity>
               </View>
             </View>
           </View>
