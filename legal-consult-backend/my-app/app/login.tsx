@@ -36,7 +36,6 @@ const SOFT = "#EEF2FF";
 const SOFT_GOLD = "#F9EBC8";
 const GUEST_TOKEN_KEY = "guest_token";
 const GUEST_USER_KEY = "guest_user";
-const OTP_INVALID_MESSAGE = "That code did not match. Check the SMS and try again.";
 
 class ApiError extends Error {
   status: number;
@@ -307,10 +306,10 @@ export default function LoginScreen() {
       console.error("[verifyCode] error:", e);
       verifyingCodeRef.current = "";
       if (e?.status === 400) {
-        setOtpError(OTP_INVALID_MESSAGE);
+        setOtpError("invalid");
         return;
       }
-      setOtpError(e?.message || "We could not verify that code. Please try again.");
+      Alert.alert("Error", e?.message || "We could not verify that code. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -634,20 +633,6 @@ export default function LoginScreen() {
                     textAlign: "center",
                   }}
                 />
-
-                {otpError ? (
-                  <Text
-                    style={{
-                      color: "#B91C1C",
-                      fontSize: 12,
-                      lineHeight: 17,
-                      textAlign: "center",
-                      fontWeight: "700",
-                    }}
-                  >
-                    {otpError}
-                  </Text>
-                ) : null}
 
                 <TouchableOpacity
                   onPress={requestCode}
