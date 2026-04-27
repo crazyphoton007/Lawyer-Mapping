@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
-import { Feather, FontAwesome } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
 
 import { API_BASE } from "../../constants/config";
@@ -78,7 +78,7 @@ function BackIconButton({ onPress }: { onPress: () => void }) {
         justifyContent: "center",
       }}
     >
-      <FontAwesome name="arrow-left" size={22} color={INK} />
+      <Feather name="arrow-left" size={24} color={INK} />
     </TouchableOpacity>
   );
 }
