@@ -1,5 +1,5 @@
 ﻿// app/login.tsx
-import { useEffect, useRef, useState } from "react";
+import { type ElementRef, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -145,6 +145,7 @@ export default function LoginScreen() {
   const [deliveryAccent, setDeliveryAccent] = useState<"dark" | "soft">("dark");
   const [otpError, setOtpError] = useState("");
   const verifyingCodeRef = useRef("");
+  const otpInputRef = useRef<ElementRef<typeof TextInput>>(null);
 
   // Info modal state
   const [showInfo, setShowInfo] = useState(false);
@@ -173,6 +174,18 @@ export default function LoginScreen() {
     });
 
     return () => sub.remove();
+  }, [step]);
+
+  useEffect(() => {
+    if (step !== "verify") {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      otpInputRef.current?.focus();
+    }, 250);
+
+    return () => clearTimeout(timer);
   }, [step]);
 
   function pickRandomTip() {
@@ -629,6 +642,7 @@ export default function LoginScreen() {
                 }}
               >
                 <TextInput
+                  ref={otpInputRef}
                   value={code}
                   onChangeText={handleCodeChange}
                   maxLength={6}
