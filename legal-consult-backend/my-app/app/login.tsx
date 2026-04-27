@@ -18,6 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter, Link } from "expo-router";
 import * as SecureStore from "expo-secure-store";
+import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import { API_BASE } from "../constants/config";
@@ -309,6 +310,7 @@ export default function LoginScreen() {
       verifyingCodeRef.current = "";
       if (e?.status === 400) {
         setOtpError("invalid");
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
         return;
       }
       console.error("[verifyCode] error:", e);
