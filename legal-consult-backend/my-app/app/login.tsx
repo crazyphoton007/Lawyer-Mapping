@@ -303,12 +303,12 @@ export default function LoginScreen() {
       // Alert.alert("Logged in", "You’re signed in.");
       router.replace("/(tabs)/requests");
     } catch (e: any) {
-      console.error("[verifyCode] error:", e);
       verifyingCodeRef.current = "";
       if (e?.status === 400) {
         setOtpError("invalid");
         return;
       }
+      console.error("[verifyCode] error:", e);
       Alert.alert("Error", e?.message || "We could not verify that code. Please try again.");
     } finally {
       setLoading(false);
