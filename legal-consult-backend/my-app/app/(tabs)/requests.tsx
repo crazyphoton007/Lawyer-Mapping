@@ -101,7 +101,7 @@ function FlashingNeonButton({
 
   const scale = pulseAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [1, 1.03],
+    outputRange: [0.9, 1.09],
   });
 
   return (
