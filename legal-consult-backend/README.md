@@ -148,6 +148,15 @@ curl -X POST http://127.0.0.1:8000/auth/admin/set-role \
 ## 7) Production OTP providers
 To send login OTPs instead of printing them in server logs, configure a primary provider and optional fallback.
 
+OTP request throttling is enabled by default:
+
+```env
+OTP_RATE_LIMIT_COUNT=2
+OTP_RATE_LIMIT_WINDOW_SECONDS=3600
+```
+
+With those values, each phone number can request 2 OTPs per rolling hour. If the limit is exceeded, `/auth/request-code` returns `429 Too Many Requests` with a `Retry-After` header.
+
 ### WhatsApp + Email fallback
 ```env
 OTP_PROVIDER=whatsapp

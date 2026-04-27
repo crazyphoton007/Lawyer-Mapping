@@ -40,6 +40,9 @@ const GUEST_TOKEN_KEY = "guest_token";
 const GUEST_USER_KEY = "guest_user";
 const SUPPORT_EMAIL = "support@thecasefit.com";
 const WHATSAPP_E164 = "919807863007";
+const OTP_LIMIT_TITLE = "Your OTP vault is cooling down";
+const OTP_LIMIT_MESSAGE =
+  "You’ve requested OTP too many times. Please try again after 1 hour.";
 
 class ApiError extends Error {
   status: number;
@@ -274,6 +277,10 @@ export default function LoginScreen() {
       setStep("verify");
     } catch (e: any) {
       console.error("[requestCode] error:", e);
+      if (e?.status === 429) {
+        Alert.alert(OTP_LIMIT_TITLE, OTP_LIMIT_MESSAGE);
+        return;
+      }
       Alert.alert("Error", e?.message || "Failed to request code");
     } finally {
       setLoading(false);
