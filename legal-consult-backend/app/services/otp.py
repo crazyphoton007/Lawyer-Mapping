@@ -35,6 +35,7 @@ MSG91_TEMPLATE_OTP_KEY = os.getenv("MSG91_TEMPLATE_OTP_KEY", "OTP").strip() or "
 MSG91_OTP_EXPIRY_MINUTES = int(os.getenv("MSG91_OTP_EXPIRY_MINUTES", "5"))
 MSG91_SEND_MODE = os.getenv("MSG91_SEND_MODE", "sendotp").lower().strip()
 MSG91_SMS_ROUTE = os.getenv("MSG91_SMS_ROUTE", "4").strip()
+MSG91_DLT_TE_ID = os.getenv("MSG91_DLT_TE_ID", "").strip()
 MSG91_MESSAGE_TEMPLATE = os.getenv(
     "MSG91_MESSAGE_TEMPLATE",
     "caseFit Technologies Pvt Ltd - Your OTP for login is {code}. Do not share it with anyone.",
@@ -155,6 +156,9 @@ def _send_otp_via_msg91_sms(ctx: OtpDeliveryContext) -> None:
             }
         ],
     }
+    if MSG91_DLT_TE_ID:
+        payload["DLT_TE_ID"] = MSG91_DLT_TE_ID
+
     request = urllib.request.Request(
         "https://api.msg91.com/api/v2/sendsms",
         data=json.dumps(payload).encode("utf-8"),

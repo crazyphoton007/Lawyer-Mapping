@@ -221,6 +221,7 @@ Notes:
   ```env
   MSG91_SEND_MODE=sms
   MSG91_SMS_ROUTE=4
+  MSG91_DLT_TE_ID=1207177704313400010
   MSG91_MESSAGE_TEMPLATE=caseFit Technologies Pvt Ltd - Your OTP for login is {code}. Do not share it with anyone.
   ```
 - phone numbers are sent to MSG91 in international format digits only, e.g. `919807863007`
