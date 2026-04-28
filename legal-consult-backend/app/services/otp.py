@@ -33,6 +33,13 @@ MSG91_SENDER_ID = os.getenv("MSG91_SENDER_ID", "").strip()
 MSG91_TEMPLATE_ID = os.getenv("MSG91_TEMPLATE_ID", "").strip()
 MSG91_TEMPLATE_OTP_KEY = os.getenv("MSG91_TEMPLATE_OTP_KEY", "OTP").strip() or "OTP"
 MSG91_OTP_EXPIRY_MINUTES = int(os.getenv("MSG91_OTP_EXPIRY_MINUTES", "5"))
+MSG91_SEND_MODE = os.getenv("MSG91_SEND_MODE", "sendotp").lower().strip()
+MSG91_SMS_ROUTE = os.getenv("MSG91_SMS_ROUTE", "4").strip()
+MSG91_DLT_TE_ID = os.getenv("MSG91_DLT_TE_ID", "").strip()
+MSG91_MESSAGE_TEMPLATE = os.getenv(
+    "MSG91_MESSAGE_TEMPLATE",
+    "caseFit Technologies Pvt Ltd - Your OTP for login is {code}. Do not share it with anyone.",
+).strip()
 
 AWS_REGION = os.getenv("AWS_REGION", "").strip() or os.getenv("AWS_DEFAULT_REGION", "").strip()
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "").strip()
@@ -64,19 +71,53 @@ def _provider_chain() -> Iterable[str]:
     return providers or ["dev"]
 
 
-def _send_otp_via_msg91(ctx: OtpDeliveryContext) -> None:
-    if not MSG91_AUTH_KEY or not MSG91_TEMPLATE_ID:
+def _require_msg91_config(*required_values: str) -> None:
+    if not all(required_values):
         raise HTTPException(
             status_code=500,
-            detail=(
-                "MSG91 is selected but MSG91_AUTH_KEY or MSG91_TEMPLATE_ID "
-                "is missing."
-            ),
+            detail="MSG91 is selected but required MSG91 settings are missing.",
         )
 
+
+def _msg91_mobile(ctx: OtpDeliveryContext) -> str:
     mobile = "".join(ch for ch in ctx.phone if ch.isdigit())
     if not mobile:
         raise HTTPException(status_code=400, detail="MSG91 requires a valid phone number.")
+    return mobile
+
+
+def _check_msg91_payload(payload: dict | str) -> None:
+    if isinstance(payload, str):
+        normalized = payload.lower()
+        if "error" in normalized or "fail" in normalized:
+            raise HTTPException(status_code=502, detail=f"MSG91 OTP send failed: {payload}")
+        return
+
+    msg = str(payload.get("message") or "").lower()
+    typ = str(payload.get("type") or "").lower()
+    if typ in {"error", "failure", "failed"} or "error" in msg or "fail" in msg:
+        raise HTTPException(status_code=502, detail=f"MSG91 OTP send failed: {payload}")
+
+
+def _read_msg91_response(request: urllib.request.Request) -> dict | str:
+    try:
+        with urllib.request.urlopen(request, timeout=15) as response:
+            body = response.read().decode("utf-8", errors="replace")
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"MSG91 OTP send failed: {exc}")
+
+    if not body:
+        return {}
+
+    try:
+        return json.loads(body)
+    except json.JSONDecodeError:
+        return body
+
+
+def _send_otp_via_msg91_sendotp(ctx: OtpDeliveryContext) -> None:
+    _require_msg91_config(MSG91_AUTH_KEY, MSG91_TEMPLATE_ID)
+    mobile = _msg91_mobile(ctx)
 
     query = urllib.parse.urlencode(
         {
@@ -96,18 +137,48 @@ def _send_otp_via_msg91(ctx: OtpDeliveryContext) -> None:
             "accept": "application/json",
         },
     )
+    payload = _read_msg91_response(request)
+    _check_msg91_payload(payload)
 
-    try:
-        with urllib.request.urlopen(request, timeout=15) as response:
-            body = response.read().decode("utf-8", errors="replace")
-            payload = json.loads(body) if body else {}
-    except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"MSG91 OTP send failed: {exc}")
 
-    msg = str(payload.get("message") or "").lower()
-    typ = str(payload.get("type") or "").lower()
-    if typ == "error" or "error" in msg:
-        raise HTTPException(status_code=502, detail=f"MSG91 OTP send failed: {payload}")
+def _send_otp_via_msg91_sms(ctx: OtpDeliveryContext) -> None:
+    _require_msg91_config(MSG91_AUTH_KEY, MSG91_SENDER_ID, MSG91_MESSAGE_TEMPLATE)
+    mobile = _msg91_mobile(ctx)
+    message = MSG91_MESSAGE_TEMPLATE.format(code=ctx.code)
+    payload = {
+        "sender": MSG91_SENDER_ID,
+        "route": MSG91_SMS_ROUTE or "4",
+        "country": "91",
+        "sms": [
+            {
+                "message": message,
+                "to": [mobile],
+            }
+        ],
+    }
+    if MSG91_DLT_TE_ID:
+        payload["DLT_TE_ID"] = MSG91_DLT_TE_ID
+
+    request = urllib.request.Request(
+        "https://api.msg91.com/api/v2/sendsms",
+        data=json.dumps(payload).encode("utf-8"),
+        method="POST",
+        headers={
+            "authkey": MSG91_AUTH_KEY,
+            "content-type": "application/json",
+            "accept": "application/json",
+        },
+    )
+    response_payload = _read_msg91_response(request)
+    _check_msg91_payload(response_payload)
+
+
+def _send_otp_via_msg91(ctx: OtpDeliveryContext) -> None:
+    if MSG91_SEND_MODE in {"sms", "text", "dlt"}:
+        _send_otp_via_msg91_sms(ctx)
+        return
+
+    _send_otp_via_msg91_sendotp(ctx)
 
 
 def _send_otp_via_whatsapp(ctx: OtpDeliveryContext) -> None:
