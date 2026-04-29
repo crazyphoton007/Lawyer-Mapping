@@ -411,8 +411,8 @@
                 </select>
               </div>
               <div style="flex: 1">
-                <label for="searchFilter">Search by Mobile</label>
-                <input id="searchFilter" type="text" placeholder="+9198... or last digits" />
+                <label for="searchFilter">Search by Mobile or Case</label>
+                <input id="searchFilter" type="text" placeholder="+9198..., last digits, CF-38660, or 38660" />
               </div>
               <button class="btn-secondary" id="filterBtn">Apply</button>
             </div>
@@ -761,7 +761,11 @@
 
       async function loadRequests() {
         const status = document.getElementById("statusFilter").value;
-        const qs = status ? `?status=${encodeURIComponent(status)}` : "";
+        const search = document.getElementById("searchFilter").value.trim();
+        const params = new URLSearchParams();
+        if (status) params.set("status", status);
+        if (search) params.set("search", search);
+        const qs = params.toString() ? `?${params.toString()}` : "";
         const data = await api(`/admin/requests${qs}`, { method: "GET" });
         state.requests = data.requests || [];
         applySearchFilter();

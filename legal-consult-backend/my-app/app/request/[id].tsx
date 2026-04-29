@@ -548,7 +548,18 @@ export default function RequestDetailsScreen() {
       const text = await res.text();
 
       if (!res.ok) {
-        throw new Error(text || `HTTP ${res.status}`);
+        let message = text || `HTTP ${res.status}`;
+
+        try {
+          const errorBody = text ? JSON.parse(text) : null;
+          if (typeof errorBody?.detail === "string") {
+            message = errorBody.detail;
+          }
+        } catch {
+          // Keep the original response text if it is not JSON.
+        }
+
+        throw new Error(message);
       }
 
       const data: PaymentLinkResponse = text ? JSON.parse(text) : {};

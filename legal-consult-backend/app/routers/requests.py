@@ -1,7 +1,7 @@
 # app/routers/requests.py
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
@@ -17,6 +17,7 @@ from app.schemas import (
     ScheduleAppointmentIn,
     ShareLawyerDetailsIn,
 )
+from app.services.request_notifications import NewRequestAlert, send_new_request_email
 
 router = APIRouter(prefix="/requests", tags=["requests"])
 
@@ -73,9 +74,15 @@ def list_requests(
 @router.post("/", response_model=RequestOut, status_code=201)
 def create_request(
     payload: RequestCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    customer_name = current_user.name
+    customer_phone = current_user.phone
+    customer_email = current_user.email
+    customer_area = current_user.area
+
     rec = Request(
         user_id=current_user.id,
         category=payload.category,
@@ -87,6 +94,20 @@ def create_request(
     db.add(rec)
     db.commit()
     db.refresh(rec)
+    alert = NewRequestAlert(
+        request_id=rec.id,
+        category=rec.category,
+        description=rec.description,
+        status=rec.status,
+        preferred_city=rec.preferred_city,
+        preferred_window=rec.preferred_window,
+        created_at=rec.created_at,
+        customer_name=customer_name,
+        customer_phone=customer_phone,
+        customer_email=customer_email,
+        customer_area=customer_area,
+    )
+    background_tasks.add_task(send_new_request_email, alert)
     return rec
 
 

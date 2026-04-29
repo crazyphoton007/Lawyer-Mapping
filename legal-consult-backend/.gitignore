@@ -4,6 +4,9 @@ my-app/android/
 my-app/ios/
 my-app/dist/
 my-app/.cache/
+.env
+.env.*
+!.env.example
 .venv/
 .venv/
 .venv
