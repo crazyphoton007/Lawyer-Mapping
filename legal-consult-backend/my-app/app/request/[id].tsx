@@ -10,6 +10,7 @@ import {
   Animated,
   Easing,
   Pressable,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
@@ -1548,7 +1549,15 @@ export default function RequestDetailsScreen() {
                     justifyContent: "center",
                   }}
                 >
-                  <Feather name="briefcase" size={21} color="#E7C97D" />
+                  <Image
+                    source={require("../../assets/images/court_connect.png")}
+                    style={{
+                      width: 50,
+                      height: 50,
+                      borderRadius: 25,
+                    }}
+                    resizeMode="cover"
+                  />
                 </View>
               </View>
             </View>
