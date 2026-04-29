@@ -13,6 +13,7 @@ from app.models.request import Request
 from app.models.user import User
 from app.routers.auth import get_current_user
 from app.schemas import ScheduleAppointmentIn, ShareLawyerDetailsIn
+from app.services.case_reference import derive_case_reference
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -56,14 +57,6 @@ def load_request(db: Session, request_id: UUID) -> Request | None:
         .where(Request.id == request_id)
     )
     return db.execute(stmt).scalars().first()
-
-
-def derive_case_reference(request_id: UUID) -> str:
-    value = str(request_id)
-    hashed = 0
-    for char in value:
-        hashed = (hashed * 31 + ord(char)) & 0xFFFFFFFF
-    return f"CF-{str(hashed % 100000).zfill(5)}"
 
 
 def serialize_request(req: Request) -> dict:
@@ -112,6 +105,7 @@ def admin_ui():
 @router.get("/requests")
 def admin_list_requests(
     status: str | None = Query(None),
+    search: str | None = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_team_user),
 ):
@@ -127,6 +121,35 @@ def admin_list_requests(
         stmt = stmt.where(Request.status == status)
 
     rows = db.execute(stmt).scalars().all()
+
+    if search:
+        query = search.strip().lower()
+        digits = "".join(ch for ch in query if ch.isdigit())
+        terms = [query]
+        if digits and digits != query:
+            terms.append(digits)
+
+        def matches(req: Request) -> bool:
+            case_reference = derive_case_reference(req.id).lower()
+            user = getattr(req, "user", None)
+            values = (
+                case_reference,
+                getattr(user, "phone", None),
+                getattr(user, "name", None),
+                req.category,
+                req.description,
+                req.preferred_city,
+            )
+            return any(
+                term and any(value and term in str(value).lower() for value in values)
+                for term in terms
+            )
+
+        return {
+            "viewer_role": getattr(current_user, "role", None),
+            "requests": [serialize_request(req) for req in rows if matches(req)],
+        }
+
     return {
         "viewer_role": getattr(current_user, "role", None),
         "requests": [serialize_request(req) for req in rows],

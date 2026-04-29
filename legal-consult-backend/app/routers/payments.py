@@ -1,5 +1,6 @@
 import os
 import time
+import logging
 from typing import Optional
 from uuid import UUID
 
@@ -16,6 +17,7 @@ from app.models.user import User
 from app.routers.auth import get_current_user
 
 router = APIRouter(prefix="/payments", tags=["payments"])
+logger = logging.getLogger(__name__)
 
 
 class CreatePaymentLinkIn(BaseModel):
@@ -50,8 +52,8 @@ class VerifyPaymentOut(BaseModel):
 
 
 def get_razorpay_client() -> razorpay.Client:
-    key_id = os.getenv("RAZORPAY_KEY_ID")
-    key_secret = os.getenv("RAZORPAY_KEY_SECRET")
+    key_id = (os.getenv("RAZORPAY_KEY_ID") or "").strip()
+    key_secret = (os.getenv("RAZORPAY_KEY_SECRET") or "").strip()
 
     if not key_id or not key_secret:
         raise HTTPException(
@@ -60,6 +62,25 @@ def get_razorpay_client() -> razorpay.Client:
         )
 
     return razorpay.Client(auth=(key_id, key_secret))
+
+
+def raise_payment_provider_error(action: str, exc: Exception) -> None:
+    logger.exception("Razorpay %s failed", action)
+
+    message = str(exc).lower()
+    if "authentication failed" in message or "unauthorized" in message:
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "Payment provider authentication failed. "
+                "Please check the Razorpay key ID and key secret configured on the backend."
+            ),
+        )
+
+    raise HTTPException(
+        status_code=502,
+        detail="Payment provider is unavailable right now. Please try again shortly.",
+    )
 
 
 def assign_lawyer_after_delay(request_id: UUID, delay_seconds: int = 60) -> None:
@@ -135,7 +156,7 @@ def create_payment_link(
             }
         )
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Unable to create payment link: {exc}")
+        raise_payment_provider_error("payment link creation", exc)
 
     short_url = payment_link.get("short_url")
     payment_link_id = payment_link.get("id")
@@ -179,7 +200,7 @@ def verify_payment_link(
     try:
         payment_link = client.payment_link.fetch(payload.payment_link_id)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Unable to verify payment link: {exc}")
+        raise_payment_provider_error("payment link verification", exc)
 
     payment_status = (payment_link.get("status") or "").lower()
     amount = payment_link.get("amount", 0)
