@@ -197,19 +197,19 @@
       .queue-summary {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 10px;
-        margin-bottom: 14px;
+        gap: 8px;
+        margin-bottom: 12px;
       }
 
       .metric-card {
         border: 1px solid var(--line);
-        border-radius: 16px;
+        border-radius: 14px;
         background: #fbfcfe;
-        padding: 12px;
+        padding: 10px 12px;
       }
 
       .metric-label {
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 800;
         letter-spacing: 0.08em;
         text-transform: uppercase;
@@ -218,7 +218,7 @@
 
       .metric-value {
         margin-top: 4px;
-        font-size: 24px;
+        font-size: 22px;
         font-weight: 900;
       }
 
@@ -246,9 +246,21 @@
 
       .filter-grid {
         display: grid;
-        grid-template-columns: 1fr 1.25fr repeat(3, minmax(140px, 0.7fr)) auto;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 12px;
         align-items: end;
+      }
+
+      .filter-search {
+        grid-column: span 2;
+      }
+
+      .filter-sort {
+        grid-column: span 2;
+      }
+
+      .filter-apply {
+        min-width: 100%;
       }
 
       .queue-toolbar {
@@ -289,9 +301,31 @@
 
       .request-footer {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px 12px;
-        margin-top: 10px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .request-field {
+        border-top: 1px solid rgba(217, 225, 234, 0.72);
+        padding-top: 10px;
+        min-width: 0;
+      }
+
+      .request-field-label {
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .request-field-value {
+        margin-top: 3px;
+        color: #334155;
+        font-size: 13px;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
       }
 
       .request-list {
@@ -304,7 +338,7 @@
       .request-card {
         border: 1px solid var(--line);
         border-radius: 18px;
-        padding: 16px;
+        padding: 14px 16px 16px;
         background: #fbfcfe;
         cursor: pointer;
       }
@@ -533,7 +567,7 @@
             </div>
 
             <div class="filter-grid">
-              <div style="flex: 1">
+              <div>
                 <label for="statusFilter">Status Filter</label>
                 <select id="statusFilter">
                   <option value="">All requests</option>
@@ -547,9 +581,12 @@
                   <option value="cancelled">Cancelled</option>
                 </select>
               </div>
-              <div style="flex: 1">
+              <div class="filter-search">
                 <label for="searchFilter">Search by Mobile or Case</label>
                 <input id="searchFilter" type="text" placeholder="+9198..., last digits, CF-38660, or 38660" />
+              </div>
+              <div>
+                <button class="btn-secondary filter-apply" id="filterBtn">Apply</button>
               </div>
               <div>
                 <label for="dateFromFilter">From</label>
@@ -559,7 +596,7 @@
                 <label for="dateToFilter">To</label>
                 <input id="dateToFilter" type="date" />
               </div>
-              <div>
+              <div class="filter-sort">
                 <label for="sortFilter">Sort</label>
                 <select id="sortFilter">
                   <option value="newest">Newest first</option>
@@ -567,7 +604,6 @@
                   <option value="scheduled">Next appointment</option>
                 </select>
               </div>
-              <button class="btn-secondary" id="filterBtn">Apply</button>
             </div>
 
             <div class="queue-toolbar">
@@ -931,10 +967,22 @@
             </div>
             <div class="meta" style="margin-top: 10px;">${escapeHtml(item.description || "No description")}</div>
             <div class="request-footer">
-              <div class="meta">City: ${escapeHtml(item.preferred_city || "Not specified")}</div>
-              <div class="meta">Submitted: ${escapeHtml(submittedAt)}</div>
-              <div class="meta">Lawyer: ${escapeHtml(item.assigned_lawyer_name || "Unassigned")}</div>
-              <div class="meta">Appointment: ${escapeHtml(item.scheduled_for ? formatDate(item.scheduled_for) : "Pending")}</div>
+              <div class="request-field">
+                <div class="request-field-label">City</div>
+                <div class="request-field-value">${escapeHtml(item.preferred_city || "Not specified")}</div>
+              </div>
+              <div class="request-field">
+                <div class="request-field-label">Submitted</div>
+                <div class="request-field-value">${escapeHtml(submittedAt)}</div>
+              </div>
+              <div class="request-field">
+                <div class="request-field-label">Lawyer</div>
+                <div class="request-field-value">${escapeHtml(item.assigned_lawyer_name || "Unassigned")}</div>
+              </div>
+              <div class="request-field">
+                <div class="request-field-label">Appointment</div>
+                <div class="request-field-value">${escapeHtml(item.scheduled_for ? formatDate(item.scheduled_for) : "Pending")}</div>
+              </div>
             </div>
           `;
           card.addEventListener("click", () => {
