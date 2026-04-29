@@ -847,15 +847,15 @@ export default function RequestDetailsScreen() {
               <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}>
                 <Text style={[{ lineHeight: 22 }, stepStyle(1)]}>Pending</Text>
                 <Feather
-                  name="chevron-right"
-                  size={18}
+                  name="arrow-right"
+                  size={17}
                   color={MUTED}
                   style={{ marginHorizontal: 8, marginTop: 1 }}
                 />
                 <Text style={[{ lineHeight: 22 }, stepStyle(2)]}>Payment Confirmed</Text>
                 <Feather
-                  name="chevron-right"
-                  size={18}
+                  name="arrow-right"
+                  size={17}
                   color={MUTED}
                   style={{ marginHorizontal: 8, marginTop: 1 }}
                 />
