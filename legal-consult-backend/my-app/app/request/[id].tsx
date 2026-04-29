@@ -9,6 +9,7 @@ import {
   RefreshControl,
   Animated,
   Easing,
+  Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
@@ -1148,6 +1149,41 @@ export default function RequestDetailsScreen() {
                     Refreshing in {assignmentCountdown}s
                   </Text>
                 </View>
+
+                <Pressable
+                  onPress={() => load("silent")}
+                  style={({ pressed }) => ({
+                    backgroundColor: pressed ? "#F4C75D" : GOLD,
+                    borderRadius: 14,
+                    paddingVertical: 11,
+                    paddingHorizontal: 14,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                    borderWidth: 1,
+                    borderColor: pressed ? "#F8E0A0" : "rgba(255,255,255,0.22)",
+                    shadowColor: "#F4C75D",
+                    shadowOpacity: pressed ? 0.16 : 0.28,
+                    shadowRadius: pressed ? 6 : 12,
+                    shadowOffset: { width: 0, height: pressed ? 2 : 6 },
+                    elevation: pressed ? 1 : 4,
+                    transform: [{ scale: pressed ? 0.97 : 1 }],
+                  })}
+                >
+                  {({ pressed }) => (
+                    <>
+                      <Feather
+                        name="refresh-cw"
+                        size={16}
+                        color="#111111"
+                        style={{ opacity: pressed ? 0.78 : 1 }}
+                      />
+                      <Text style={{ color: "#111111", fontWeight: "900" }}>
+                        Check
+                      </Text>
+                    </>
+                  )}
+                </Pressable>
               </View>
             </View>
           </View>
