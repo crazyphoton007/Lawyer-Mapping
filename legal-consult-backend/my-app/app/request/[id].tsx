@@ -176,13 +176,6 @@ function formatAppointmentMode(value?: string | null) {
     .join(" ");
 }
 
-function initialsFromName(value?: string | null) {
-  if (!value) return "CF";
-
-  const parts = value.trim().split(/\s+/).slice(0, 2);
-  return parts.map((part) => part[0]?.toUpperCase() ?? "").join("") || "CF";
-}
-
 function appointmentSummary(
   hasAppointment: boolean,
   mode?: string | null,
@@ -727,7 +720,6 @@ export default function RequestDetailsScreen() {
     inputRange: [0, 0.5, 1],
     outputRange: ["0deg", "180deg", "360deg"],
   });
-  const lawyerSpecialties = item.assigned_lawyer_specialties?.filter(Boolean) || [];
   const hasAppointment = !!item.scheduled_for;
   const nextMilestone = hasAppointment
     ? `${formatAppointmentMode(item.appointment_mode)} confirmed`
@@ -1252,40 +1244,6 @@ export default function RequestDetailsScreen() {
             <View style={{ padding: 18 }}>
               <View
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 14,
-                }}
-              >
-                <View
-                  style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: 28,
-                    backgroundColor: "#E8EEF8",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text style={{ color: INK, fontSize: 18, fontWeight: "900" }}>
-                    {initialsFromName(lawyerName)}
-                  </Text>
-                </View>
-
-                <View style={{ flex: 1 }}>
-                  <Text style={{ marginTop: 4, color: MUTED }}>
-                    {lawyerSpecialties.length
-                      ? lawyerSpecialties.join(" • ")
-                      : lawyerName
-                        ? "Personally assigned counsel"
-                        : nextMilestone}
-                  </Text>
-                </View>
-              </View>
-
-              <View
-                style={{
-                  marginTop: 16,
                   flexDirection: "row",
                   flexWrap: "wrap",
                   gap: 10,
