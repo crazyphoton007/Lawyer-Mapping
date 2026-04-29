@@ -1273,9 +1273,6 @@ export default function RequestDetailsScreen() {
                 </View>
 
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: INK, fontSize: 16, fontWeight: "800" }}>
-                    {lawyerName || "Assignment pending"}
-                  </Text>
                   <Text style={{ marginTop: 4, color: MUTED }}>
                     {lawyerSpecialties.length
                       ? lawyerSpecialties.join(" • ")
@@ -1523,17 +1520,6 @@ export default function RequestDetailsScreen() {
                     }}
                   >
                     Case Snapshot
-                  </Text>
-                  <Text
-                    style={{
-                      marginTop: 8,
-                      color: "#A9B8CC",
-                      lineHeight: 22,
-                      fontSize: 14,
-                    }}
-                  >
-                    A premium overview of your matter, confirmed timeline, assigned counsel,
-                    and live service progression.
                   </Text>
                 </View>
 
