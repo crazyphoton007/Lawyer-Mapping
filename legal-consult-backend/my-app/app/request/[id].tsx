@@ -7,6 +7,10 @@ import {
   TouchableOpacity,
   Alert,
   RefreshControl,
+  Animated,
+  Easing,
+  Pressable,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
@@ -172,13 +176,6 @@ function formatAppointmentMode(value?: string | null) {
     .join(" ");
 }
 
-function initialsFromName(value?: string | null) {
-  if (!value) return "CF";
-
-  const parts = value.trim().split(/\s+/).slice(0, 2);
-  return parts.map((part) => part[0]?.toUpperCase() ?? "").join("") || "CF";
-}
-
 function appointmentSummary(
   hasAppointment: boolean,
   mode?: string | null,
@@ -208,7 +205,7 @@ function appointmentSupportingCopy(
     return "Expect the confirmed date, time, and joining details shortly.";
   }
 
-  return "Assignment and scheduling updates will be reflected automatically.";
+  return "";
 }
 
 function DetailRow({
@@ -308,10 +305,16 @@ export default function RequestDetailsScreen() {
   const [paying, setPaying] = useState(false);
   const [checkingPayment, setCheckingPayment] = useState(false);
   const [latestPaymentLinkId, setLatestPaymentLinkId] = useState<string | null>(null);
+  const [assignmentCountdown, setAssignmentCountdown] = useState(10);
   const hasLoadedOnce = useRef(false);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hourglassSpin = useRef(new Animated.Value(0)).current;
 
   const authToken = token;
+  const assignmentWaitingForEffect =
+    (item?.status || "").toLowerCase() === "paid" &&
+    !item?.assigned_lawyer &&
+    !item?.assigned_lawyer_name;
 
   const load = useCallback(async (mode: "initial" | "refresh" | "silent" = "initial") => {
     if (!hydrated) {
@@ -423,6 +426,42 @@ export default function RequestDetailsScreen() {
       }
     })();
   }, [id]);
+
+  useEffect(() => {
+    if (!assignmentWaitingForEffect) {
+      setAssignmentCountdown(10);
+      hourglassSpin.stopAnimation();
+      hourglassSpin.setValue(0);
+      return;
+    }
+
+    hourglassSpin.setValue(0);
+    const animation = Animated.loop(
+      Animated.timing(hourglassSpin, {
+        toValue: 1,
+        duration: 1800,
+        easing: Easing.inOut(Easing.quad),
+        useNativeDriver: true,
+      })
+    );
+    animation.start();
+
+    return () => {
+      animation.stop();
+    };
+  }, [assignmentWaitingForEffect, hourglassSpin]);
+
+  useEffect(() => {
+    if (!assignmentWaitingForEffect) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setAssignmentCountdown((current) => (current <= 1 ? 10 : current - 1));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [assignmentWaitingForEffect]);
 
   const verifyPaymentStatus = useCallback(
     async ({
@@ -676,7 +715,11 @@ export default function RequestDetailsScreen() {
   const showCheckStatusButton = status === "awaiting_payment" && !!latestPaymentLinkId;
   const lawyerName =
     item.assigned_lawyer_name || (item.assigned_lawyer ? "CaseFit Legal Expert" : null);
-  const lawyerSpecialties = item.assigned_lawyer_specialties?.filter(Boolean) || [];
+  const showAssignmentWaiting = status === "paid" && !lawyerName;
+  const hourglassRotation = hourglassSpin.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: ["0deg", "180deg", "360deg"],
+  });
   const hasAppointment = !!item.scheduled_for;
   const nextMilestone = hasAppointment
     ? `${formatAppointmentMode(item.appointment_mode)} confirmed`
@@ -794,13 +837,23 @@ export default function RequestDetailsScreen() {
                 This request has been cancelled.
               </Text>
             ) : (
-              <Text style={{ lineHeight: 22 }}>
-                <Text style={stepStyle(1)}>Pending</Text>
-                <Text style={{ color: MUTED }}>  →  </Text>
-                <Text style={stepStyle(2)}>Payment Confirmed</Text>
-                <Text style={{ color: MUTED }}>  →  </Text>
-                <Text style={stepStyle(3)}>Appointment Scheduled</Text>
-              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}>
+                <Text style={[{ lineHeight: 22 }, stepStyle(1)]}>Pending</Text>
+                <Feather
+                  name="arrow-right"
+                  size={17}
+                  color={MUTED}
+                  style={{ marginHorizontal: 8, marginTop: 1 }}
+                />
+                <Text style={[{ lineHeight: 22 }, stepStyle(2)]}>Payment Confirmed</Text>
+                <Feather
+                  name="arrow-right"
+                  size={17}
+                  color={MUTED}
+                  style={{ marginHorizontal: 8, marginTop: 1 }}
+                />
+                <Text style={[{ lineHeight: 22 }, stepStyle(3)]}>Appointment Scheduled</Text>
+              </View>
             )}
           </View>
         </View>
@@ -996,6 +1049,139 @@ export default function RequestDetailsScreen() {
           </View>
         ) : null}
 
+        {showAssignmentWaiting ? (
+          <View
+            style={{
+              marginTop: 14,
+              borderRadius: 24,
+              padding: 1.5,
+              backgroundColor: "rgba(200,155,60,0.32)",
+              shadowColor: "#0B1220",
+              shadowOpacity: 0.1,
+              shadowRadius: 14,
+              shadowOffset: { width: 0, height: 7 },
+              elevation: 4,
+            }}
+          >
+            <View
+              style={{
+                borderRadius: 22,
+                backgroundColor: "#0F172A",
+                padding: 18,
+                overflow: "hidden",
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 14,
+                }}
+              >
+                <Animated.View
+                  style={{
+                    width: 58,
+                    height: 58,
+                    borderRadius: 29,
+                    backgroundColor: "rgba(246,231,193,0.13)",
+                    borderWidth: 1,
+                    borderColor: "rgba(246,231,193,0.28)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transform: [{ rotate: hourglassRotation }],
+                  }}
+                >
+                  <Feather name="clock" size={28} color={GOLD_LIGHT} />
+                </Animated.View>
+
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      color: "#FFFFFF",
+                      fontSize: 20,
+                      fontWeight: "900",
+                      marginTop: 6,
+                    }}
+                  >
+                    Payment confirmed
+                  </Text>
+                  <Text
+                    style={{
+                      color: "#CBD5E1",
+                      marginTop: 6,
+                      lineHeight: 20,
+                    }}
+                  >
+                    caseFit AI is matching the right lawyer!
+                  </Text>
+                </View>
+              </View>
+
+              <View
+                style={{
+                  marginTop: 16,
+                  borderRadius: 16,
+                  backgroundColor: "rgba(255,255,255,0.06)",
+                  borderWidth: 1,
+                  borderColor: "rgba(246,231,193,0.16)",
+                  padding: 14,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                }}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      color: "#FFFFFF",
+                      fontSize: 16,
+                      fontWeight: "900",
+                    }}
+                  >
+                    Refreshing in {assignmentCountdown}s
+                  </Text>
+                </View>
+
+                <Pressable
+                  onPress={() => load("silent")}
+                  style={({ pressed }) => ({
+                    backgroundColor: pressed ? "#F4C75D" : GOLD,
+                    borderRadius: 14,
+                    paddingVertical: 11,
+                    paddingHorizontal: 14,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                    borderWidth: 1,
+                    borderColor: pressed ? "#F8E0A0" : "rgba(255,255,255,0.22)",
+                    shadowColor: "#F4C75D",
+                    shadowOpacity: pressed ? 0.16 : 0.28,
+                    shadowRadius: pressed ? 6 : 12,
+                    shadowOffset: { width: 0, height: pressed ? 2 : 6 },
+                    elevation: pressed ? 1 : 4,
+                    transform: [{ scale: pressed ? 0.97 : 1 }],
+                  })}
+                >
+                  {({ pressed }) => (
+                    <>
+                      <Feather
+                        name="refresh-cw"
+                        size={16}
+                        color="#111111"
+                        style={{ opacity: pressed ? 0.78 : 1 }}
+                      />
+                      <Text style={{ color: "#111111", fontWeight: "900" }}>
+                        Check
+                      </Text>
+                    </>
+                  )}
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        ) : null}
+
         <View
           style={{
             marginTop: 14,
@@ -1058,43 +1244,6 @@ export default function RequestDetailsScreen() {
             <View style={{ padding: 18 }}>
               <View
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 14,
-                }}
-              >
-                <View
-                  style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: 28,
-                    backgroundColor: "#E8EEF8",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text style={{ color: INK, fontSize: 18, fontWeight: "900" }}>
-                    {initialsFromName(lawyerName)}
-                  </Text>
-                </View>
-
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: INK, fontSize: 16, fontWeight: "800" }}>
-                    {lawyerName || "Assignment pending"}
-                  </Text>
-                  <Text style={{ marginTop: 4, color: MUTED }}>
-                    {lawyerSpecialties.length
-                      ? lawyerSpecialties.join(" • ")
-                      : lawyerName
-                        ? "Personally assigned counsel"
-                        : nextMilestone}
-                  </Text>
-                </View>
-              </View>
-
-              <View
-                style={{
-                  marginTop: 16,
                   flexDirection: "row",
                   flexWrap: "wrap",
                   gap: 10,
@@ -1330,17 +1479,6 @@ export default function RequestDetailsScreen() {
                   >
                     Case Snapshot
                   </Text>
-                  <Text
-                    style={{
-                      marginTop: 8,
-                      color: "#A9B8CC",
-                      lineHeight: 22,
-                      fontSize: 14,
-                    }}
-                  >
-                    A premium overview of your matter, confirmed timeline, assigned counsel,
-                    and live service progression.
-                  </Text>
                 </View>
 
                 <View
@@ -1355,7 +1493,15 @@ export default function RequestDetailsScreen() {
                     justifyContent: "center",
                   }}
                 >
-                  <Feather name="briefcase" size={21} color="#E7C97D" />
+                  <Image
+                    source={require("../../assets/images/court_connect.png")}
+                    style={{
+                      width: 50,
+                      height: 50,
+                      borderRadius: 25,
+                    }}
+                    resizeMode="cover"
+                  />
                 </View>
               </View>
             </View>

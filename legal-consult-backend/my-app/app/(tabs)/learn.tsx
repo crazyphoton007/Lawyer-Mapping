@@ -143,7 +143,7 @@ export default function LearnScreen() {
                 style={styles.nextActionInner}
               >
                 <Text style={styles.nextActionText}>
-                  {language === "en" ? "Spin Up" : "आगे बढ़ें"}
+                  {language === "en" ? "Next" : "आगे बढ़ें"}
                 </Text>
                 <Ionicons name="arrow-forward" size={18} color="#F8FBFF" />
               </LinearGradient>
