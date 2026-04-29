@@ -210,7 +210,7 @@ function appointmentSupportingCopy(
     return "Expect the confirmed date, time, and joining details shortly.";
   }
 
-  return "Assignment and scheduling updates will be reflected automatically.";
+  return "";
 }
 
 function DetailRow({
@@ -843,13 +843,23 @@ export default function RequestDetailsScreen() {
                 This request has been cancelled.
               </Text>
             ) : (
-              <Text style={{ lineHeight: 22 }}>
-                <Text style={stepStyle(1)}>Pending</Text>
-                <Text style={{ color: MUTED }}>  →  </Text>
-                <Text style={stepStyle(2)}>Payment Confirmed</Text>
-                <Text style={{ color: MUTED }}>  →  </Text>
-                <Text style={stepStyle(3)}>Appointment Scheduled</Text>
-              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}>
+                <Text style={[{ lineHeight: 22 }, stepStyle(1)]}>Pending</Text>
+                <Feather
+                  name="chevron-right"
+                  size={18}
+                  color={MUTED}
+                  style={{ marginHorizontal: 8, marginTop: 1 }}
+                />
+                <Text style={[{ lineHeight: 22 }, stepStyle(2)]}>Payment Confirmed</Text>
+                <Feather
+                  name="chevron-right"
+                  size={18}
+                  color={MUTED}
+                  style={{ marginHorizontal: 8, marginTop: 1 }}
+                />
+                <Text style={[{ lineHeight: 22 }, stepStyle(3)]}>Appointment Scheduled</Text>
+              </View>
             )}
           </View>
         </View>
@@ -1093,17 +1103,6 @@ export default function RequestDetailsScreen() {
                 <View style={{ flex: 1 }}>
                   <Text
                     style={{
-                      color: GOLD_LIGHT,
-                      fontSize: 11,
-                      fontWeight: "900",
-                      letterSpacing: 1,
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Matching in progress
-                  </Text>
-                  <Text
-                    style={{
                       color: "#FFFFFF",
                       fontSize: 20,
                       fontWeight: "900",
@@ -1119,8 +1118,7 @@ export default function RequestDetailsScreen() {
                       lineHeight: 20,
                     }}
                   >
-                    We are assigning the right lawyer for your matter. This card
-                    disappears automatically once counsel is assigned.
+                    caseFit AI is matching the right lawyer!
                   </Text>
                 </View>
               </View>
@@ -1142,19 +1140,7 @@ export default function RequestDetailsScreen() {
                 <View style={{ flex: 1 }}>
                   <Text
                     style={{
-                      color: "#94A3B8",
-                      fontSize: 11,
-                      fontWeight: "800",
-                      letterSpacing: 0.7,
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Next status check
-                  </Text>
-                  <Text
-                    style={{
                       color: "#FFFFFF",
-                      marginTop: 4,
                       fontSize: 16,
                       fontWeight: "900",
                     }}
@@ -1162,23 +1148,6 @@ export default function RequestDetailsScreen() {
                     Refreshing in {assignmentCountdown}s
                   </Text>
                 </View>
-
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  onPress={() => load("silent")}
-                  style={{
-                    backgroundColor: GOLD,
-                    borderRadius: 14,
-                    paddingVertical: 11,
-                    paddingHorizontal: 14,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
-                  <Feather name="refresh-cw" size={16} color="#111111" />
-                  <Text style={{ color: "#111111", fontWeight: "900" }}>Check</Text>
-                </TouchableOpacity>
               </View>
             </View>
           </View>
