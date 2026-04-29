@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -39,6 +40,19 @@ class AdminStatusUpdateIn(BaseModel):
 
 class AdminAssignLawyerIn(BaseModel):
     lawyer_id: UUID
+
+
+def parse_admin_date(value: str | None, field_name: str) -> datetime | None:
+    if not value:
+        return None
+
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        try:
+            return datetime.strptime(value, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid {field_name}.")
 
 
 def require_team_user(current_user: User = Depends(get_current_user)) -> User:
@@ -106,53 +120,92 @@ def admin_ui():
 def admin_list_requests(
     status: str | None = Query(None),
     search: str | None = Query(None),
+    date_from: str | None = Query(None),
+    date_to: str | None = Query(None),
+    sort: str = Query("newest"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=10, le=100),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_team_user),
 ):
+    start_date = parse_admin_date(date_from, "date_from")
+    end_date = parse_admin_date(date_to, "date_to")
+    if end_date:
+        end_date = end_date + timedelta(days=1)
+
     stmt = (
         select(Request)
         .options(
             joinedload(Request.user),
             joinedload(Request.assigned_lawyer_obj).joinedload(Lawyer.user),
         )
-        .order_by(Request.created_at.desc())
     )
-    if status:
-        stmt = stmt.where(Request.status == status)
+    if start_date:
+        stmt = stmt.where(Request.created_at >= start_date)
+    if end_date:
+        stmt = stmt.where(Request.created_at < end_date)
 
     rows = db.execute(stmt).scalars().all()
 
-    if search:
+    def matches_search(req: Request) -> bool:
+        if not search:
+            return True
+
         query = search.strip().lower()
         digits = "".join(ch for ch in query if ch.isdigit())
         terms = [query]
         if digits and digits != query:
             terms.append(digits)
 
-        def matches(req: Request) -> bool:
-            case_reference = derive_case_reference(req.id).lower()
-            user = getattr(req, "user", None)
-            values = (
-                case_reference,
-                getattr(user, "phone", None),
-                getattr(user, "name", None),
-                req.category,
-                req.description,
-                req.preferred_city,
-            )
-            return any(
-                term and any(value and term in str(value).lower() for value in values)
-                for term in terms
-            )
+        case_reference = derive_case_reference(req.id).lower()
+        user = getattr(req, "user", None)
+        values = (
+            case_reference,
+            getattr(user, "phone", None),
+            getattr(user, "name", None),
+            req.category,
+            req.description,
+            req.preferred_city,
+        )
+        return any(
+            term and any(value and term in str(value).lower() for value in values)
+            for term in terms
+        )
 
-        return {
-            "viewer_role": getattr(current_user, "role", None),
-            "requests": [serialize_request(req) for req in rows if matches(req)],
-        }
+    rows = [req for req in rows if matches_search(req)]
+
+    status_counts = {allowed_status: 0 for allowed_status in ALLOWED_STATUSES}
+    for req in rows:
+        if req.status in status_counts:
+            status_counts[req.status] += 1
+        else:
+            status_counts[req.status] = status_counts.get(req.status, 0) + 1
+
+    if status:
+        rows = [req for req in rows if req.status == status]
+
+    if sort == "oldest":
+        rows.sort(key=lambda req: req.created_at or datetime.min)
+    elif sort == "scheduled":
+        rows.sort(key=lambda req: (req.scheduled_for is None, req.scheduled_for or datetime.max))
+    else:
+        rows.sort(key=lambda req: req.created_at or datetime.min, reverse=True)
+
+    total = len(rows)
+    start = (page - 1) * page_size
+    paged_rows = rows[start : start + page_size]
 
     return {
         "viewer_role": getattr(current_user, "role", None),
-        "requests": [serialize_request(req) for req in rows],
+        "requests": [serialize_request(req) for req in paged_rows],
+        "summary": {
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": max(1, (total + page_size - 1) // page_size),
+            "status_counts": status_counts,
+            "all_count": sum(status_counts.values()),
+        },
     }
 
 

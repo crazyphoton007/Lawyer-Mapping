@@ -194,6 +194,106 @@
         align-items: end;
       }
 
+      .queue-summary {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .metric-card {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #fbfcfe;
+        padding: 12px;
+      }
+
+      .metric-label {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .metric-value {
+        margin-top: 4px;
+        font-size: 24px;
+        font-weight: 900;
+      }
+
+      .status-tabs {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        margin-bottom: 12px;
+      }
+
+      .tab-btn {
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+        white-space: nowrap;
+        padding: 9px 12px;
+        border-radius: 999px;
+      }
+
+      .tab-btn.active {
+        border-color: rgba(200, 155, 60, 0.54);
+        background: var(--gold-soft);
+      }
+
+      .filter-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.25fr repeat(3, minmax(140px, 0.7fr)) auto;
+        gap: 12px;
+        align-items: end;
+      }
+
+      .queue-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .pager {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .pager button {
+        padding: 9px 12px;
+      }
+
+      .request-title {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .case-pill {
+        border-radius: 999px;
+        background: #edf2f7;
+        color: #334155;
+        padding: 4px 8px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .request-footer {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 12px;
+        margin-top: 10px;
+      }
+
       .request-list {
         display: grid;
         gap: 12px;
@@ -334,9 +434,17 @@
         .auth-bar,
         .detail-grid,
         .action-grid,
-        .filters {
+        .filters,
+        .filter-grid,
+        .queue-summary {
           grid-template-columns: 1fr;
           display: grid;
+        }
+
+        .queue-toolbar,
+        .request-footer {
+          display: grid;
+          grid-template-columns: 1fr;
         }
 
         .hero h1 {
@@ -395,7 +503,36 @@
             <div class="panel-sub">Search the live production queue and open a request to manage it.</div>
           </div>
           <div class="panel-body">
-            <div class="filters">
+            <div class="queue-summary" id="queueSummary">
+              <div class="metric-card">
+                <div class="metric-label">Visible</div>
+                <div class="metric-value" id="metricVisible">0</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">New</div>
+                <div class="metric-value" id="metricPending">0</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">Paid</div>
+                <div class="metric-value" id="metricPaid">0</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">Scheduling</div>
+                <div class="metric-value" id="metricScheduling">0</div>
+              </div>
+            </div>
+
+            <div class="status-tabs" id="statusTabs">
+              <button class="tab-btn active" data-status="">All <span data-count="all">0</span></button>
+              <button class="tab-btn" data-status="pending">New <span data-count="pending">0</span></button>
+              <button class="tab-btn" data-status="awaiting_payment">Awaiting payment <span data-count="awaiting_payment">0</span></button>
+              <button class="tab-btn" data-status="paid">Paid <span data-count="paid">0</span></button>
+              <button class="tab-btn" data-status="assigned">Assigned <span data-count="assigned">0</span></button>
+              <button class="tab-btn" data-status="appointment_scheduled">Scheduled <span data-count="appointment_scheduled">0</span></button>
+              <button class="tab-btn" data-status="completed">Completed <span data-count="completed">0</span></button>
+            </div>
+
+            <div class="filter-grid">
               <div style="flex: 1">
                 <label for="statusFilter">Status Filter</label>
                 <select id="statusFilter">
@@ -414,7 +551,32 @@
                 <label for="searchFilter">Search by Mobile or Case</label>
                 <input id="searchFilter" type="text" placeholder="+9198..., last digits, CF-38660, or 38660" />
               </div>
+              <div>
+                <label for="dateFromFilter">From</label>
+                <input id="dateFromFilter" type="date" />
+              </div>
+              <div>
+                <label for="dateToFilter">To</label>
+                <input id="dateToFilter" type="date" />
+              </div>
+              <div>
+                <label for="sortFilter">Sort</label>
+                <select id="sortFilter">
+                  <option value="newest">Newest first</option>
+                  <option value="oldest">Oldest first</option>
+                  <option value="scheduled">Next appointment</option>
+                </select>
+              </div>
               <button class="btn-secondary" id="filterBtn">Apply</button>
+            </div>
+
+            <div class="queue-toolbar">
+              <div id="resultMeta">No requests loaded.</div>
+              <div class="pager">
+                <button class="btn-secondary" id="prevPageBtn">Previous</button>
+                <span id="pageLabel">Page 1 of 1</span>
+                <button class="btn-secondary" id="nextPageBtn">Next</button>
+              </div>
             </div>
 
             <div id="requestList" class="request-list" style="margin-top: 16px"></div>
@@ -543,12 +705,25 @@
         filteredRequests: [],
         lawyers: [],
         selectedRequestId: null,
+        summary: {
+          total: 0,
+          page: 1,
+          page_size: 25,
+          total_pages: 1,
+          status_counts: {},
+          all_count: 0,
+        },
       };
 
       const messageEl = document.getElementById("message");
       const requestListEl = document.getElementById("requestList");
       const selectionEmptyEl = document.getElementById("selectionEmpty");
       const selectionContentEl = document.getElementById("selectionContent");
+      const resultMetaEl = document.getElementById("resultMeta");
+      const pageLabelEl = document.getElementById("pageLabel");
+      const prevPageBtn = document.getElementById("prevPageBtn");
+      const nextPageBtn = document.getElementById("nextPageBtn");
+      let searchDebounceTimer = null;
 
       function showMessage(text, kind = "success") {
         messageEl.textContent = text;
@@ -577,6 +752,15 @@
           "Content-Type": "application/json",
           authorization: `Bearer ${state.token}`,
         };
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
       }
 
       function formatDate(value) {
@@ -616,6 +800,39 @@
       function indiaDateTimeLocalToIso(value) {
         if (!value) return null;
         return `${value}:00+05:30`;
+      }
+
+      function renderSummary() {
+        const counts = state.summary.status_counts || {};
+        document.getElementById("metricVisible").textContent = state.summary.total || 0;
+        document.getElementById("metricPending").textContent = counts.pending || 0;
+        document.getElementById("metricPaid").textContent = counts.paid || 0;
+        document.getElementById("metricScheduling").textContent =
+          (counts.assigned || 0) + (counts.appointment_scheduled || 0);
+
+        document.querySelectorAll("[data-count]").forEach((node) => {
+          const key = node.dataset.count;
+          node.textContent = key === "all" ? state.summary.all_count || 0 : counts[key] || 0;
+        });
+
+        const page = state.summary.page || 1;
+        const totalPages = state.summary.total_pages || 1;
+        pageLabelEl.textContent = `Page ${page} of ${totalPages}`;
+        prevPageBtn.disabled = page <= 1;
+        nextPageBtn.disabled = page >= totalPages;
+
+        const first = state.summary.total ? (page - 1) * state.summary.page_size + 1 : 0;
+        const last = Math.min(page * state.summary.page_size, state.summary.total || 0);
+        resultMetaEl.textContent = state.summary.total
+          ? `Showing ${first}-${last} of ${state.summary.total} matching requests`
+          : "No matching requests";
+      }
+
+      function setStatusFilter(status) {
+        document.getElementById("statusFilter").value = status;
+        document.querySelectorAll(".tab-btn").forEach((button) => {
+          button.classList.toggle("active", button.dataset.status === status);
+        });
       }
 
       function selectedRequest() {
@@ -689,6 +906,7 @@
       }
 
       function renderRequests() {
+        renderSummary();
         requestListEl.innerHTML = "";
         if (!state.filteredRequests.length) {
           requestListEl.innerHTML = '<div class="empty">No requests found for this filter.</div>';
@@ -699,17 +917,25 @@
         for (const item of state.filteredRequests) {
           const card = document.createElement("div");
           card.className = `request-card${item.id === state.selectedRequestId ? " active" : ""}`;
+          const submittedAt = item.created_at ? formatDate(item.created_at) : "Date not available";
           card.innerHTML = `
             <div class="row">
               <div>
-                <strong>${item.category || "Legal Request"}</strong>
-                <div class="meta">${item.customer_name || "Unknown client"}${item.case_reference ? ` • ${item.case_reference}` : ""}${item.customer_phone ? ` • ${item.customer_phone}` : ""}</div>
+                <div class="request-title">
+                  <strong>${escapeHtml(item.category || "Legal Request")}</strong>
+                  ${item.case_reference ? `<span class="case-pill">${escapeHtml(item.case_reference)}</span>` : ""}
+                </div>
+                <div class="meta">${escapeHtml(item.customer_name || "Unknown client")}${item.customer_phone ? ` • ${escapeHtml(item.customer_phone)}` : ""}</div>
               </div>
-              <span class="status-chip">${item.status}</span>
+              <span class="status-chip">${escapeHtml(item.status || "pending")}</span>
             </div>
-            <div class="meta" style="margin-top: 10px;">${item.description || "No description"}</div>
-            <div class="meta" style="margin-top: 10px;">Preferred city: ${item.preferred_city || "Not specified"}</div>
-            <div class="meta" style="margin-top: 10px;">Lawyer: ${item.assigned_lawyer_name || "Unassigned"} • Appointment: ${item.scheduled_for ? formatDate(item.scheduled_for) : "Pending"}</div>
+            <div class="meta" style="margin-top: 10px;">${escapeHtml(item.description || "No description")}</div>
+            <div class="request-footer">
+              <div class="meta">City: ${escapeHtml(item.preferred_city || "Not specified")}</div>
+              <div class="meta">Submitted: ${escapeHtml(submittedAt)}</div>
+              <div class="meta">Lawyer: ${escapeHtml(item.assigned_lawyer_name || "Unassigned")}</div>
+              <div class="meta">Appointment: ${escapeHtml(item.scheduled_for ? formatDate(item.scheduled_for) : "Pending")}</div>
+            </div>
           `;
           card.addEventListener("click", () => {
             state.selectedRequestId = item.id;
@@ -762,12 +988,24 @@
       async function loadRequests() {
         const status = document.getElementById("statusFilter").value;
         const search = document.getElementById("searchFilter").value.trim();
+        const dateFrom = document.getElementById("dateFromFilter").value;
+        const dateTo = document.getElementById("dateToFilter").value;
+        const sort = document.getElementById("sortFilter").value;
         const params = new URLSearchParams();
         if (status) params.set("status", status);
         if (search) params.set("search", search);
+        if (dateFrom) params.set("date_from", dateFrom);
+        if (dateTo) params.set("date_to", dateTo);
+        if (sort) params.set("sort", sort);
+        params.set("page", state.summary.page || 1);
+        params.set("page_size", state.summary.page_size || 25);
         const qs = params.toString() ? `?${params.toString()}` : "";
         const data = await api(`/admin/requests${qs}`, { method: "GET" });
         state.requests = data.requests || [];
+        state.summary = {
+          ...state.summary,
+          ...(data.summary || {}),
+        };
         applySearchFilter();
         renderRequests();
       }
@@ -883,17 +1121,27 @@
         state.filteredRequests = [];
         state.lawyers = [];
         state.selectedRequestId = null;
+        state.summary = {
+          total: 0,
+          page: 1,
+          page_size: 25,
+          total_pages: 1,
+          status_counts: {},
+          all_count: 0,
+        };
         document.getElementById("token").value = "";
         document.getElementById("otp").value = "";
         persistToken();
         setSessionLabel();
         requestListEl.innerHTML = "";
+        renderSummary();
         renderSelection();
         showMessage("Logged out.");
       });
 
       document.getElementById("filterBtn").addEventListener("click", async () => {
         try {
+          state.summary.page = 1;
           await loadRequests();
           showMessage("Filter applied.");
         } catch (error) {
@@ -902,8 +1150,74 @@
       });
 
       document.getElementById("searchFilter").addEventListener("input", () => {
-        applySearchFilter();
-        renderRequests();
+        window.clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = window.setTimeout(async () => {
+          try {
+            state.summary.page = 1;
+            await loadRequests();
+          } catch (error) {
+            showMessage(error.message || "Search failed.", "error");
+          }
+        }, 350);
+      });
+
+      document.getElementById("statusFilter").addEventListener("change", async (event) => {
+        try {
+          setStatusFilter(event.target.value);
+          state.summary.page = 1;
+          await loadRequests();
+        } catch (error) {
+          showMessage(error.message || "Could not change status filter.", "error");
+        }
+      });
+
+      document.getElementById("dateFromFilter").addEventListener("change", () => {
+        state.summary.page = 1;
+      });
+
+      document.getElementById("dateToFilter").addEventListener("change", () => {
+        state.summary.page = 1;
+      });
+
+      document.getElementById("sortFilter").addEventListener("change", async () => {
+        try {
+          state.summary.page = 1;
+          await loadRequests();
+        } catch (error) {
+          showMessage(error.message || "Could not sort requests.", "error");
+        }
+      });
+
+      document.querySelectorAll(".tab-btn").forEach((button) => {
+        button.addEventListener("click", async () => {
+          try {
+            setStatusFilter(button.dataset.status || "");
+            state.summary.page = 1;
+            await loadRequests();
+          } catch (error) {
+            showMessage(error.message || "Could not load this queue.", "error");
+          }
+        });
+      });
+
+      prevPageBtn.addEventListener("click", async () => {
+        if ((state.summary.page || 1) <= 1) return;
+        try {
+          state.summary.page -= 1;
+          await loadRequests();
+        } catch (error) {
+          showMessage(error.message || "Could not load previous page.", "error");
+        }
+      });
+
+      nextPageBtn.addEventListener("click", async () => {
+        if ((state.summary.page || 1) >= (state.summary.total_pages || 1)) return;
+        try {
+          state.summary.page += 1;
+          await loadRequests();
+        } catch (error) {
+          showMessage(error.message || "Could not load next page.", "error");
+        }
       });
 
       document.getElementById("statusBtn").addEventListener("click", async () => {
