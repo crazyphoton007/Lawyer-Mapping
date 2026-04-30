@@ -81,8 +81,13 @@ def _require_msg91_config(*required_values: str) -> None:
 
 def _msg91_mobile(ctx: OtpDeliveryContext) -> str:
     mobile = "".join(ch for ch in ctx.phone if ch.isdigit())
+
+    if len(mobile) == 10:
+        mobile = "91" + mobile
+
     if not mobile:
         raise HTTPException(status_code=400, detail="MSG91 requires a valid phone number.")
+
     return mobile
 
 

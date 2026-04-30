@@ -1119,7 +1119,7 @@
               throw new Error(data?.detail || text || `HTTP ${response.status}`);
             }
           });
-          showMessage("OTP sent. In local dev, check the backend terminal for the code.");
+          showMessage("OTP sent to your phone.");
         } catch (error) {
           showMessage(error.message || "Could not request OTP.", "error");
         }
