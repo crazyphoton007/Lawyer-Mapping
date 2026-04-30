@@ -133,9 +133,10 @@ def _send_otp_via_msg91_sendotp(ctx: OtpDeliveryContext) -> None:
             "otp_expiry": MSG91_OTP_EXPIRY_MINUTES,
         }
     )
+    body = json.dumps({MSG91_TEMPLATE_OTP_KEY: ctx.code}).encode("utf-8")
     request = urllib.request.Request(
         f"https://control.msg91.com/api/v5/otp?{query}",
-        data=b"{}",
+        data=body,
         method="POST",
         headers={
             "content-type": "application/JSON",
