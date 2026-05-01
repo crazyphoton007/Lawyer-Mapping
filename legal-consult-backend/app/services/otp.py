@@ -129,13 +129,11 @@ def _send_otp_via_msg91_sendotp(ctx: OtpDeliveryContext) -> None:
             "template_id": MSG91_TEMPLATE_ID,
             "mobile": mobile,
             "authkey": MSG91_AUTH_KEY,
-            "otp": ctx.code,
         }
     )
-    body = json.dumps({MSG91_TEMPLATE_OTP_KEY: ctx.code}).encode("utf-8")
     request = urllib.request.Request(
         f"https://control.msg91.com/api/v5/otp?{query}",
-        data=body,
+        data=b"{}",
         method="POST",
         headers={
             "content-type": "application/JSON",
@@ -184,6 +182,32 @@ def _send_otp_via_msg91(ctx: OtpDeliveryContext) -> None:
         return
 
     _send_otp_via_msg91_sendotp(ctx)
+
+
+def is_msg91_managed_otp() -> bool:
+    return OTP_PROVIDER == "msg91" and MSG91_SEND_MODE not in {"sms", "text", "dlt"}
+
+
+def verify_msg91_otp(phone: str, code: str) -> bool:
+    _require_msg91_config(MSG91_AUTH_KEY)
+    mobile = _msg91_mobile(OtpDeliveryContext(phone=phone, code=code))
+    query = urllib.parse.urlencode({"mobile": mobile, "otp": code})
+    request = urllib.request.Request(
+        f"https://control.msg91.com/api/v5/otp/verify?{query}",
+        method="GET",
+        headers={
+            "authkey": MSG91_AUTH_KEY,
+            "accept": "application/json",
+        },
+    )
+    payload = _read_msg91_response(request)
+    if isinstance(payload, str):
+        normalized = payload.lower()
+        return "success" in normalized or "verified" in normalized
+
+    msg = str(payload.get("message") or "").lower()
+    typ = str(payload.get("type") or "").lower()
+    return typ == "success" or "verified" in msg
 
 
 def _send_otp_via_whatsapp(ctx: OtpDeliveryContext) -> None:

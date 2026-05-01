@@ -12,7 +12,12 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.models.user import User
 from app.schemas import UserUpdate
-from app.services.otp import OtpDeliveryContext, dispatch_otp
+from app.services.otp import (
+    OtpDeliveryContext,
+    dispatch_otp,
+    is_msg91_managed_otp,
+    verify_msg91_otp,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -50,7 +55,7 @@ class SetRoleIn(BaseModel):
 
 
 # simple in-memory store (MVP only)
-_otp: dict[str, tuple[str, float]] = {}
+_otp: dict[str, tuple[str, float, str]] = {}
 _otp_request_log: dict[str, list[float]] = {}
 
 
@@ -153,7 +158,7 @@ def _check_otp_rate_limit(phone: str) -> None:
 def request_code(inp: RequestCodeIn, db: Session = Depends(get_db)):
     _check_otp_rate_limit(inp.phone)
     code = f"{random.randint(100000, 999999)}"
-    _otp[inp.phone] = (code, time.time() + OTP_EXPIRES_SECONDS)
+    expires_at = time.time() + OTP_EXPIRES_SECONDS
     user = db.query(User).filter(User.phone == inp.phone).first()
     fallback_email = inp.email or getattr(user, "email", None)
     if inp.email and user and not getattr(user, "email", None):
@@ -169,13 +174,17 @@ def request_code(inp: RequestCodeIn, db: Session = Depends(get_db)):
             name=getattr(user, "name", None) if user else None,
         )
     )
+    _otp[inp.phone] = (code, expires_at, provider)
     return {"ok": True, "delivery_channel": provider}
 
 
 @router.post("/verify")
 def verify(inp: VerifyCodeIn, db: Session = Depends(get_db)):
     rec = _otp.get(inp.phone)
-    if not rec or rec[0] != inp.code or rec[1] < time.time():
+    if rec and rec[2] == "msg91" and is_msg91_managed_otp():
+        if not rec or rec[1] < time.time() or not verify_msg91_otp(inp.phone, inp.code):
+            raise HTTPException(status_code=400, detail="Invalid or expired code")
+    elif not rec or rec[0] != inp.code or rec[1] < time.time():
         raise HTTPException(status_code=400, detail="Invalid or expired code")
 
     # upsert user
@@ -187,6 +196,7 @@ def verify(inp: VerifyCodeIn, db: Session = Depends(get_db)):
         db.refresh(user)
 
     token = _make_jwt(str(user.id), user.phone)
+    _otp.pop(inp.phone, None)
 
     return {
         "token": token,
@@ -242,7 +252,12 @@ def claim_guest_account(
         raise HTTPException(status_code=400, detail="Phone is required")
 
     rec = _otp.get(clean_phone)
-    if not rec or rec[0] != inp.code or rec[1] < time.time():
+    if rec and rec[2] == "msg91" and is_msg91_managed_otp():
+        invalid_code = not rec or rec[1] < time.time() or not verify_msg91_otp(clean_phone, inp.code)
+    else:
+        invalid_code = not rec or rec[0] != inp.code or rec[1] < time.time()
+
+    if invalid_code:
         raise HTTPException(status_code=400, detail="Invalid or expired code")
 
     existing = db.query(User).filter(User.phone == clean_phone).first()
