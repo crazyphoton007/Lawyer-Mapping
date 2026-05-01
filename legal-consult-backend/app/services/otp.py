@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import smtplib
 import urllib.parse
@@ -10,6 +11,8 @@ from typing import Iterable
 from fastapi import HTTPException
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -120,6 +123,22 @@ def _read_msg91_response(request: urllib.request.Request) -> dict | str:
         return body
 
 
+def _log_msg91_result(action: str, mobile: str, payload: dict | str) -> None:
+    mobile_hint = mobile[-4:] if mobile else "none"
+    if isinstance(payload, dict):
+        logger.info(
+            "MSG91 %s response mobile_last4=%s type=%s message=%s request_id=%s",
+            action,
+            mobile_hint,
+            payload.get("type"),
+            payload.get("message"),
+            payload.get("request_id"),
+        )
+        return
+
+    logger.info("MSG91 %s response mobile_last4=%s body=%s", action, mobile_hint, payload)
+
+
 def _send_otp_via_msg91_sendotp(ctx: OtpDeliveryContext) -> None:
     _require_msg91_config(MSG91_AUTH_KEY, MSG91_TEMPLATE_ID)
     mobile = _msg91_mobile(ctx)
@@ -141,6 +160,7 @@ def _send_otp_via_msg91_sendotp(ctx: OtpDeliveryContext) -> None:
         },
     )
     payload = _read_msg91_response(request)
+    _log_msg91_result("sendotp", mobile, payload)
     _check_msg91_payload(payload)
 
 
@@ -173,6 +193,7 @@ def _send_otp_via_msg91_sms(ctx: OtpDeliveryContext) -> None:
         },
     )
     response_payload = _read_msg91_response(request)
+    _log_msg91_result("sendsms", mobile, response_payload)
     _check_msg91_payload(response_payload)
 
 
@@ -201,6 +222,7 @@ def verify_msg91_otp(phone: str, code: str) -> bool:
         },
     )
     payload = _read_msg91_response(request)
+    _log_msg91_result("verify", mobile, payload)
     if isinstance(payload, str):
         normalized = payload.lower()
         return "success" in normalized or "verified" in normalized
