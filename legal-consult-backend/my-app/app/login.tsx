@@ -148,7 +148,6 @@ export default function LoginScreen() {
   const [deliveryMessage, setDeliveryMessage] = useState("");
   const [deliveryAccent, setDeliveryAccent] = useState<"dark" | "soft">("dark");
   const [otpError, setOtpError] = useState("");
-  const [otpChecking, setOtpChecking] = useState(false);
   const verifyingCodeRef = useRef("");
   const otpInputRef = useRef<ElementRef<typeof TextInput>>(null);
 
@@ -172,7 +171,6 @@ export default function LoginScreen() {
         setCode("");
         setDeliveryMessage("");
         setOtpError("");
-        setOtpChecking(false);
         verifyingCodeRef.current = "";
         return true;
       }
@@ -223,7 +221,6 @@ export default function LoginScreen() {
   async function continueAsGuest() {
     setLoading(true);
     setOtpError("");
-    setOtpChecking(false);
     verifyingCodeRef.current = "";
     try {
       const savedGuest = await readStoredGuestSession();
@@ -304,7 +301,6 @@ export default function LoginScreen() {
 
     setLoading(true);
     setOtpError("");
-    setOtpChecking(true);
     verifyingCodeRef.current = nextCode;
     try {
       const e164 = `+91${ph}`;
@@ -334,7 +330,6 @@ export default function LoginScreen() {
     } catch (e: any) {
       verifyingCodeRef.current = "";
       if (e?.status === 400) {
-        setOtpChecking(false);
         setOtpError("invalid");
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
         return;
@@ -342,7 +337,6 @@ export default function LoginScreen() {
       console.error("[verifyCode] error:", e);
       Alert.alert("Error", e?.message || "We could not verify that code. Please try again.");
     } finally {
-      setOtpChecking(false);
       setLoading(false);
     }
   }
@@ -351,7 +345,6 @@ export default function LoginScreen() {
     const next = value.replace(/\D/g, "").slice(0, OTP_LENGTH);
     setCode(next);
     setOtpError("");
-    setOtpChecking(false);
 
     if (next.length === OTP_LENGTH) {
       verifyCode(next);
@@ -670,23 +663,17 @@ export default function LoginScreen() {
                   cursorColor={INK}
                   style={{
                     borderWidth: 1,
-                    borderColor: otpError ? "#DC2626" : otpChecking ? "#2563EB" : BORDER,
+                    borderColor: otpError ? "#DC2626" : BORDER,
                     borderRadius: 12,
                     padding: 12,
-                    backgroundColor: otpError ? "#FEF2F2" : otpChecking ? "#EFF6FF" : "#FAFAFA",
+                    backgroundColor: otpError ? "#FEF2F2" : "#FAFAFA",
                     fontSize: 18,
-                    color: otpError ? "#991B1B" : otpChecking ? "#1D4ED8" : INK,
+                    color: otpError ? "#991B1B" : INK,
                     fontWeight: "700", // BOLD OTP
                     letterSpacing: 2, // subtle spacing to look like code boxes
                     textAlign: "center",
                   }}
                 />
-                {otpChecking ? (
-                  <View style={{ alignItems: "center" }}>
-                    <ActivityIndicator size="small" color="#2563EB" />
-                  </View>
-                ) : null}
-
                 <TouchableOpacity
                   onPress={requestCode}
                   disabled={loading}
