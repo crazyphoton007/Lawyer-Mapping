@@ -1994,7 +1994,7 @@ export default function ProfileScreen() {
                     </Text>
                     <TextInput
                       value={claimCode}
-                      onChangeText={setClaimCode}
+                      onChangeText={(value) => setClaimCode(value.replace(/\D/g, "").slice(0, 6))}
                       keyboardType="number-pad"
                       inputMode="numeric"
                       maxLength={6}

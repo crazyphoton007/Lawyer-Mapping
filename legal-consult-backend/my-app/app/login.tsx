@@ -40,6 +40,8 @@ const GUEST_TOKEN_KEY = "guest_token";
 const GUEST_USER_KEY = "guest_user";
 const SUPPORT_EMAIL = "support@thecasefit.com";
 const WHATSAPP_E164 = "919807863007";
+const OTP_MAX_LENGTH = 6;
+const OTP_AUTO_VERIFY_LENGTH = 4;
 const OTP_LIMIT_TITLE = "Your OTP vault is cooling down";
 const OTP_LIMIT_MESSAGE =
   "You’ve requested OTP too many times. Please try again after 1 hour.";
@@ -341,11 +343,11 @@ export default function LoginScreen() {
   }
 
   function handleCodeChange(value: string) {
-    const next = value.replace(/\D/g, "").slice(0, 6);
+    const next = value.replace(/\D/g, "").slice(0, OTP_MAX_LENGTH);
     setCode(next);
     setOtpError("");
 
-    if (next.length === 6) {
+    if (next.length === OTP_AUTO_VERIFY_LENGTH) {
       setTimeout(() => verifyCode(next), 80);
     }
   }
@@ -652,7 +654,7 @@ export default function LoginScreen() {
                   ref={otpInputRef}
                   value={code}
                   onChangeText={handleCodeChange}
-                  maxLength={6}
+                  maxLength={OTP_MAX_LENGTH}
                   keyboardType="number-pad"
                   inputMode="numeric"
                   textContentType="oneTimeCode"
