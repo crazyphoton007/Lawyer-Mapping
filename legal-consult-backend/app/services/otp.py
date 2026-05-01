@@ -225,11 +225,18 @@ def verify_msg91_otp(phone: str, code: str) -> bool:
     _log_msg91_result("verify", mobile, payload)
     if isinstance(payload, str):
         normalized = payload.lower()
-        return "success" in normalized or "verified" in normalized
+        return "verified" in normalized and not any(
+            marker in normalized
+            for marker in ("not verified", "invalid", "incorrect", "expired", "failed")
+        )
 
     msg = str(payload.get("message") or "").lower()
     typ = str(payload.get("type") or "").lower()
-    return typ == "success" or "verified" in msg
+    failure_markers = ("not verified", "invalid", "incorrect", "expired", "failed", "mismatch")
+    if typ in {"error", "failure", "failed"} or any(marker in msg for marker in failure_markers):
+        return False
+
+    return "verified" in msg
 
 
 def _send_otp_via_whatsapp(ctx: OtpDeliveryContext) -> None:
