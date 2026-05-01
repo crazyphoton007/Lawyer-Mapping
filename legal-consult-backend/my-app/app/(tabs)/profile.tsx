@@ -1994,10 +1994,10 @@ export default function ProfileScreen() {
                     </Text>
                     <TextInput
                       value={claimCode}
-                      onChangeText={(value) => setClaimCode(value.replace(/\D/g, "").slice(0, 6))}
+                      onChangeText={(value) => setClaimCode(value.replace(/\D/g, "").slice(0, 4))}
                       keyboardType="number-pad"
                       inputMode="numeric"
-                      maxLength={6}
+                      maxLength={4}
                       placeholder="Enter OTP"
                       placeholderTextColor="#9CA3AF"
                       style={{
