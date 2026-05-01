@@ -129,8 +129,6 @@ def _send_otp_via_msg91_sendotp(ctx: OtpDeliveryContext) -> None:
             "template_id": MSG91_TEMPLATE_ID,
             "mobile": mobile,
             "authkey": MSG91_AUTH_KEY,
-            "otp": ctx.code,
-            "otp_expiry": MSG91_OTP_EXPIRY_MINUTES,
         }
     )
     body = json.dumps({MSG91_TEMPLATE_OTP_KEY: ctx.code}).encode("utf-8")
