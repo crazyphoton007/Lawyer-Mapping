@@ -12,7 +12,7 @@ from fastapi import HTTPException
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.error")
 
 
 @dataclass
@@ -126,7 +126,7 @@ def _read_msg91_response(request: urllib.request.Request) -> dict | str:
 def _log_msg91_result(action: str, mobile: str, payload: dict | str) -> None:
     mobile_hint = mobile[-4:] if mobile else "none"
     if isinstance(payload, dict):
-        logger.info(
+        logger.warning(
             "MSG91 %s response mobile_last4=%s type=%s message=%s request_id=%s",
             action,
             mobile_hint,
@@ -136,7 +136,7 @@ def _log_msg91_result(action: str, mobile: str, payload: dict | str) -> None:
         )
         return
 
-    logger.info("MSG91 %s response mobile_last4=%s body=%s", action, mobile_hint, payload)
+    logger.warning("MSG91 %s response mobile_last4=%s body=%s", action, mobile_hint, payload)
 
 
 def _send_otp_via_msg91_sendotp(ctx: OtpDeliveryContext) -> None:
