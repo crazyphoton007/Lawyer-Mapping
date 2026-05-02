@@ -3,6 +3,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, Linking, Alert, Dimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { Feather } from "@expo/vector-icons";
 import Logo from "../assets/images/casefit-wordmark.svg"; // your SVG
 
 const INK = "#000000";
@@ -16,9 +17,9 @@ const LOGO_MAX_W = 520;              // absolute cap for very wide phones
 /** Your SVG aspect (width / height): 805 × 227 → ~3.547 */
 const LOGO_ASPECT = 805 / 227;
 
-type Props = { showBack?: boolean; showHelp?: boolean };
+type Props = { showBack?: boolean; showHelp?: boolean; onBackPress?: () => void };
 
-export default function CaseFitHeader({ showBack, showHelp }: Props) {
+export default function CaseFitHeader({ showBack, showHelp, onBackPress }: Props) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -53,11 +54,11 @@ export default function CaseFitHeader({ showBack, showHelp }: Props) {
         <View style={{ width: 56, alignItems: "flex-start" }}>
           {showBack ? (
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={onBackPress ?? (() => router.back())}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              style={{ width: 56, height: 56, alignItems: "flex-start", justifyContent: "center", paddingLeft: 6 }}
+              style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center", borderRadius: 22 }}
             >
-              <Text style={{ color: WHITE, fontSize: 42, lineHeight: 40, fontWeight: "600" }}>‹</Text>
+              <Feather name="chevron-left" size={30} color={WHITE} />
             </TouchableOpacity>
           ) : null}
         </View>
