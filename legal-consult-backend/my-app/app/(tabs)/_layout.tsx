@@ -498,17 +498,6 @@ export default function TabLayout() {
         },
       }}
     >
-      {/* Articles */}
-      <Tabs.Screen
-        name="articles"
-        options={{
-          title: "Articles",
-          tabBarIcon: ({ color, size }) => <Feather name="book-open" size={size ?? 22} color={color} />,
-        }}
-      />
-      {/* hidden helper route */}
-      <Tabs.Screen name="_articles" options={{ href: null }} />
-
       {/* Explore */}
       <Tabs.Screen
         name="learn"
