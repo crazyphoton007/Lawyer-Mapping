@@ -61,6 +61,7 @@ def list_requests(
             joinedload(Request.assigned_lawyer_obj).joinedload(Lawyer.user)
         )
         .where(Request.user_id == current_user.id)
+        .where(Request.status != "voided")
         .order_by(Request.created_at.desc())
     )
 
@@ -118,7 +119,7 @@ def get_request(
     current_user: User = Depends(get_current_user),
 ):
     rec = _load_request_with_lawyer(db, request_id)
-    if not rec:
+    if not rec or rec.status == "voided":
         raise HTTPException(status_code=404, detail="Request not found")
 
     if rec.user_id != current_user.id:
@@ -138,7 +139,11 @@ def update_status(
         ),
     ),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
+    if getattr(current_user, "role", None) not in ("admin", "lawyer"):
+        raise HTTPException(status_code=403, detail="Only team members can update status")
+
     if status not in ALLOWED_STATUSES:
         raise HTTPException(status_code=400, detail="Invalid status")
 

@@ -196,6 +196,11 @@
         color: var(--ink);
       }
 
+      .btn-danger {
+        background: rgba(220, 38, 38, 0.1);
+        color: #991b1b;
+      }
+
       .filters {
         display: flex;
         gap: 12px;
@@ -584,6 +589,7 @@
               <button class="tab-btn" data-status="assigned">Assigned <span data-count="assigned">0</span></button>
               <button class="tab-btn" data-status="appointment_scheduled">Scheduled <span data-count="appointment_scheduled">0</span></button>
               <button class="tab-btn" data-status="completed">Completed <span data-count="completed">0</span></button>
+              <button class="tab-btn" data-status="voided">Voided <span data-count="voided">0</span></button>
             </div>
 
             <div class="filter-grid">
@@ -599,6 +605,7 @@
                   <option value="calling">Calling</option>
                   <option value="completed">Completed</option>
                   <option value="cancelled">Cancelled</option>
+                  <option value="voided">Voided</option>
                 </select>
               </div>
               <div class="filter-search">
@@ -684,9 +691,11 @@
                         <option value="completed">Completed</option>
                         <option value="closed">Closed</option>
                         <option value="cancelled">Cancelled</option>
+                        <option value="voided">Voided</option>
                       </select>
                     </div>
                     <button class="btn-primary" id="statusBtn">Update Status</button>
+                    <button class="btn-danger" id="voidBtn">Void Request</button>
                   </div>
                 </div>
 
@@ -1318,6 +1327,34 @@
           showMessage("Status updated.");
         } catch (error) {
           showMessage(error.message || "Could not update status.", "error");
+        }
+      });
+
+      document.getElementById("voidBtn").addEventListener("click", async () => {
+        try {
+          const item = selectedRequest();
+          if (!item) {
+            throw new Error("Choose a request first.");
+          }
+
+          const label = item.case_reference || item.id;
+          const confirmed = window.confirm(
+            `Void ${label}? This hides it from the user but keeps the admin record.`
+          );
+          if (!confirmed) return;
+
+          const updated = await api(`/admin/requests/${item.id}/status`, {
+            method: "PATCH",
+            body: JSON.stringify({ status: "voided" }),
+          });
+          state.requests = state.requests.filter((req) => req.id !== updated.id);
+          state.selectedRequestId = state.requests[0]?.id || null;
+          applySearchFilter();
+          renderRequests();
+          renderSelection();
+          showMessage("Request voided and hidden from the user.");
+        } catch (error) {
+          showMessage(error.message || "Could not void request.", "error");
         }
       });
 

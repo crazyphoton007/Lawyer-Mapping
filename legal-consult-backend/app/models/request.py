@@ -25,7 +25,7 @@ class Request(Base):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # pending | assigned | awaiting_payment | paid | appointment_scheduled
-    # | calling | in_progress | completed | closed | cancelled
+    # | calling | in_progress | completed | closed | cancelled | voided
     status: Mapped[str] = mapped_column(String, default="pending")
 
     assigned_lawyer: Mapped[Optional[uuid.UUID]] = mapped_column(
@@ -44,7 +44,7 @@ class Request(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "status IN ('pending','assigned','awaiting_payment','paid','appointment_scheduled','calling','in_progress','completed','closed','cancelled')",
+            "status IN ('pending','assigned','awaiting_payment','paid','appointment_scheduled','calling','in_progress','completed','closed','cancelled','voided')",
             name="requests_status_chk",
         ),
     )

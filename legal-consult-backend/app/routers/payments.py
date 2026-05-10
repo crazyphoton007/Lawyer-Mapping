@@ -117,7 +117,7 @@ def create_payment_link(
         raise HTTPException(status_code=400, detail="Invalid request_id")
 
     req = db.get(Request, request_uuid)
-    if not req or req.user_id != current_user.id:
+    if not req or req.user_id != current_user.id or req.status == "voided":
         raise HTTPException(status_code=404, detail="Request not found")
 
     amount_paise = payload.amount_rupees * 100
@@ -194,7 +194,7 @@ def verify_payment_link(
         raise HTTPException(status_code=400, detail="Invalid request_id")
 
     req = db.get(Request, request_uuid)
-    if not req or req.user_id != current_user.id:
+    if not req or req.user_id != current_user.id or req.status == "voided":
         raise HTTPException(status_code=404, detail="Request not found")
 
     try:
