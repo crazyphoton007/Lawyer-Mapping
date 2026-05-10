@@ -1,4 +1,5 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useRef } from "react";
+import { Animated, Easing, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -47,8 +48,40 @@ const SERVICE_META: Record<
 
 export default function CourtConnectHome() {
   const router = useRouter();
+  const livePulse = useRef(new Animated.Value(0)).current;
   const { highCourt, lowerCourt } = COURT_CATALOG;
   const primaryHighCourt = highCourt.courts[0];
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(livePulse, {
+          toValue: 1,
+          duration: 820,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(livePulse, {
+          toValue: 0,
+          duration: 820,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    loop.start();
+    return () => loop.stop();
+  }, [livePulse]);
+
+  const liveDotScale = livePulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.7],
+  });
+  const liveDotOpacity = livePulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.62, 1],
+  });
 
   const openPortal = (title: string, url: string) => {
     router.push({
@@ -78,7 +111,26 @@ export default function CourtConnectHome() {
           </View>
           <View style={styles.livePill}>
             <Text style={styles.liveText}>LIVE</Text>
-            <View style={styles.liveDot} />
+            <View style={styles.liveDotWrap}>
+              <Animated.View
+                style={[
+                  styles.liveDotAura,
+                  {
+                    opacity: liveDotOpacity,
+                    transform: [{ scale: liveDotScale }],
+                  },
+                ]}
+              />
+              <Animated.View
+                style={[
+                  styles.liveDot,
+                  {
+                    opacity: liveDotOpacity,
+                    transform: [{ scale: liveDotScale }],
+                  },
+                ]}
+              />
+            </View>
           </View>
         </LinearGradient>
 
@@ -317,11 +369,29 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   liveDot: {
+    position: "absolute",
     width: 7,
     height: 7,
     borderRadius: 4,
     backgroundColor: "#A7F074",
+    shadowColor: "#A7F074",
+    shadowOpacity: 0.9,
+    shadowRadius: 7,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  liveDotAura: {
+    position: "absolute",
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: "rgba(167,240,116,0.25)",
+  },
+  liveDotWrap: {
+    width: 14,
+    height: 14,
     marginLeft: 8,
+    alignItems: "center",
+    justifyContent: "center",
   },
   highCourtHeader: {
     marginBottom: 14,
