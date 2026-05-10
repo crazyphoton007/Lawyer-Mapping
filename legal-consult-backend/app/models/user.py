@@ -27,6 +27,7 @@ class User(Base):
     phone: Mapped[Optional[str]]  = mapped_column(String, unique=True, nullable=True)
     email: Mapped[Optional[str]]  = mapped_column(String, nullable=True)
     role:  Mapped[Optional[str]]  = mapped_column(String, nullable=True)  # 'user' | 'lawyer' | 'admin'
+    token_version: Mapped[int]    = mapped_column(Integer, nullable=False, default=0, server_default="0")
     created_at: Mapped[datetime]  = mapped_column(DateTime, default=datetime.utcnow)
 
     # Relationships

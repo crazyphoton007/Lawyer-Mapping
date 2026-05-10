@@ -110,6 +110,14 @@
         margin-top: 20px;
       }
 
+      .tools-panel {
+        margin-top: 20px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 14px;
+        align-items: end;
+      }
+
       .panel {
         background: var(--panel);
         border: 1px solid rgba(15, 28, 51, 0.08);
@@ -466,6 +474,7 @@
         }
 
         .auth-bar,
+        .tools-panel,
         .detail-grid,
         .action-grid,
         .filters,
@@ -529,6 +538,17 @@
       </section>
 
       <div id="message" class="message"></div>
+
+      <section class="panel tools-panel">
+        <div>
+          <label for="refreshSessionPhone">Account Session Refresh</label>
+          <input id="refreshSessionPhone" type="text" placeholder="Enter client mobile number" />
+          <div class="meta">
+            Invalidates old app tokens for this account. The user can then reopen the app and log in again.
+          </div>
+        </div>
+        <button class="btn-primary" id="refreshSessionBtn">Refresh Account</button>
+      </section>
 
       <section class="layout">
         <div class="panel">
@@ -1159,6 +1179,22 @@
           await reloadAll();
         } catch (error) {
           showMessage(error.message || "Reload failed.", "error");
+        }
+      });
+
+      document.getElementById("refreshSessionBtn").addEventListener("click", async () => {
+        try {
+          const phone = document.getElementById("refreshSessionPhone").value.trim();
+          if (!phone) {
+            throw new Error("Enter the client mobile number first.");
+          }
+          const data = await api("/admin/users/refresh-session", {
+            method: "POST",
+            body: JSON.stringify({ phone }),
+          });
+          showMessage(`Account refreshed for ${data.user?.phone || phone}. Ask the user to reopen CaseFit and log in again.`);
+        } catch (error) {
+          showMessage(error.message || "Could not refresh this account.", "error");
         }
       });
 

@@ -42,6 +42,16 @@ class AdminAssignLawyerIn(BaseModel):
     lawyer_id: UUID
 
 
+class AdminRefreshSessionIn(BaseModel):
+    phone: str
+
+
+def require_admin_user(current_user: User = Depends(get_current_user)) -> User:
+    if getattr(current_user, "role", None) != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required.")
+    return current_user
+
+
 def parse_admin_date(value: str | None, field_name: str) -> datetime | None:
     if not value:
         return None
@@ -59,6 +69,33 @@ def require_team_user(current_user: User = Depends(get_current_user)) -> User:
     if getattr(current_user, "role", None) not in ("admin", "lawyer"):
         raise HTTPException(status_code=403, detail="Team access required.")
     return current_user
+
+
+def find_user_by_phone(db: Session, phone: str) -> User | None:
+    clean_phone = phone.strip()
+    if not clean_phone:
+        raise HTTPException(status_code=400, detail="Phone is required.")
+
+    exact = db.execute(select(User).where(User.phone == clean_phone)).scalars().first()
+    if exact:
+        return exact
+
+    digits = "".join(ch for ch in clean_phone if ch.isdigit())
+    if not digits:
+        return None
+
+    users = db.execute(select(User).where(User.phone.is_not(None))).scalars().all()
+    matches = [
+        user
+        for user in users
+        if "".join(ch for ch in (user.phone or "") if ch.isdigit()).endswith(digits)
+    ]
+    if len(matches) > 1:
+        raise HTTPException(
+            status_code=409,
+            detail="Multiple users match this phone. Enter the full saved number.",
+        )
+    return matches[0] if matches else None
 
 
 def load_request(db: Session, request_id: UUID) -> Request | None:
@@ -217,6 +254,35 @@ def admin_list_lawyers(
     stmt = select(Lawyer).options(joinedload(Lawyer.user)).order_by(Lawyer.id)
     lawyers = db.execute(stmt).scalars().all()
     return {"lawyers": [serialize_lawyer(lawyer) for lawyer in lawyers]}
+
+
+@router.post("/users/refresh-session")
+def admin_refresh_user_session(
+    payload: AdminRefreshSessionIn,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_user),
+):
+    user = find_user_by_phone(db, payload.phone)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    previous_version = int(getattr(user, "token_version", 0) or 0)
+    user.token_version = previous_version + 1
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "ok": True,
+        "updated_by": str(current_user.id),
+        "user": {
+            "id": str(user.id),
+            "phone": user.phone,
+            "role": user.role,
+            "previous_token_version": previous_version,
+            "token_version": user.token_version,
+        },
+    }
 
 
 @router.patch("/requests/{request_id}/status")

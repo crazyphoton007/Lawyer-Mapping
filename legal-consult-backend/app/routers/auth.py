@@ -59,11 +59,11 @@ _otp: dict[str, tuple[str, float, str]] = {}
 _otp_request_log: dict[str, list[float]] = {}
 
 
-def _make_jwt(user_id: str, phone: str) -> str:
+def _make_jwt(user_id: str, phone: str, token_version: int = 0) -> str:
     now = int(time.time())
     exp = now + JWT_EXPIRES_MIN * 60
     return jwt.encode(
-        {"sub": user_id, "phone": phone, "iat": now, "exp": exp},
+        {"sub": user_id, "phone": phone, "ver": token_version, "iat": now, "exp": exp},
         JWT_SECRET,
         algorithm="HS256",
     )
@@ -84,6 +84,10 @@ def _require_user(authorization: Optional[str], db: Session) -> User:
     user = db.get(User, payload.get("sub"))
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
+
+    token_version = int(payload.get("ver", 0) or 0)
+    if token_version != int(getattr(user, "token_version", 0) or 0):
+        raise HTTPException(status_code=401, detail="Invalid token")
 
     return user
 
@@ -195,7 +199,7 @@ def verify(inp: VerifyCodeIn, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(user)
 
-    token = _make_jwt(str(user.id), user.phone)
+    token = _make_jwt(str(user.id), user.phone, getattr(user, "token_version", 0) or 0)
     _otp.pop(inp.phone, None)
 
     return {
@@ -221,7 +225,7 @@ def guest_login(inp: GuestLoginIn, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
 
-    token = _make_jwt(str(user.id), user.phone or "")
+    token = _make_jwt(str(user.id), user.phone or "", getattr(user, "token_version", 0) or 0)
 
     return {
         "token": token,
@@ -276,7 +280,11 @@ def claim_guest_account(
 
     _otp.pop(clean_phone, None)
 
-    token = _make_jwt(str(current_user.id), current_user.phone)
+    token = _make_jwt(
+        str(current_user.id),
+        current_user.phone,
+        getattr(current_user, "token_version", 0) or 0,
+    )
 
     return {
         "token": token,
