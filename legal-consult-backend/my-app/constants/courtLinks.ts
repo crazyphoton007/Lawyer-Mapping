@@ -17,11 +17,28 @@ export const COURT_CATALOG = {
   },
 
   lowerCourt: {
-    title: "Lower Court",
+    title: "eCourts Services",
     courts: [
-      { name: "Allahabad", url: null },
-      { name: "Lucknow", url: null },
-      { name: "Lakhimpur Kheri", url: null },
+      {
+        name: "CNR Number",
+        url: "https://services.ecourts.gov.in/ecourtindia_v6/?p=home/index&app_token=",
+      },
+      {
+        name: "Case Status",
+        url: "https://services.ecourts.gov.in/ecourtindia_v6/?p=casestatus/index&app_token=",
+      },
+      {
+        name: "Court Orders",
+        url: "https://services.ecourts.gov.in/ecourtindia_v6/?p=courtorder/index&app_token=",
+      },
+      {
+        name: "Cause List",
+        url: "https://services.ecourts.gov.in/ecourtindia_v6/?p=cause_list/index&app_token=",
+      },
+      {
+        name: "Caveat Search",
+        url: "https://services.ecourts.gov.in/ecourtindia_v6/?p=caveat_search/index&app_token=",
+      },
     ] as NamedCourt[],
   },
 } as const;
