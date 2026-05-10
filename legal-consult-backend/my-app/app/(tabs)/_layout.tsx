@@ -265,7 +265,7 @@
 
 
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Tabs, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -320,9 +320,10 @@ function GlowIcon({ focused }: { focused: boolean }) {
 
 /* ------------------------- Court Connect Neon Green Icon ------------------------- */
 /* Logo inside a green, sparkling ring + heartbeat dot (no label on tab) */
-function CourtIcon({ focused }: { focused: boolean }) {
+function CourtIcon({ focused, flashKey }: { focused: boolean; flashKey: number }) {
   const glow = useRef(new Animated.Value(0)).current;      // soft flash / sparkle
   const beat = useRef(new Animated.Value(0)).current;      // tiny dot heartbeat
+  const flash = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const glowLoop = Animated.loop(
@@ -343,10 +344,32 @@ function CourtIcon({ focused }: { focused: boolean }) {
     return () => { glowLoop.stop(); beatLoop.stop(); };
   }, [glow, beat]);
 
+  useEffect(() => {
+    if (flashKey === 0) return;
+
+    flash.setValue(0);
+    Animated.sequence([
+      Animated.timing(flash, {
+        toValue: 1,
+        duration: 80,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(flash, {
+        toValue: 0,
+        duration: 170,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [flash, flashKey]);
+
   const ringScale = glow.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] });
   const ringOpacity = glow.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0.7] });
   const dotScale = beat.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.35] });
   const dotOpacity = beat.interpolate({ inputRange: [0, 1], outputRange: [0.65, 1] });
+  const flashScale = flash.interpolate({ inputRange: [0, 1], outputRange: [0.82, 1.22] });
+  const flashOpacity = flash.interpolate({ inputRange: [0, 0.35, 1], outputRange: [0, 1, 0] });
 
   return (
     <View style={styles.courtIconWrap}>
@@ -375,6 +398,23 @@ function CourtIcon({ focused }: { focused: boolean }) {
           }}
         />
       </View>
+
+      {/* quick white edge sweep on press */}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.courtPressFlash,
+          {
+            opacity: flashOpacity,
+            transform: [{ scale: flashScale }, { rotate: "-16deg" }],
+          },
+        ]}
+      >
+        <View style={[styles.flashCorner, styles.flashTopLeft]} />
+        <View style={[styles.flashCorner, styles.flashTopRight]} />
+        <View style={[styles.flashCorner, styles.flashBottomLeft]} />
+        <View style={[styles.flashCorner, styles.flashBottomRight]} />
+      </Animated.View>
 
       {/* tiny heartbeat dot */}
       <Animated.View
@@ -471,12 +511,58 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     elevation: 4,
   },
+  courtPressFlash: {
+    position: "absolute",
+    width: 82,
+    height: 82,
+    borderRadius: 41,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.95)",
+    shadowColor: "#FFFFFF",
+    shadowOpacity: 1,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 10,
+  },
+  flashCorner: {
+    position: "absolute",
+    width: 18,
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#FFFFFF",
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 11,
+  },
+  flashTopLeft: {
+    top: 5,
+    left: 10,
+    transform: [{ rotate: "-24deg" }],
+  },
+  flashTopRight: {
+    top: 10,
+    right: 5,
+    transform: [{ rotate: "66deg" }],
+  },
+  flashBottomLeft: {
+    bottom: 10,
+    left: 5,
+    transform: [{ rotate: "66deg" }],
+  },
+  flashBottomRight: {
+    right: 10,
+    bottom: 5,
+    transform: [{ rotate: "-24deg" }],
+  },
 });
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const BASE_HEIGHT = 58;
+  const [casefitFlashKey, setCasefitFlashKey] = useState(0);
 
   return (
     <Tabs
@@ -521,12 +607,15 @@ export default function TabLayout() {
         options={{
           title: "Court Connect",
           tabBarLabel: () => null,
-          tabBarIcon: ({ focused }) => <CourtIcon focused={focused} />,
+          tabBarIcon: ({ focused }) => <CourtIcon focused={focused} flashKey={casefitFlashKey} />,
           tabBarButton: (props) => (
             <TouchableOpacity
               {...props}
               activeOpacity={0.78}
-              onPress={() => router.push("/court-connect")}
+              onPress={() => {
+                setCasefitFlashKey((value) => value + 1);
+                setTimeout(() => router.push("/court-connect"), 120);
+              }}
             />
           ),
         }}
