@@ -43,7 +43,8 @@ class AdminAssignLawyerIn(BaseModel):
 
 
 class AdminRefreshSessionIn(BaseModel):
-    phone: str
+    phone: str | None = None
+    identifier: str | None = None
 
 
 def require_admin_user(current_user: User = Depends(get_current_user)) -> User:
@@ -74,7 +75,7 @@ def require_team_user(current_user: User = Depends(get_current_user)) -> User:
 def find_user_by_phone(db: Session, phone: str) -> User | None:
     clean_phone = phone.strip()
     if not clean_phone:
-        raise HTTPException(status_code=400, detail="Phone is required.")
+        return None
 
     exact = db.execute(select(User).where(User.phone == clean_phone)).scalars().first()
     if exact:
@@ -96,6 +97,46 @@ def find_user_by_phone(db: Session, phone: str) -> User | None:
             detail="Multiple users match this phone. Enter the full saved number.",
         )
     return matches[0] if matches else None
+
+
+def find_user_by_request_reference(db: Session, reference: str) -> User | None:
+    clean_reference = reference.strip()
+    if not clean_reference:
+        return None
+
+    normalized = clean_reference.upper()
+    if normalized.startswith("CASE #"):
+        normalized = normalized.replace("CASE #", "", 1).strip()
+    if normalized.startswith("#"):
+        normalized = normalized[1:].strip()
+    if normalized.isdigit():
+        normalized = f"CF-{normalized.zfill(5)}"
+
+    requests = db.execute(select(Request).where(Request.user_id.is_not(None))).scalars().all()
+    matches = [
+        req
+        for req in requests
+        if str(req.id).lower() == clean_reference.lower()
+        or derive_case_reference(req.id).upper() == normalized
+    ]
+
+    if len(matches) > 1:
+        raise HTTPException(
+            status_code=409,
+            detail="Multiple requests match this reference. Enter the full CF case reference.",
+        )
+    if not matches:
+        return None
+
+    return db.get(User, matches[0].user_id)
+
+
+def find_user_for_session_refresh(db: Session, payload: AdminRefreshSessionIn) -> User | None:
+    identifier = (payload.identifier or payload.phone or "").strip()
+    if not identifier:
+        raise HTTPException(status_code=400, detail="Phone or case reference is required.")
+
+    return find_user_by_phone(db, identifier) or find_user_by_request_reference(db, identifier)
 
 
 def load_request(db: Session, request_id: UUID) -> Request | None:
@@ -262,7 +303,7 @@ def admin_refresh_user_session(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin_user),
 ):
-    user = find_user_by_phone(db, payload.phone)
+    user = find_user_for_session_refresh(db, payload)
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
 
