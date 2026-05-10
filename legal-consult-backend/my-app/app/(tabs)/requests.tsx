@@ -154,7 +154,7 @@ function normalizePhone(s?: string | null) {
 }
 
 export default function RequestsScreen() {
-  const { token, hydrated } = useAuth();
+  const { token, hydrated, logout } = useAuth();
   const router = useRouter();
 
   const [items, setItems] = useState<Req[]>([]);
@@ -208,6 +208,18 @@ export default function RequestsScreen() {
 
       const text = await res.text();
 
+      if (res.status === 401) {
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+          pollIntervalRef.current = null;
+        }
+        hasLoadedOnce.current = false;
+        setItems([]);
+        setError(null);
+        await logout();
+        return;
+      }
+
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}: ${text}`);
       }
@@ -226,7 +238,7 @@ export default function RequestsScreen() {
         setLoading(false);
       }
     }
-  }, [authToken, hydrated]);
+  }, [authToken, hydrated, logout]);
 
   useEffect(() => {
     if (!hydrated) {

@@ -5,6 +5,7 @@ const TOKEN_KEY = "token";
 const USER_KEY = "user";
 const GUEST_TOKEN_KEY = "guest_token";
 const GUEST_USER_KEY = "guest_user";
+const USER_MOBILE_KEY = "user_mobile";
 
 type User = {
   id: string;
@@ -80,8 +81,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     setToken(null);
     setUser(null);
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
-    await SecureStore.deleteItemAsync(USER_KEY);
+    await Promise.all([
+      SecureStore.deleteItemAsync(TOKEN_KEY),
+      SecureStore.deleteItemAsync(USER_KEY),
+      SecureStore.deleteItemAsync(GUEST_TOKEN_KEY),
+      SecureStore.deleteItemAsync(GUEST_USER_KEY),
+      SecureStore.deleteItemAsync(USER_MOBILE_KEY),
+    ]);
   };
 
   return (
