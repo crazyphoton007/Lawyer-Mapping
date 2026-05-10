@@ -10,6 +10,10 @@ export const COURT_CATALOG = {
         benches: [
           { name: "Allahabad ", url: "https://www.allahabadhighcourt.in/apps/status_ccms/" },
           { name: "Lucknow Bench",  url: "https://hclko.allahabadhighcourt.in/status/" },
+          {
+            name: "Judgment & Orders",
+            url: "https://elegalix.allahabadhighcourt.in/elegalix/StartWebSearch.do",
+          },
         ],
       },
       // add more high courts later (e.g., Patna High Court) with benches

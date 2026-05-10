@@ -76,9 +76,15 @@ export default function CourtConnectHome() {
               {(court.benches ?? []).map((bench) => (
                 <PortalRow
                   key={bench.name}
-                  icon="briefcase"
+                  icon={bench.name.trim() === "Judgment & Orders" ? "file-text" : "briefcase"}
                   title={bench.name.trim()}
-                  subtitle={bench.url ? "Open status portal" : "Coming soon"}
+                  subtitle={
+                    bench.name.trim() === "Judgment & Orders"
+                      ? "Search judgments and court orders"
+                      : bench.url
+                        ? "Open status portal"
+                        : "Coming soon"
+                  }
                   disabled={!bench.url}
                   onPress={() => bench.url && openPortal(bench.name.trim(), bench.url)}
                 />
