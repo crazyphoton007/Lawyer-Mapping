@@ -266,11 +266,11 @@
 
 
 import React, { useEffect, useRef } from "react";
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import CaseFitHeader from "@/components/CaseFitHeader";
-import { Animated, Easing, View, StyleSheet, Platform, Image } from "react-native";
+import { Animated, Easing, View, StyleSheet, Platform, Image, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
 const INK = "#000000";
@@ -347,9 +347,6 @@ function CourtIcon({ focused }: { focused: boolean }) {
   const ringOpacity = glow.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0.7] });
   const dotScale = beat.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.35] });
   const dotOpacity = beat.interpolate({ inputRange: [0, 1], outputRange: [0.65, 1] });
-
-  // If your PNG is monochrome and you want it tinted, set this to true.
-  const USE_TINT = false;
 
   return (
     <View style={styles.courtIconWrap}>
@@ -478,6 +475,7 @@ const styles = StyleSheet.create({
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const BASE_HEIGHT = 58;
 
   return (
@@ -517,13 +515,20 @@ export default function TabLayout() {
         }}
       />
 
-      {/* Court Connect — icon only (no label) */}
+      {/* CaseFit center action opens Court Connect outside the tab tree. */}
       <Tabs.Screen
-        name="court-connect"
+        name="casefit"
         options={{
           title: "Court Connect",
           tabBarLabel: () => null,
           tabBarIcon: ({ focused }) => <CourtIcon focused={focused} />,
+          tabBarButton: (props) => (
+            <TouchableOpacity
+              {...props}
+              activeOpacity={0.78}
+              onPress={() => router.push("/court-connect")}
+            />
+          ),
         }}
       />
 

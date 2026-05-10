@@ -23,6 +23,8 @@ export default function RootLayout() {
 
           <Stack.Screen name="request" options={{ headerShown: false }} />
 
+          <Stack.Screen name="court-connect" options={{ headerShown: false }} />
+
           {/* Login shows compact black header (matches your component) */}
           <Stack.Screen
             name="login"
