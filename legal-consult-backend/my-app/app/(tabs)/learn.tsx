@@ -13,7 +13,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 
 import { INFO_TOPICS } from "../../constants/legal_tips";
-import { useArticles } from "../../hooks/useArticles";
 
 const PAPER = "#F4F7FB";
 const INK = "#081121";
@@ -28,7 +27,6 @@ export default function LearnScreen() {
   const [tipIndex, setTipIndex] = useState(0);
   const [language, setLanguage] = useState<Language>("en");
   const [infoLoading, setInfoLoading] = useState(false);
-  useArticles();
   const aiPulse = useRef(new Animated.Value(0)).current;
 
   const content = INFO_TOPICS[tipIndex][language];
