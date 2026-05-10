@@ -31,6 +31,7 @@ ALLOWED_STATUSES = (
     "completed",
     "closed",
     "cancelled",
+    "voided",
 )
 
 
@@ -261,6 +262,8 @@ def admin_list_requests(
 
     if status:
         rows = [req for req in rows if req.status == status]
+    else:
+        rows = [req for req in rows if req.status != "voided"]
 
     if sort == "oldest":
         rows.sort(key=lambda req: req.created_at or datetime.min)
@@ -282,7 +285,9 @@ def admin_list_requests(
             "page_size": page_size,
             "total_pages": max(1, (total + page_size - 1) // page_size),
             "status_counts": status_counts,
-            "all_count": sum(status_counts.values()),
+            "all_count": sum(
+                count for status_name, count in status_counts.items() if status_name != "voided"
+            ),
         },
     }
 
@@ -335,6 +340,8 @@ def admin_update_status(
 ):
     if payload.status not in ALLOWED_STATUSES:
         raise HTTPException(status_code=400, detail="Invalid status.")
+    if payload.status == "voided" and getattr(current_user, "role", None) != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required to void requests.")
 
     req = db.get(Request, request_id)
     if not req:
