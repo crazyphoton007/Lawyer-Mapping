@@ -430,7 +430,44 @@ function CourtIcon({ focused, flashKey }: { focused: boolean; flashKey: number }
   );
 }
 
+function ScreenCornerFlash({ progress }: { progress: Animated.Value }) {
+  const opacity = progress.interpolate({
+    inputRange: [0, 0.18, 0.76, 1],
+    outputRange: [0, 1, 0.85, 0],
+  });
+  const edgeScale = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.08, 1],
+  });
+  const flareScale = progress.interpolate({
+    inputRange: [0, 0.28, 1],
+    outputRange: [0.7, 1.12, 1.22],
+  });
+
+  return (
+    <Animated.View pointerEvents="none" style={[styles.screenFlashLayer, { opacity }]}>
+      <Animated.View style={[styles.screenFlare, styles.screenFlareTopLeft, { transform: [{ scale: flareScale }] }]} />
+      <Animated.View style={[styles.screenFlare, styles.screenFlareTopRight, { transform: [{ scale: flareScale }] }]} />
+      <Animated.View style={[styles.screenFlare, styles.screenFlareBottomLeft, { transform: [{ scale: flareScale }] }]} />
+      <Animated.View style={[styles.screenFlare, styles.screenFlareBottomRight, { transform: [{ scale: flareScale }] }]} />
+
+      <Animated.View style={[styles.screenBeamHorizontal, styles.screenBeamTopLeft, { transform: [{ scaleX: edgeScale }] }]} />
+      <Animated.View style={[styles.screenBeamHorizontal, styles.screenBeamTopRight, { transform: [{ scaleX: edgeScale }] }]} />
+      <Animated.View style={[styles.screenBeamHorizontal, styles.screenBeamBottomLeft, { transform: [{ scaleX: edgeScale }] }]} />
+      <Animated.View style={[styles.screenBeamHorizontal, styles.screenBeamBottomRight, { transform: [{ scaleX: edgeScale }] }]} />
+
+      <Animated.View style={[styles.screenBeamVertical, styles.screenBeamLeftTop, { transform: [{ scaleY: edgeScale }] }]} />
+      <Animated.View style={[styles.screenBeamVertical, styles.screenBeamRightTop, { transform: [{ scaleY: edgeScale }] }]} />
+      <Animated.View style={[styles.screenBeamVertical, styles.screenBeamLeftBottom, { transform: [{ scaleY: edgeScale }] }]} />
+      <Animated.View style={[styles.screenBeamVertical, styles.screenBeamRightBottom, { transform: [{ scaleY: edgeScale }] }]} />
+    </Animated.View>
+  );
+}
+
 const styles = StyleSheet.create({
+  appRoot: {
+    flex: 1,
+  },
   iconWrap: {
     width: 28,
     height: 28,
@@ -557,91 +594,204 @@ const styles = StyleSheet.create({
     bottom: 4,
     transform: [{ rotate: "-24deg" }],
   },
+  screenFlashLayer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 999,
+  },
+  screenFlare: {
+    position: "absolute",
+    width: 92,
+    height: 92,
+    borderRadius: 46,
+    backgroundColor: "rgba(255,255,255,0.20)",
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: "#FFFFFF",
+    shadowOpacity: 1,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 18,
+  },
+  screenFlareTopLeft: {
+    top: -28,
+    left: -28,
+  },
+  screenFlareTopRight: {
+    top: -28,
+    right: -28,
+  },
+  screenFlareBottomLeft: {
+    bottom: -28,
+    left: -28,
+  },
+  screenFlareBottomRight: {
+    right: -28,
+    bottom: -28,
+  },
+  screenBeamHorizontal: {
+    position: "absolute",
+    height: 5,
+    width: "43%",
+    borderRadius: 999,
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#FFFFFF",
+    shadowOpacity: 1,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 18,
+  },
+  screenBeamVertical: {
+    position: "absolute",
+    width: 5,
+    height: "24%",
+    borderRadius: 999,
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#FFFFFF",
+    shadowOpacity: 1,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 18,
+  },
+  screenBeamTopLeft: {
+    top: 8,
+    left: 10,
+  },
+  screenBeamTopRight: {
+    top: 8,
+    right: 10,
+  },
+  screenBeamBottomLeft: {
+    bottom: 8,
+    left: 10,
+  },
+  screenBeamBottomRight: {
+    right: 10,
+    bottom: 8,
+  },
+  screenBeamLeftTop: {
+    top: 10,
+    left: 8,
+  },
+  screenBeamRightTop: {
+    top: 10,
+    right: 8,
+  },
+  screenBeamLeftBottom: {
+    bottom: 10,
+    left: 8,
+  },
+  screenBeamRightBottom: {
+    right: 8,
+    bottom: 10,
+  },
 });
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const BASE_HEIGHT = 58;
+  const screenFlash = useRef(new Animated.Value(0)).current;
   const [casefitFlashKey, setCasefitFlashKey] = useState(0);
 
+  const triggerCasefitFlash = () => {
+    setCasefitFlashKey((value) => value + 1);
+    screenFlash.setValue(0);
+    Animated.sequence([
+      Animated.timing(screenFlash, {
+        toValue: 1,
+        duration: 260,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(screenFlash, {
+        toValue: 0,
+        duration: 170,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: true,
-        header: () => <CaseFitHeader />,
-        tabBarActiveTintColor: INK,
-        tabBarInactiveTintColor: MUTED,
-        tabBarLabelStyle: { fontSize: 12, fontWeight: "700", marginTop: 2 },
-        tabBarStyle: {
-          backgroundColor: CARD,
-          borderTopWidth: 1,
-          borderTopColor: BORDER,
-          height: BASE_HEIGHT + insets.bottom,
-          paddingBottom: Math.max(insets.bottom, 6),
-          paddingTop: 6,
-        },
-      }}
-    >
-      {/* Explore */}
-      <Tabs.Screen
-        name="learn"
-        options={{
-          title: "Explore",
-          tabBarLabel: "Explore",
-          tabBarIcon: ({ focused }) => <GlowIcon focused={focused} />,
+    <View style={styles.appRoot}>
+      <Tabs
+        screenOptions={{
+          headerShown: true,
+          header: () => <CaseFitHeader />,
+          tabBarActiveTintColor: INK,
+          tabBarInactiveTintColor: MUTED,
+          tabBarLabelStyle: { fontSize: 12, fontWeight: "700", marginTop: 2 },
+          tabBarStyle: {
+            backgroundColor: CARD,
+            borderTopWidth: 1,
+            borderTopColor: BORDER,
+            height: BASE_HEIGHT + insets.bottom,
+            paddingBottom: Math.max(insets.bottom, 6),
+            paddingTop: 6,
+          },
         }}
-      />
+      >
+        {/* Explore */}
+        <Tabs.Screen
+          name="learn"
+          options={{
+            title: "Explore",
+            tabBarLabel: "Explore",
+            tabBarIcon: ({ focused }) => <GlowIcon focused={focused} />,
+          }}
+        />
 
-      {/* Consult */}
-      <Tabs.Screen
-        name="consult"
-        options={{
-          title: "Consult",
-          tabBarIcon: ({ color, size }) => <Feather name="users" size={size ?? 22} color={color} />,
-        }}
-      />
+        {/* Consult */}
+        <Tabs.Screen
+          name="consult"
+          options={{
+            title: "Consult",
+            tabBarIcon: ({ color, size }) => <Feather name="users" size={size ?? 22} color={color} />,
+          }}
+        />
 
-      {/* CaseFit center action opens Court Connect outside the tab tree. */}
-      <Tabs.Screen
-        name="casefit"
-        options={{
-          title: "Court Connect",
-          tabBarLabel: () => null,
-          tabBarIcon: ({ focused }) => <CourtIcon focused={focused} flashKey={casefitFlashKey} />,
-          tabBarButton: (props) => (
-            <TouchableOpacity
-              {...props}
-              activeOpacity={0.78}
-              onPressIn={() => {
-                props.onPressIn?.();
-                setCasefitFlashKey((value) => value + 1);
-              }}
-              onPress={() => {
-                setTimeout(() => router.push("/court-connect"), 260);
-              }}
-            />
-          ),
-        }}
-      />
+        {/* CaseFit center action opens Court Connect outside the tab tree. */}
+        <Tabs.Screen
+          name="casefit"
+          options={{
+            title: "Court Connect",
+            tabBarLabel: () => null,
+            tabBarIcon: ({ focused }) => <CourtIcon focused={focused} flashKey={casefitFlashKey} />,
+            tabBarButton: (props) => (
+              <TouchableOpacity
+                {...props}
+                activeOpacity={0.78}
+                onPressIn={() => {
+                  props.onPressIn?.();
+                  triggerCasefitFlash();
+                }}
+                onPress={() => {
+                  setTimeout(() => router.push("/court-connect"), 360);
+                }}
+              />
+            ),
+          }}
+        />
 
-      {/* My Requests */}
-      <Tabs.Screen
-        name="requests"
-        options={{
-          title: "Requests",
-          tabBarIcon: ({ color, size }) => <Feather name="file-text" size={size ?? 22} color={color} />,
-        }}
-      />
+        {/* My Requests */}
+        <Tabs.Screen
+          name="requests"
+          options={{
+            title: "Requests",
+            tabBarIcon: ({ color, size }) => <Feather name="file-text" size={size ?? 22} color={color} />,
+          }}
+        />
 
-      {/* Profile */}
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color, size }) => <Feather name="user" size={size ?? 22} color={color} />,
-        }}
-      />
-    </Tabs>
+        {/* Profile */}
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: "Profile",
+            tabBarIcon: ({ color, size }) => <Feather name="user" size={size ?? 22} color={color} />,
+          }}
+        />
+      </Tabs>
+      <ScreenCornerFlash progress={screenFlash} />
+    </View>
   );
 }
