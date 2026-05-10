@@ -351,13 +351,13 @@ function CourtIcon({ focused, flashKey }: { focused: boolean; flashKey: number }
     Animated.sequence([
       Animated.timing(flash, {
         toValue: 1,
-        duration: 80,
+        duration: 120,
         easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }),
       Animated.timing(flash, {
         toValue: 0,
-        duration: 170,
+        duration: 260,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
@@ -368,8 +368,8 @@ function CourtIcon({ focused, flashKey }: { focused: boolean; flashKey: number }
   const ringOpacity = glow.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0.7] });
   const dotScale = beat.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.35] });
   const dotOpacity = beat.interpolate({ inputRange: [0, 1], outputRange: [0.65, 1] });
-  const flashScale = flash.interpolate({ inputRange: [0, 1], outputRange: [0.82, 1.22] });
-  const flashOpacity = flash.interpolate({ inputRange: [0, 0.35, 1], outputRange: [0, 1, 0] });
+  const flashScale = flash.interpolate({ inputRange: [0, 1], outputRange: [0.78, 1.34] });
+  const flashOpacity = flash.interpolate({ inputRange: [0, 0.25, 1], outputRange: [0, 1, 0] });
 
   return (
     <View style={styles.courtIconWrap}>
@@ -513,21 +513,22 @@ const styles = StyleSheet.create({
   },
   courtPressFlash: {
     position: "absolute",
-    width: 82,
-    height: 82,
-    borderRadius: 41,
-    borderWidth: 1,
+    width: 94,
+    height: 94,
+    borderRadius: 47,
+    borderWidth: 2,
     borderColor: "rgba(255,255,255,0.95)",
+    backgroundColor: "rgba(255,255,255,0.16)",
     shadowColor: "#FFFFFF",
     shadowOpacity: 1,
-    shadowRadius: 14,
+    shadowRadius: 22,
     shadowOffset: { width: 0, height: 0 },
     elevation: 10,
   },
   flashCorner: {
     position: "absolute",
-    width: 18,
-    height: 4,
+    width: 34,
+    height: 7,
     borderRadius: 999,
     backgroundColor: "#FFFFFF",
     shadowColor: "#FFFFFF",
@@ -537,23 +538,23 @@ const styles = StyleSheet.create({
     elevation: 11,
   },
   flashTopLeft: {
-    top: 5,
-    left: 10,
+    top: 4,
+    left: 7,
     transform: [{ rotate: "-24deg" }],
   },
   flashTopRight: {
-    top: 10,
-    right: 5,
+    top: 13,
+    right: -2,
     transform: [{ rotate: "66deg" }],
   },
   flashBottomLeft: {
-    bottom: 10,
-    left: 5,
+    bottom: 13,
+    left: -2,
     transform: [{ rotate: "66deg" }],
   },
   flashBottomRight: {
-    right: 10,
-    bottom: 5,
+    right: 7,
+    bottom: 4,
     transform: [{ rotate: "-24deg" }],
   },
 });
@@ -612,9 +613,12 @@ export default function TabLayout() {
             <TouchableOpacity
               {...props}
               activeOpacity={0.78}
-              onPress={() => {
+              onPressIn={() => {
+                props.onPressIn?.();
                 setCasefitFlashKey((value) => value + 1);
-                setTimeout(() => router.push("/court-connect"), 120);
+              }}
+              onPress={() => {
+                setTimeout(() => router.push("/court-connect"), 260);
               }}
             />
           ),
