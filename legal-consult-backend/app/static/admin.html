@@ -542,9 +542,9 @@
       <section class="panel tools-panel">
         <div>
           <label for="refreshSessionPhone">Account Session Refresh</label>
-          <input id="refreshSessionPhone" type="text" placeholder="Enter client mobile number" />
+          <input id="refreshSessionPhone" type="text" placeholder="Enter mobile, CF-46119, or 46119" />
           <div class="meta">
-            Invalidates old app tokens for this account. The user can then reopen the app and log in again.
+            Invalidates old app tokens by mobile number or case reference. The user can then reopen the app and log in again.
           </div>
         </div>
         <button class="btn-primary" id="refreshSessionBtn">Refresh Account</button>
@@ -1184,15 +1184,15 @@
 
       document.getElementById("refreshSessionBtn").addEventListener("click", async () => {
         try {
-          const phone = document.getElementById("refreshSessionPhone").value.trim();
-          if (!phone) {
-            throw new Error("Enter the client mobile number first.");
+          const identifier = document.getElementById("refreshSessionPhone").value.trim();
+          if (!identifier) {
+            throw new Error("Enter a mobile number or case reference first.");
           }
           const data = await api("/admin/users/refresh-session", {
             method: "POST",
-            body: JSON.stringify({ phone }),
+            body: JSON.stringify({ identifier }),
           });
-          showMessage(`Account refreshed for ${data.user?.phone || phone}. Ask the user to reopen CaseFit and log in again.`);
+          showMessage(`Account refreshed for ${data.user?.phone || identifier}. Ask the user to reopen CaseFit and log in again.`);
         } catch (error) {
           showMessage(error.message || "Could not refresh this account.", "error");
         }
