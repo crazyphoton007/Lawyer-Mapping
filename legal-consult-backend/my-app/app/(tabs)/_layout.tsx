@@ -265,12 +265,12 @@
 
 
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Tabs, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import CaseFitHeader from "@/components/CaseFitHeader";
-import { Animated, Easing, View, StyleSheet, Platform, Image, TouchableOpacity } from "react-native";
+import { Animated, Easing, View, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
 const INK = "#000000";
@@ -319,10 +319,10 @@ function GlowIcon({ focused }: { focused: boolean }) {
 }
 
 /* ------------------------- Court Connect Neon Green Icon ------------------------- */
-/* Logo inside a green, sparkling ring + heartbeat dot (no label on tab) */
-function CourtIcon({ focused }: { focused: boolean }) {
+/* Logo inside a sparkling ring (no label on tab) */
+function CourtIcon({ focused, flashKey }: { focused: boolean; flashKey: number }) {
   const glow = useRef(new Animated.Value(0)).current;      // soft flash / sparkle
-  const beat = useRef(new Animated.Value(0)).current;      // tiny dot heartbeat
+  const flash = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const glowLoop = Animated.loop(
@@ -331,22 +331,34 @@ function CourtIcon({ focused }: { focused: boolean }) {
         Animated.timing(glow, { toValue: 0, duration: 1100, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
       ])
     );
-    const beatLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(beat, { toValue: 1, duration: 380, easing: Easing.bezier(0.3, 0.0, 0.7, 1.0), useNativeDriver: true }),
-        Animated.timing(beat, { toValue: 0, duration: 420, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        Animated.delay(240), // little pause to mimic heartbeat cadence
-      ])
-    );
     glowLoop.start();
-    beatLoop.start();
-    return () => { glowLoop.stop(); beatLoop.stop(); };
-  }, [glow, beat]);
+    return () => glowLoop.stop();
+  }, [glow]);
+
+  useEffect(() => {
+    if (flashKey === 0) return;
+
+    flash.setValue(0);
+    Animated.sequence([
+      Animated.timing(flash, {
+        toValue: 1,
+        duration: 190,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(flash, {
+        toValue: 0,
+        duration: 260,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [flash, flashKey]);
 
   const ringScale = glow.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] });
   const ringOpacity = glow.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0.7] });
-  const dotScale = beat.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.35] });
-  const dotOpacity = beat.interpolate({ inputRange: [0, 1], outputRange: [0.65, 1] });
+  const flashScale = flash.interpolate({ inputRange: [0, 1], outputRange: [0.78, 1.34] });
+  const flashOpacity = flash.interpolate({ inputRange: [0, 0.25, 1], outputRange: [0, 1, 0] });
 
   return (
     <View style={styles.courtIconWrap}>
@@ -376,21 +388,65 @@ function CourtIcon({ focused }: { focused: boolean }) {
         />
       </View>
 
-      {/* tiny heartbeat dot */}
+      {/* quick white edge sweep on press */}
       <Animated.View
+        pointerEvents="none"
         style={[
-          styles.heartDot,
+          styles.courtPressFlash,
           {
-            opacity: focused ? dotOpacity : 0.7,
-            transform: [{ scale: dotScale }],
+            opacity: flashOpacity,
+            transform: [{ scale: flashScale }, { rotate: "-16deg" }],
           },
         ]}
-      />
+      >
+        <View style={[styles.flashCorner, styles.flashTopLeft]} />
+        <View style={[styles.flashCorner, styles.flashTopRight]} />
+        <View style={[styles.flashCorner, styles.flashBottomLeft]} />
+        <View style={[styles.flashCorner, styles.flashBottomRight]} />
+      </Animated.View>
+
     </View>
   );
 }
 
+function ScreenCornerFlash({ progress }: { progress: Animated.Value }) {
+  const opacity = progress.interpolate({
+    inputRange: [0, 0.18, 0.76, 1],
+    outputRange: [0, 1, 0.85, 0],
+  });
+  const edgeScale = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.08, 1],
+  });
+  const flareScale = progress.interpolate({
+    inputRange: [0, 0.28, 1],
+    outputRange: [0.7, 1.12, 1.22],
+  });
+
+  return (
+    <Animated.View pointerEvents="none" style={[styles.screenFlashLayer, { opacity }]}>
+      <Animated.View style={[styles.screenFlare, styles.screenFlareTopLeft, { transform: [{ scale: flareScale }] }]} />
+      <Animated.View style={[styles.screenFlare, styles.screenFlareTopRight, { transform: [{ scale: flareScale }] }]} />
+      <Animated.View style={[styles.screenFlare, styles.screenFlareBottomLeft, { transform: [{ scale: flareScale }] }]} />
+      <Animated.View style={[styles.screenFlare, styles.screenFlareBottomRight, { transform: [{ scale: flareScale }] }]} />
+
+      <Animated.View style={[styles.screenBeamHorizontal, styles.screenBeamTopLeft, { transform: [{ scaleX: edgeScale }] }]} />
+      <Animated.View style={[styles.screenBeamHorizontal, styles.screenBeamTopRight, { transform: [{ scaleX: edgeScale }] }]} />
+      <Animated.View style={[styles.screenBeamHorizontal, styles.screenBeamBottomLeft, { transform: [{ scaleX: edgeScale }] }]} />
+      <Animated.View style={[styles.screenBeamHorizontal, styles.screenBeamBottomRight, { transform: [{ scaleX: edgeScale }] }]} />
+
+      <Animated.View style={[styles.screenBeamVertical, styles.screenBeamLeftTop, { transform: [{ scaleY: edgeScale }] }]} />
+      <Animated.View style={[styles.screenBeamVertical, styles.screenBeamRightTop, { transform: [{ scaleY: edgeScale }] }]} />
+      <Animated.View style={[styles.screenBeamVertical, styles.screenBeamLeftBottom, { transform: [{ scaleY: edgeScale }] }]} />
+      <Animated.View style={[styles.screenBeamVertical, styles.screenBeamRightBottom, { transform: [{ scaleY: edgeScale }] }]} />
+    </Animated.View>
+  );
+}
+
 const styles = StyleSheet.create({
+  appRoot: {
+    flex: 1,
+  },
   iconWrap: {
     width: 28,
     height: 28,
@@ -457,19 +513,141 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: "#FFFFFF",
   },
-  heartDot: {
+  courtPressFlash: {
     position: "absolute",
-    top: 6,
-    right: 7,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#ff0800ff",
-    shadowColor: Platform.OS === "ios" ? "#0037ffff" : "#0003c8ff",
-    shadowOpacity: 0.9,
-    shadowRadius: 6,
+    width: 94,
+    height: 94,
+    borderRadius: 47,
+    borderWidth: 2,
+    borderColor: "rgba(255,190,80,0.98)",
+    backgroundColor: "rgba(255,140,0,0.22)",
+    shadowColor: "#FF6A00",
+    shadowOpacity: 1,
+    shadowRadius: 30,
     shadowOffset: { width: 0, height: 0 },
-    elevation: 4,
+    elevation: 10,
+  },
+  flashCorner: {
+    position: "absolute",
+    width: 34,
+    height: 7,
+    borderRadius: 999,
+    backgroundColor: "#FFA500",
+    shadowColor: "#FFA500",
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 14,
+  },
+  flashTopLeft: {
+    top: 4,
+    left: 7,
+    transform: [{ rotate: "-24deg" }],
+  },
+  flashTopRight: {
+    top: 13,
+    right: -2,
+    transform: [{ rotate: "66deg" }],
+  },
+  flashBottomLeft: {
+    bottom: 13,
+    left: -2,
+    transform: [{ rotate: "66deg" }],
+  },
+  flashBottomRight: {
+    right: 7,
+    bottom: 4,
+    transform: [{ rotate: "-24deg" }],
+  },
+  screenFlashLayer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 999,
+  },
+  screenFlare: {
+    position: "absolute",
+    width: 92,
+    height: 92,
+    borderRadius: 46,
+    backgroundColor: "rgba(0,255,255,0.28)",
+    borderWidth: 2,
+    borderColor: "rgba(120, 255, 255, 0.95)",
+    shadowColor: "#00F7FF",
+    shadowOpacity: 1,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 18,
+  },
+  screenFlareTopLeft: {
+    top: -28,
+    left: -28,
+  },
+  screenFlareTopRight: {
+    top: -28,
+    right: -28,
+  },
+  screenFlareBottomLeft: {
+    bottom: -28,
+    left: -28,
+  },
+  screenFlareBottomRight: {
+    right: -28,
+    bottom: -28,
+  },
+  screenBeamHorizontal: {
+    position: "absolute",
+    height: 5,
+    width: "43%",
+    borderRadius: 999,
+    backgroundColor: "#00F7FF",
+    shadowColor: "#00F7FF",
+    shadowOpacity: 1,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 18,
+  },
+  screenBeamVertical: {
+    position: "absolute",
+    width: 5,
+    height: "24%",
+    borderRadius: 999,
+    backgroundColor: "#00F7FF",
+    shadowColor: "#00F7FF",
+    shadowOpacity: 1,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 18,
+  },
+  screenBeamTopLeft: {
+    top: 8,
+    left: 10,
+  },
+  screenBeamTopRight: {
+    top: 8,
+    right: 10,
+  },
+  screenBeamBottomLeft: {
+    bottom: 8,
+    left: 10,
+  },
+  screenBeamBottomRight: {
+    right: 10,
+    bottom: 8,
+  },
+  screenBeamLeftTop: {
+    top: 10,
+    left: 8,
+  },
+  screenBeamRightTop: {
+    top: 10,
+    right: 8,
+  },
+  screenBeamLeftBottom: {
+    bottom: 10,
+    left: 8,
+  },
+  screenBeamRightBottom: {
+    right: 8,
+    bottom: 10,
   },
 });
 
@@ -477,78 +655,108 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const BASE_HEIGHT = 58;
+  const screenFlash = useRef(new Animated.Value(0)).current;
+  const [casefitFlashKey, setCasefitFlashKey] = useState(0);
+
+  const triggerCasefitFlash = () => {
+    setCasefitFlashKey((value) => value + 1);
+    screenFlash.setValue(0);
+    Animated.sequence([
+      Animated.timing(screenFlash, {
+        toValue: 1,
+        duration: 260,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(screenFlash, {
+        toValue: 0,
+        duration: 170,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: true,
-        header: () => <CaseFitHeader />,
-        tabBarActiveTintColor: INK,
-        tabBarInactiveTintColor: MUTED,
-        tabBarLabelStyle: { fontSize: 12, fontWeight: "700", marginTop: 2 },
-        tabBarStyle: {
-          backgroundColor: CARD,
-          borderTopWidth: 1,
-          borderTopColor: BORDER,
-          height: BASE_HEIGHT + insets.bottom,
-          paddingBottom: Math.max(insets.bottom, 6),
-          paddingTop: 6,
-        },
-      }}
-    >
-      {/* Explore */}
-      <Tabs.Screen
-        name="learn"
-        options={{
-          title: "Explore",
-          tabBarLabel: "Explore",
-          tabBarIcon: ({ focused }) => <GlowIcon focused={focused} />,
+    <View style={styles.appRoot}>
+      <Tabs
+        screenOptions={{
+          headerShown: true,
+          header: () => <CaseFitHeader />,
+          tabBarActiveTintColor: INK,
+          tabBarInactiveTintColor: MUTED,
+          tabBarLabelStyle: { fontSize: 12, fontWeight: "700", marginTop: 2 },
+          tabBarStyle: {
+            backgroundColor: CARD,
+            borderTopWidth: 1,
+            borderTopColor: BORDER,
+            height: BASE_HEIGHT + insets.bottom,
+            paddingBottom: Math.max(insets.bottom, 6),
+            paddingTop: 6,
+          },
         }}
-      />
+      >
+        {/* Explore */}
+        <Tabs.Screen
+          name="learn"
+          options={{
+            title: "Explore",
+            tabBarLabel: "Explore",
+            tabBarIcon: ({ focused }) => <GlowIcon focused={focused} />,
+          }}
+        />
 
-      {/* Consult */}
-      <Tabs.Screen
-        name="consult"
-        options={{
-          title: "Consult",
-          tabBarIcon: ({ color, size }) => <Feather name="users" size={size ?? 22} color={color} />,
-        }}
-      />
+        {/* Consult */}
+        <Tabs.Screen
+          name="consult"
+          options={{
+            title: "Consult",
+            tabBarIcon: ({ color, size }) => <Feather name="users" size={size ?? 22} color={color} />,
+          }}
+        />
 
-      {/* CaseFit center action opens Court Connect outside the tab tree. */}
-      <Tabs.Screen
-        name="casefit"
-        options={{
-          title: "Court Connect",
-          tabBarLabel: () => null,
-          tabBarIcon: ({ focused }) => <CourtIcon focused={focused} />,
-          tabBarButton: (props) => (
-            <TouchableOpacity
-              {...props}
-              activeOpacity={0.78}
-              onPress={() => router.push("/court-connect")}
-            />
-          ),
-        }}
-      />
+        {/* CaseFit center action opens Court Connect outside the tab tree. */}
+        <Tabs.Screen
+          name="casefit"
+          options={{
+            title: "Court Connect",
+            tabBarLabel: () => null,
+            tabBarIcon: ({ focused }) => <CourtIcon focused={focused} flashKey={casefitFlashKey} />,
+            tabBarButton: (props) => (
+              <TouchableOpacity
+                {...props}
+                activeOpacity={0.78}
+                onPressIn={() => {
+                  props.onPressIn?.();
+                  triggerCasefitFlash();
+                }}
+                onPress={() => {
+                  setTimeout(() => router.push("/court-connect"), 360);
+                }}
+              />
+            ),
+          }}
+        />
 
-      {/* My Requests */}
-      <Tabs.Screen
-        name="requests"
-        options={{
-          title: "Requests",
-          tabBarIcon: ({ color, size }) => <Feather name="file-text" size={size ?? 22} color={color} />,
-        }}
-      />
+        {/* My Requests */}
+        <Tabs.Screen
+          name="requests"
+          options={{
+            title: "Requests",
+            tabBarIcon: ({ color, size }) => <Feather name="file-text" size={size ?? 22} color={color} />,
+          }}
+        />
 
-      {/* Profile */}
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color, size }) => <Feather name="user" size={size ?? 22} color={color} />,
-        }}
-      />
-    </Tabs>
+        {/* Profile */}
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: "Profile",
+            tabBarIcon: ({ color, size }) => <Feather name="user" size={size ?? 22} color={color} />,
+          }}
+        />
+      </Tabs>
+      <ScreenCornerFlash progress={screenFlash} />
+    </View>
   );
 }
