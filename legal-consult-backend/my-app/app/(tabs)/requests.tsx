@@ -34,6 +34,7 @@ const INK = "#0B1220";
 const CARD = "#FFFFFF";
 const BORDER = "#E5E7EB";
 const MUTED = "#6B7280";
+const BLUE = "#2563EB";
 
 const STATUS_COLOR: Record<string, string> = {
   pending: "#F59E0B",
@@ -43,6 +44,16 @@ const STATUS_COLOR: Record<string, string> = {
   calling: "#06B6D4",
   completed: "#16A34A",
   cancelled: "#EF4444",
+};
+
+const STATUS_TINT: Record<string, string> = {
+  pending: "#FEF3C7",
+  assigned: "#DBEAFE",
+  awaiting_payment: "#F3E8FF",
+  paid: "#D1FAE5",
+  calling: "#CFFAFE",
+  completed: "#D1FAE5",
+  cancelled: "#FEE2E2",
 };
 
 function deriveCaseNumber(id: string) {
@@ -428,11 +439,48 @@ export default function RequestsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
-      <View style={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: 12 }}>
-        <Text style={{ fontSize: 24, fontWeight: "700", color: INK }}>CaseBoard</Text>
-        <Text style={{ fontSize: 12, color: MUTED }}>
-          Synced With: {myPhone || "your account"}
-        </Text>
+      <View style={{ paddingHorizontal: 18, paddingTop: 14, paddingBottom: 12 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <View>
+            <Text style={{ fontSize: 34, fontWeight: "900", color: INK, letterSpacing: 0 }}>
+              CaseBoard
+            </Text>
+            <View style={{ marginTop: 8, flexDirection: "row", alignItems: "center" }}>
+              <Feather name="shield" size={17} color={BLUE} />
+              <Text style={{ marginLeft: 10, fontSize: 15, color: "#667085", fontWeight: "600" }}>
+                Synced With: {myPhone || "your account"}
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            activeOpacity={0.75}
+            onPress={onRefresh}
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 18,
+              backgroundColor: "#FFFFFF",
+              borderWidth: 1,
+              borderColor: "#E7ECF5",
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: "#0B1220",
+              shadowOpacity: 0.04,
+              shadowRadius: 12,
+              shadowOffset: { width: 0, height: 6 },
+              elevation: 2,
+            }}
+          >
+            <Feather name="filter" size={23} color={BLUE} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
@@ -440,12 +488,13 @@ export default function RequestsScreen() {
         keyExtractor={(it) => String(it.id)}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-        contentContainerStyle={{ padding: 16, paddingBottom: 24, flexGrow: 1 }}
+        contentContainerStyle={{ padding: 18, paddingTop: 22, paddingBottom: 24, flexGrow: 1 }}
         ListEmptyComponent={<EmptyState />}
         renderItem={({ item, index }) => {
           const status = (item.status || "pending").toLowerCase();
           const step = stepFromStatus(status);
           const chip = STATUS_COLOR[status] ?? MUTED;
+          const chipTint = STATUS_TINT[status] ?? "#F3F4F6";
           const title = item.category || `Request ${index + 1}`;
           const caseNo = deriveCaseNumber(item.id);
           const date = item.created_at ? new Date(item.created_at).toLocaleString() : "";
@@ -460,15 +509,15 @@ export default function RequestsScreen() {
             <View
               style={{
                 backgroundColor: CARD,
-                borderRadius: 16,
-                padding: 16,
+                borderRadius: 26,
+                padding: 20,
                 borderWidth: 1,
-                borderColor: BORDER,
-                shadowColor: "#000",
-                shadowOpacity: 0.05,
-                shadowRadius: 8,
-                shadowOffset: { width: 0, height: 4 },
-                elevation: 2,
+                borderColor: "#E1E7F0",
+                shadowColor: "#0B1220",
+                shadowOpacity: 0.07,
+                shadowRadius: 18,
+                shadowOffset: { width: 0, height: 10 },
+                elevation: 3,
               }}
             >
               <View
@@ -480,44 +529,95 @@ export default function RequestsScreen() {
               >
                 <View
                   style={{
-                    backgroundColor: chip,
-                    paddingVertical: 4,
-                    paddingHorizontal: 10,
+                    backgroundColor: chipTint,
+                    paddingVertical: 7,
+                    paddingHorizontal: 12,
                     borderRadius: 999,
+                    flexDirection: "row",
+                    alignItems: "center",
                   }}
                 >
-                  <Text style={{ color: "#fff", fontWeight: "700", fontSize: 12 }}>
+                  <Feather
+                    name={status === "completed" ? "check-circle" : status === "cancelled" ? "x-circle" : "clock"}
+                    size={15}
+                    color={chip}
+                  />
+                  <Text style={{ color: chip, fontWeight: "900", fontSize: 13, marginLeft: 7 }}>
                     {status}
                   </Text>
                 </View>
-                <Text style={{ color: MUTED, fontSize: 12 }}>{date}</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", flexShrink: 1 }}>
+                  <Text
+                    numberOfLines={1}
+                    style={{ color: "#667085", fontSize: 14, fontWeight: "600", maxWidth: 170 }}
+                  >
+                    {date}
+                  </Text>
+                  <TouchableOpacity activeOpacity={0.65} style={{ marginLeft: 10, padding: 4 }}>
+                    <Feather name="more-vertical" size={20} color="#667085" />
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <Text
                 style={{
-                  marginTop: 10,
-                  fontSize: 16,
-                  fontWeight: "700",
+                  marginTop: 26,
+                  fontSize: 22,
+                  lineHeight: 28,
+                  fontWeight: "900",
                   color: INK,
                 }}
               >
                 {`Request ${index + 1}: Case #${caseNo}`}
               </Text>
 
-              <Text style={{ marginTop: 2, color: "#374151" }}>{title}</Text>
+              <View style={{ marginTop: 20, flexDirection: "row", alignItems: "center" }}>
+                <View
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: 8,
+                    backgroundColor: "#EFF6FF",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: 10,
+                  }}
+                >
+                  <Feather name="briefcase" size={16} color={BLUE} />
+                </View>
+                <Text style={{ color: "#475467", fontSize: 17, fontWeight: "700" }}>{title}</Text>
+              </View>
+
               {details ? (
                 <Text
                   numberOfLines={3}
-                  style={{ marginTop: 8, color: "#374151", lineHeight: 20 }}
+                  style={{ marginTop: 18, color: "#475467", fontSize: 16, lineHeight: 24 }}
                 >
                   {details}
                 </Text>
               ) : null}
 
               {item.preferred_city ? (
-                <Text style={{ marginTop: details ? 8 : 4, color: MUTED, fontWeight: "700" }}>
-                  Preferred city: {item.preferred_city}
-                </Text>
+                <>
+                  <View
+                    style={{
+                      width: "44%",
+                      height: 1,
+                      backgroundColor: "#E4E9F2",
+                      marginTop: 22,
+                      marginBottom: 18,
+                    }}
+                  />
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Feather name="map-pin" size={21} color="#667085" />
+                    <Text style={{ marginLeft: 10, color: "#667085", fontSize: 16, fontWeight: "700" }}>
+                      Preferred city:{" "}
+                    </Text>
+                    <Text style={{ color: BLUE, fontSize: 16, fontWeight: "900" }}>
+                      {item.preferred_city}
+                    </Text>
+                  </View>
+                </>
               ) : null}
 
               {status === "cancelled" ? (
