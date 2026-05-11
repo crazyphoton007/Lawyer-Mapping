@@ -440,46 +440,16 @@ export default function RequestsScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
       <View style={{ paddingHorizontal: 18, paddingTop: 14, paddingBottom: 12 }}>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <View>
-            <Text style={{ fontSize: 34, fontWeight: "900", color: INK, letterSpacing: 0 }}>
-              CaseBoard
+        <View>
+          <Text style={{ fontSize: 34, fontWeight: "900", color: INK, letterSpacing: 0 }}>
+            CaseBoard
+          </Text>
+          <View style={{ marginTop: 8, flexDirection: "row", alignItems: "center" }}>
+            <Feather name="shield" size={17} color={BLUE} />
+            <Text style={{ marginLeft: 10, fontSize: 15, color: "#667085", fontWeight: "600" }}>
+              Synced With: {myPhone || "your account"}
             </Text>
-            <View style={{ marginTop: 8, flexDirection: "row", alignItems: "center" }}>
-              <Feather name="shield" size={17} color={BLUE} />
-              <Text style={{ marginLeft: 10, fontSize: 15, color: "#667085", fontWeight: "600" }}>
-                Synced With: {myPhone || "your account"}
-              </Text>
-            </View>
           </View>
-
-          <TouchableOpacity
-            activeOpacity={0.75}
-            onPress={onRefresh}
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 18,
-              backgroundColor: "#FFFFFF",
-              borderWidth: 1,
-              borderColor: "#E7ECF5",
-              alignItems: "center",
-              justifyContent: "center",
-              shadowColor: "#0B1220",
-              shadowOpacity: 0.04,
-              shadowRadius: 12,
-              shadowOffset: { width: 0, height: 6 },
-              elevation: 2,
-            }}
-          >
-            <Feather name="filter" size={23} color={BLUE} />
-          </TouchableOpacity>
         </View>
       </View>
 
