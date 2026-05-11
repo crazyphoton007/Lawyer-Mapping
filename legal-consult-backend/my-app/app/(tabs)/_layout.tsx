@@ -270,7 +270,7 @@ import { Tabs, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import CaseFitHeader from "@/components/CaseFitHeader";
-import { Animated, Easing, View, StyleSheet, Platform, Image, TouchableOpacity } from "react-native";
+import { Animated, Easing, View, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
 const INK = "#000000";
@@ -319,10 +319,9 @@ function GlowIcon({ focused }: { focused: boolean }) {
 }
 
 /* ------------------------- Court Connect Neon Green Icon ------------------------- */
-/* Logo inside a green, sparkling ring + heartbeat dot (no label on tab) */
+/* Logo inside a sparkling ring (no label on tab) */
 function CourtIcon({ focused, flashKey }: { focused: boolean; flashKey: number }) {
   const glow = useRef(new Animated.Value(0)).current;      // soft flash / sparkle
-  const beat = useRef(new Animated.Value(0)).current;      // tiny dot heartbeat
   const flash = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -332,17 +331,9 @@ function CourtIcon({ focused, flashKey }: { focused: boolean; flashKey: number }
         Animated.timing(glow, { toValue: 0, duration: 1100, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
       ])
     );
-    const beatLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(beat, { toValue: 1, duration: 380, easing: Easing.bezier(0.3, 0.0, 0.7, 1.0), useNativeDriver: true }),
-        Animated.timing(beat, { toValue: 0, duration: 420, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        Animated.delay(240), // little pause to mimic heartbeat cadence
-      ])
-    );
     glowLoop.start();
-    beatLoop.start();
-    return () => { glowLoop.stop(); beatLoop.stop(); };
-  }, [glow, beat]);
+    return () => glowLoop.stop();
+  }, [glow]);
 
   useEffect(() => {
     if (flashKey === 0) return;
@@ -351,7 +342,7 @@ function CourtIcon({ focused, flashKey }: { focused: boolean; flashKey: number }
     Animated.sequence([
       Animated.timing(flash, {
         toValue: 1,
-        duration: 120,
+        duration: 190,
         easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }),
@@ -366,8 +357,6 @@ function CourtIcon({ focused, flashKey }: { focused: boolean; flashKey: number }
 
   const ringScale = glow.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] });
   const ringOpacity = glow.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0.7] });
-  const dotScale = beat.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.35] });
-  const dotOpacity = beat.interpolate({ inputRange: [0, 1], outputRange: [0.65, 1] });
   const flashScale = flash.interpolate({ inputRange: [0, 1], outputRange: [0.78, 1.34] });
   const flashOpacity = flash.interpolate({ inputRange: [0, 0.25, 1], outputRange: [0, 1, 0] });
 
@@ -416,16 +405,6 @@ function CourtIcon({ focused, flashKey }: { focused: boolean; flashKey: number }
         <View style={[styles.flashCorner, styles.flashBottomRight]} />
       </Animated.View>
 
-      {/* tiny heartbeat dot */}
-      <Animated.View
-        style={[
-          styles.heartDot,
-          {
-            opacity: focused ? dotOpacity : 0.7,
-            transform: [{ scale: dotScale }],
-          },
-        ]}
-      />
     </View>
   );
 }
@@ -534,31 +513,17 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: "#FFFFFF",
   },
-  heartDot: {
-    position: "absolute",
-    top: 6,
-    right: 7,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#ff0800ff",
-    shadowColor: Platform.OS === "ios" ? "#0037ffff" : "#0003c8ff",
-    shadowOpacity: 0.9,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 4,
-  },
   courtPressFlash: {
     position: "absolute",
     width: 94,
     height: 94,
     borderRadius: 47,
     borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.95)",
-    backgroundColor: "rgba(255,255,255,0.16)",
-    shadowColor: "#FFFFFF",
+    borderColor: "rgba(255,190,80,0.98)",
+    backgroundColor: "rgba(255,140,0,0.22)",
+    shadowColor: "#FF6A00",
     shadowOpacity: 1,
-    shadowRadius: 22,
+    shadowRadius: 30,
     shadowOffset: { width: 0, height: 0 },
     elevation: 10,
   },
@@ -567,12 +532,12 @@ const styles = StyleSheet.create({
     width: 34,
     height: 7,
     borderRadius: 999,
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#FFFFFF",
+    backgroundColor: "#FFA500",
+    shadowColor: "#FFA500",
     shadowOpacity: 1,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 0 },
-    elevation: 11,
+    elevation: 14,
   },
   flashTopLeft: {
     top: 4,
@@ -603,10 +568,10 @@ const styles = StyleSheet.create({
     width: 92,
     height: 92,
     borderRadius: 46,
-    backgroundColor: "rgba(255,255,255,0.20)",
+    backgroundColor: "rgba(0,255,255,0.28)",
     borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.92)",
-    shadowColor: "#FFFFFF",
+    borderColor: "rgba(120, 255, 255, 0.95)",
+    shadowColor: "#00F7FF",
     shadowOpacity: 1,
     shadowRadius: 24,
     shadowOffset: { width: 0, height: 0 },
@@ -633,8 +598,8 @@ const styles = StyleSheet.create({
     height: 5,
     width: "43%",
     borderRadius: 999,
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#FFFFFF",
+    backgroundColor: "#00F7FF",
+    shadowColor: "#00F7FF",
     shadowOpacity: 1,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 0 },
@@ -645,8 +610,8 @@ const styles = StyleSheet.create({
     width: 5,
     height: "24%",
     borderRadius: 999,
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#FFFFFF",
+    backgroundColor: "#00F7FF",
+    shadowColor: "#00F7FF",
     shadowOpacity: 1,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 0 },
