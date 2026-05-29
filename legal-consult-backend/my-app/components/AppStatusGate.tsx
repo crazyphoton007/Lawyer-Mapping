@@ -1,5 +1,5 @@
 import { ReactNode, useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, Image, View } from "react-native";
 
 import { API_BASE } from "@/constants/config";
 import PremiumErrorState from "@/components/PremiumErrorState";
@@ -76,7 +76,11 @@ export default function AppStatusGate({ children }: { children: ReactNode }) {
           gap: 14,
         }}
       >
-        <Text style={{ color: "#FFFFFF", fontSize: 34, fontWeight: "800", letterSpacing: 0 }}>caseFit</Text>
+        <Image
+          source={require("@/assets/images/splash.png")}
+          style={{ width: 220, height: 220 }}
+          resizeMode="contain"
+        />
         <ActivityIndicator color="#FFFFFF" />
       </View>
     );
