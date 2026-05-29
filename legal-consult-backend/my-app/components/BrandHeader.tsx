@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Image, StyleSheet } from "react-native";
+import { View, Image, StyleSheet, type ViewStyle } from "react-native";
 
 type Props = {
   // If true => show a circular chip behind the logo (PhonePe-style)
@@ -24,7 +24,7 @@ export default function BrandHeader({
   circleBg = "#000",
   src = require("@/assets/images/fit.png"), // put your file here
 }: Props) {
-  const containerStyle = [
+  const containerStyle: ViewStyle[] = [
     styles.container,
     { alignItems: align === "center" ? "center" : "flex-start" },
   ];

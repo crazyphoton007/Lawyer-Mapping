@@ -20,6 +20,11 @@ def _split_csv(value: str) -> list[str]:
 app_env = os.getenv("APP_ENV", "development").strip().lower()
 docs_enabled = os.getenv("ENABLE_DOCS", "1" if app_env != "production" else "0") == "1"
 cors_origins = _split_csv(os.getenv("CORS_ALLOW_ORIGINS", "*"))
+maintenance_enabled = os.getenv("MAINTENANCE_MODE", "0").strip().lower() in {"1", "true", "yes", "on"}
+maintenance_message = os.getenv(
+    "MAINTENANCE_MESSAGE",
+    "We are upgrading caseFit for a smoother experience. Please check back shortly.",
+).strip()
 
 app = FastAPI(
     title="Legal Consult API",
@@ -50,6 +55,16 @@ def root():
 
 @app.get("/health")
 def health():
+    return {"status": "ok", "version": "0.1.0", "environment": app_env}
+
+@app.get("/app-status")
+def app_status():
+    if maintenance_enabled:
+        return {
+            "status": "maintenance",
+            "message": maintenance_message,
+            "environment": app_env,
+        }
     return {"status": "ok", "version": "0.1.0", "environment": app_env}
 
 # --- Routers ---

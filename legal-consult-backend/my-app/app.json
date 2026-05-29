@@ -19,7 +19,11 @@
       "backgroundColor": "#0B1220"
     },
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.thecasefit.app",
+      "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.thecasefit.app",

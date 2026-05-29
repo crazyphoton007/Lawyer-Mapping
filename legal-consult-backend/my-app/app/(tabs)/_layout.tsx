@@ -270,7 +270,7 @@ import { Tabs, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import CaseFitHeader from "@/components/CaseFitHeader";
-import { Animated, Easing, View, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { Animated, Easing, View, StyleSheet, Image, TouchableOpacity, type ColorValue, type TouchableOpacityProps } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
 const INK = "#000000";
@@ -301,8 +301,8 @@ function GlowIcon({ focused }: { focused: boolean }) {
 
   const palette =
     GLOW_COLOR === "green"
-      ? { ring: "rgba(0, 230, 118, 0.6)", grad: ["#B9F6CA", "#00E676", "#00C853"] }
-      : { ring: "rgba(30, 136, 229, 0.6)", grad: ["#81D4FA", "#1E88E5", "#0D47A1"] };
+      ? { ring: "rgba(0, 230, 118, 0.6)", grad: ["#B9F6CA", "#00E676", "#00C853"] as readonly [ColorValue, ColorValue, ...ColorValue[]] }
+      : { ring: "rgba(30, 136, 229, 0.6)", grad: ["#81D4FA", "#1E88E5", "#0D47A1"] as readonly [ColorValue, ColorValue, ...ColorValue[]] };
 
   return (
     <View style={styles.iconWrap}>
@@ -722,12 +722,14 @@ export default function TabLayout() {
             title: "Court Connect",
             tabBarLabel: () => null,
             tabBarIcon: ({ focused }) => <CourtIcon focused={focused} flashKey={casefitFlashKey} />,
-            tabBarButton: (props) => (
+            tabBarButton: ({ delayLongPress, disabled, onPressIn, ...props }) => (
               <TouchableOpacity
-                {...props}
+                {...(props as TouchableOpacityProps)}
+                delayLongPress={delayLongPress ?? undefined}
+                disabled={disabled ?? undefined}
                 activeOpacity={0.78}
-                onPressIn={() => {
-                  props.onPressIn?.();
+                onPressIn={(event) => {
+                  onPressIn?.(event);
                   triggerCasefitFlash();
                 }}
                 onPress={() => {

@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
-  Button,
   TouchableOpacity,
   Animated,
   Easing,
@@ -16,6 +15,8 @@ import { API_BASE } from "../../constants/config";
 import { useAuth } from "../../context/auth";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
+import PremiumErrorState from "@/components/PremiumErrorState";
+import { friendlyErrorMessage } from "@/utils/errorMessages";
 
 type Req = {
   id: string;
@@ -240,7 +241,7 @@ export default function RequestsScreen() {
       setItems(list);
       hasLoadedOnce.current = true;
     } catch (e: any) {
-      setError(e?.message || "Failed to load requests");
+      setError(friendlyErrorMessage(e, "We could not load your requests right now."));
       if (!hasLoadedOnce.current) {
         setItems([]);
       }
@@ -352,26 +353,14 @@ export default function RequestsScreen() {
   if (error) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
-        <View
-          style={{
-            flex: 1,
-            padding: 24,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 16,
-              color: "#b00020",
-              marginBottom: 12,
-              textAlign: "center",
-            }}
-          >
-            {error}
-          </Text>
-          <Button title="Retry" onPress={() => load("initial")} />
-        </View>
+        <PremiumErrorState
+          compact
+          tone="error"
+          title="Requests could not refresh"
+          message={error}
+          actionLabel="Refresh"
+          onAction={() => load("initial")}
+        />
       </SafeAreaView>
     );
   }

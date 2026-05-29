@@ -20,6 +20,8 @@ import * as WebBrowser from "expo-web-browser";
 
 import { API_BASE } from "../../constants/config";
 import { useAuth } from "../../context/auth";
+import PremiumErrorState from "@/components/PremiumErrorState";
+import { friendlyErrorMessage } from "@/utils/errorMessages";
 
 type Req = {
   id: string;
@@ -374,7 +376,7 @@ export default function RequestDetailsScreen() {
       if (mode === "initial") {
         setItem(null);
       }
-      setError(e?.message || "Failed to load request details.");
+      setError(friendlyErrorMessage(e, "We could not load this request right now."));
     } finally {
       if (mode === "initial") {
         setLoading(false);
@@ -544,8 +546,8 @@ export default function RequestDetailsScreen() {
       } catch (e: any) {
         if (showAlerts) {
           Alert.alert(
-            "Could not verify payment",
-            e?.message || "Something went wrong while checking payment status."
+            "Payment check paused",
+            friendlyErrorMessage(e, "We could not confirm the payment right now. Please try again in a moment.")
           );
         }
         return false;
@@ -631,7 +633,7 @@ export default function RequestDetailsScreen() {
     } catch (e: any) {
       Alert.alert(
         "Payment could not start",
-        e?.message || "Something went wrong while creating the payment link."
+        friendlyErrorMessage(e, "We could not create the payment link right now. Please try again in a moment.")
       );
     } finally {
       setPaying(false);
@@ -659,50 +661,14 @@ export default function RequestDetailsScreen() {
           <BackIconButton onPress={() => router.back()} />
         </View>
 
-        <View
-          style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 24,
-          }}
-        >
-          <Feather name="alert-circle" size={34} color="#DC2626" />
-          <Text
-            style={{
-              marginTop: 12,
-              fontSize: 18,
-              fontWeight: "700",
-              color: INK,
-              textAlign: "center",
-            }}
-          >
-            Could not load request
-          </Text>
-          <Text
-            style={{
-              marginTop: 8,
-              color: MUTED,
-              textAlign: "center",
-              lineHeight: 20,
-            }}
-          >
-            {error || "Something went wrong."}
-          </Text>
-
-          <TouchableOpacity
-            onPress={() => load("initial")}
-            style={{
-              marginTop: 16,
-              backgroundColor: INK,
-              paddingVertical: 12,
-              paddingHorizontal: 18,
-              borderRadius: 12,
-            }}
-          >
-            <Text style={{ color: "#fff", fontWeight: "700" }}>Retry</Text>
-          </TouchableOpacity>
-        </View>
+        <PremiumErrorState
+          compact
+          tone="error"
+          title="Could not open this case"
+          message={error || "Something went wrong."}
+          actionLabel="Retry"
+          onAction={() => load("initial")}
+        />
       </SafeAreaView>
     );
   }
