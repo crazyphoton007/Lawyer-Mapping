@@ -1,5 +1,5 @@
 import { ReactNode, useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Image, View } from "react-native";
+import { Image, View } from "react-native";
 
 import { API_BASE } from "@/constants/config";
 import PremiumErrorState from "@/components/PremiumErrorState";
@@ -81,7 +81,6 @@ export default function AppStatusGate({ children }: { children: ReactNode }) {
           style={{ width: 220, height: 220 }}
           resizeMode="contain"
         />
-        <ActivityIndicator color="#FFFFFF" />
       </View>
     );
   }
