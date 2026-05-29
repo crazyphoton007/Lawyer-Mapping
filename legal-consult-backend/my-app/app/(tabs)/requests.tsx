@@ -42,6 +42,7 @@ const STATUS_COLOR: Record<string, string> = {
   assigned: "#3B82F6",
   awaiting_payment: "#A855F7",
   paid: "#10B981",
+  appointment_scheduled: "#2563EB",
   calling: "#06B6D4",
   completed: "#16A34A",
   cancelled: "#EF4444",
@@ -52,6 +53,7 @@ const STATUS_TINT: Record<string, string> = {
   assigned: "#DBEAFE",
   awaiting_payment: "#F3E8FF",
   paid: "#D1FAE5",
+  appointment_scheduled: "#DBEAFE",
   calling: "#CFFAFE",
   completed: "#D1FAE5",
   cancelled: "#FEE2E2",
@@ -155,9 +157,33 @@ function FlashingNeonButton({
 function stepFromStatus(status?: string | null) {
   const st = (status || "pending").toLowerCase();
   if (st === "paid" || st === "payment_confirmed") return 2;
-  if (["calling", "scheduled", "booked", "completed"].includes(st)) return 3;
+  if (["appointment_scheduled", "calling", "scheduled", "booked", "completed"].includes(st)) return 3;
   if (st === "cancelled") return 0;
   return 1;
+}
+
+function formatStatusLabel(status?: string | null) {
+  return (status || "pending")
+    .toLowerCase()
+    .split("_")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function formatRequestDate(value?: string | null) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${day}/${month}/${year}, ${hours}:${minutes}`;
 }
 
 function normalizePhone(s?: string | null) {
@@ -454,9 +480,10 @@ export default function RequestsScreen() {
           const step = stepFromStatus(status);
           const chip = STATUS_COLOR[status] ?? MUTED;
           const chipTint = STATUS_TINT[status] ?? "#F3F4F6";
+          const statusLabel = formatStatusLabel(status);
           const title = item.category || `Request ${index + 1}`;
           const caseNo = deriveCaseNumber(item.id);
-          const date = item.created_at ? new Date(item.created_at).toLocaleString() : "";
+          const date = formatRequestDate(item.created_at);
           const details = item.description || "";
 
           const stepStyle = (n: number) => ({
@@ -497,12 +524,20 @@ export default function RequestsScreen() {
                   }}
                 >
                   <Feather
-                    name={status === "completed" ? "check-circle" : status === "cancelled" ? "x-circle" : "clock"}
+                    name={
+                      status === "completed"
+                        ? "check-circle"
+                        : status === "cancelled"
+                          ? "x-circle"
+                          : status === "appointment_scheduled"
+                            ? "calendar"
+                            : "clock"
+                    }
                     size={15}
                     color={chip}
                   />
                   <Text style={{ color: chip, fontWeight: "900", fontSize: 13, marginLeft: 7 }}>
-                    {status}
+                    {statusLabel}
                   </Text>
                 </View>
                 <View style={{ flexDirection: "row", alignItems: "center", flexShrink: 1 }}>
