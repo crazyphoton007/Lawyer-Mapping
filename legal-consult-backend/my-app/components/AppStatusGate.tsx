@@ -1,5 +1,5 @@
 import { ReactNode, useCallback, useEffect, useState } from "react";
-import { View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 
 import { API_BASE } from "@/constants/config";
 import PremiumErrorState from "@/components/PremiumErrorState";
@@ -67,15 +67,17 @@ export default function AppStatusGate({ children }: { children: ReactNode }) {
 
   if (status === "checking") {
     return (
-      <View style={{ flex: 1, backgroundColor: "#F7F8FA" }}>
-        <PremiumErrorState
-          tone="maintenance"
-          eyebrow="caseFit"
-          title="Preparing your secure workspace"
-          message="We are checking service availability before opening the app."
-          loading
-          compact={false}
-        />
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "#000000",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 14,
+        }}
+      >
+        <Text style={{ color: "#FFFFFF", fontSize: 34, fontWeight: "800", letterSpacing: 0 }}>caseFit</Text>
+        <ActivityIndicator color="#FFFFFF" />
       </View>
     );
   }
