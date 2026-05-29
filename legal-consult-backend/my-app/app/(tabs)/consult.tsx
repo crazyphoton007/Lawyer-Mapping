@@ -19,6 +19,7 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { API_BASE } from "../../constants/config";
 import { useAuth } from "../../context/auth";
+import { friendlyErrorMessage } from "@/utils/errorMessages";
 import { Feather } from "@expo/vector-icons";
 
 const CATEGORIES = ["Family", "Criminal", "Property", "Business", "Other"] as const;
@@ -321,7 +322,10 @@ export default function ConsultScreen() {
       // show success sheet
       setOkOpen(true);
     } catch (e: any) {
-      Alert.alert("Error", e?.message || "Failed to submit");
+      Alert.alert(
+        "Request could not be submitted",
+        friendlyErrorMessage(e, "We could not submit your request right now. Please try again in a moment.")
+      );
     } finally {
       setLoading(false);
     }

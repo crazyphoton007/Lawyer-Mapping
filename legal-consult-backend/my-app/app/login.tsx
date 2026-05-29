@@ -23,6 +23,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import { API_BASE } from "../constants/config";
 import { useAuth } from "../context/auth";
+import { friendlyErrorMessage } from "@/utils/errorMessages";
 
 // Top brand bar
 import CaseFitHero from "../components/CaseFitHero";
@@ -253,7 +254,7 @@ export default function LoginScreen() {
 
       router.replace("/(tabs)/consult");
     } catch (e: any) {
-      Alert.alert("Could not continue as guest", e?.message || "Something went wrong.");
+      Alert.alert("Could not continue as guest", friendlyErrorMessage(e, "Please try again in a moment."));
     } finally {
       setLoading(false);
     }
@@ -282,7 +283,7 @@ export default function LoginScreen() {
         Alert.alert(OTP_LIMIT_TITLE, OTP_LIMIT_MESSAGE);
         return;
       }
-      Alert.alert("Error", e?.message || "Failed to request code");
+      Alert.alert("OTP could not be sent", friendlyErrorMessage(e, "Please try again in a moment."));
     } finally {
       setLoading(false);
     }
@@ -335,7 +336,7 @@ export default function LoginScreen() {
         return;
       }
       console.error("[verifyCode] error:", e);
-      Alert.alert("Error", e?.message || "We could not verify that code. Please try again.");
+      Alert.alert("Verification paused", friendlyErrorMessage(e, "We could not verify that code. Please try again."));
     } finally {
       setLoading(false);
     }

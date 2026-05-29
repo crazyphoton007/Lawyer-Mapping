@@ -954,6 +954,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../../context/auth";
 import { API_BASE } from "../../constants/config";
 import { Feather } from "@expo/vector-icons";
+import { friendlyErrorMessage } from "@/utils/errorMessages";
 
 type ProfileData = {
   id?: string | number;
@@ -1180,7 +1181,7 @@ export default function ProfileScreen() {
           area: next.area || "",
         } as any);
       } catch {
-        setForm((f) => ({ ...f, phone: user?.phone, id: user?.id }));
+        setForm((f) => ({ ...f, phone: user?.phone ?? undefined, id: user?.id }));
       } finally {
         setLoading(false);
       }
@@ -1230,7 +1231,7 @@ export default function ProfileScreen() {
       setEditing(false);
       Alert.alert("Saved", "Your profile has been updated.");
     } catch (e: any) {
-      Alert.alert("Error", e?.message || "Could not save profile");
+      Alert.alert("Profile could not be saved", friendlyErrorMessage(e, "Please try again in a moment."));
     } finally {
       setSaving(false);
     }
@@ -1309,7 +1310,7 @@ export default function ProfileScreen() {
       }
       setClaimStep("code");
     } catch (e: any) {
-      Alert.alert("Could not send OTP", e?.message || "Please try again.");
+      Alert.alert("OTP could not be sent", friendlyErrorMessage(e, "Please try again in a moment."));
     } finally {
       setClaimLoading(false);
     }
@@ -1367,7 +1368,7 @@ export default function ProfileScreen() {
       setClaimCode("");
       setClaimStep("phone");
     } catch (e: any) {
-      Alert.alert("Could not secure account", e?.message || "Please try again.");
+      Alert.alert("Account could not be secured", friendlyErrorMessage(e, "Please try again in a moment."));
     } finally {
       setClaimLoading(false);
     }
