@@ -163,6 +163,10 @@ function stepFromStatus(status?: string | null) {
 }
 
 function formatStatusLabel(status?: string | null) {
+  if ((status || "").toLowerCase() === "appointment_scheduled") {
+    return "Scheduled";
+  }
+
   return (status || "pending")
     .toLowerCase()
     .split("_")
@@ -180,10 +184,13 @@ function formatRequestDate(value?: string | null) {
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
-  const hours = String(date.getHours()).padStart(2, "0");
+  const hour24 = date.getHours();
+  const period = hour24 >= 12 ? "PM" : "AM";
+  const hour12 = hour24 % 12 || 12;
+  const hours = String(hour12).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
 
-  return `${day}/${month}/${year}, ${hours}:${minutes}`;
+  return `${day}/${month}/${year}, ${hours}:${minutes} ${period}`;
 }
 
 function normalizePhone(s?: string | null) {
