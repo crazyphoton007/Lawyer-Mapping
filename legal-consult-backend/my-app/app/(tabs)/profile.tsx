@@ -939,7 +939,6 @@ import {
   Alert,
   Image,
   ScrollView,
-  Switch,
   Pressable,
   TextInput,
   Share,
@@ -979,7 +978,6 @@ const APP_STORE_URL = "";
 const APP_SHARE_URL = PLAY_STORE_URL;
 const SUPPORT_EMAIL = "support@casefit.com";
 const WHATSAPP_E164 = "919807863007"; // country code + number (e.g., +91 9807863007)
-const NOTIFICATION_PREF_KEY = "casefit_notifications_enabled";
 const RAZORPAY_SUPPORT_LINK = "https://razorpay.me/@casefittechnologiesprivatelim";
 const RAZORPAY_QR_IMAGE = require("../../assets/images/razorpay-support-qr.jpeg");
 
@@ -1077,7 +1075,6 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState<boolean>(!!token);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<ProfileData>({ name: "", gender: "", age: "", area: "" });
-  const [notif, setNotif] = useState(true);
   const [editing, setEditing] = useState(false);
 
   // Feedback modal
@@ -1199,16 +1196,6 @@ export default function ProfileScreen() {
   }, [token]);
 
   useEffect(() => {
-    SecureStore.getItemAsync(NOTIFICATION_PREF_KEY)
-      .then((value) => {
-        if (value === "0" || value === "1") {
-          setNotif(value === "1");
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(supportPulse, {
@@ -1298,18 +1285,6 @@ export default function ProfileScreen() {
     } catch {
       Alert.alert("Rate caseFit", `Open this link after the store listing is live:\n${url}`);
     }
-  }
-
-  async function handleNotificationToggle(value: boolean) {
-    setNotif(value);
-    try {
-      await SecureStore.setItemAsync(NOTIFICATION_PREF_KEY, value ? "1" : "0");
-    } catch {}
-
-    Alert.alert(
-      value ? "Notifications on" : "Notifications off",
-      "Your preference is saved on this phone. Push alerts will start working after the notification service is connected."
-    );
   }
 
   async function openRazorpaySupport() {
@@ -1654,15 +1629,8 @@ export default function ProfileScreen() {
           />
         </Section>
 
-        {/* Notifications & Help */}
+        {/* Help */}
         <Section title="Preferences & Help">
-          <Row
-            icon={<Feather name="bell" size={22} color={INK} />}
-            label="Notifications"
-            subtitle="Saves your alert preference on this phone"
-            right={<Switch value={notif} onValueChange={handleNotificationToggle} />}
-          />
-          <Divider />
           <Row icon={<Feather name="help-circle" size={22} color={INK} />} label="Help & Support" onPress={openSupportChooser} />
         </Section>
 
