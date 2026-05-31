@@ -6,17 +6,19 @@
     <title>CaseFit Admin Console</title>
     <style>
       :root {
-        --bg: #f3f5f8;
+        --bg: #eef2f7;
         --panel: #ffffff;
         --ink: #0b1220;
-        --muted: #64748b;
-        --line: #d9e1ea;
+        --muted: #667085;
+        --line: #d7dee8;
         --navy: #0f1c33;
         --gold: #c89b3c;
         --gold-soft: #f5e7c2;
         --accent: #2f6fec;
         --success: #16a34a;
         --danger: #dc2626;
+        --shadow: 0 18px 44px rgba(15, 28, 51, 0.08);
+        --radius: 18px;
       }
 
       * {
@@ -27,23 +29,28 @@
         margin: 0;
         font-family: "Segoe UI", ui-sans-serif, system-ui, sans-serif;
         background:
-          radial-gradient(circle at top right, rgba(200, 155, 60, 0.16), transparent 24rem),
-          linear-gradient(180deg, #fbfcfe 0%, var(--bg) 100%);
+          radial-gradient(circle at 14% 0%, rgba(47, 111, 236, 0.1), transparent 26rem),
+          radial-gradient(circle at 86% 4%, rgba(200, 155, 60, 0.15), transparent 24rem),
+          linear-gradient(180deg, #fbfcff 0%, var(--bg) 100%);
         color: var(--ink);
+        min-height: 100vh;
       }
 
       .shell {
-        max-width: 1440px;
+        max-width: 1320px;
         margin: 0 auto;
-        padding: 24px;
+        padding: 18px 22px 28px;
       }
 
       .hero {
-        background: linear-gradient(135deg, #10192d 0%, #182846 100%);
+        background:
+          radial-gradient(circle at 82% 0%, rgba(200, 155, 60, 0.26), transparent 18rem),
+          linear-gradient(135deg, #071225 0%, #12213c 100%);
         color: #fff;
-        border-radius: 28px;
-        padding: 28px;
-        box-shadow: 0 24px 60px rgba(10, 18, 32, 0.18);
+        border-radius: 22px;
+        padding: 22px;
+        box-shadow: 0 22px 56px rgba(10, 18, 32, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .eyebrow {
@@ -54,29 +61,32 @@
       }
 
       .hero h1 {
-        margin: 10px 0 8px;
-        font-size: 34px;
+        margin: 8px 0 6px;
+        font-size: 30px;
+        letter-spacing: -0.02em;
       }
 
       .hero p {
         margin: 0;
         color: #c8d3e3;
-        max-width: 760px;
+        max-width: 860px;
         line-height: 1.5;
+        font-size: 14px;
       }
 
       .auth-bar {
-        margin-top: 20px;
+        margin-top: 18px;
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         gap: 12px;
       }
 
       .auth-card {
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 16px;
         padding: 14px;
+        backdrop-filter: blur(12px);
       }
 
       .auth-card-title {
@@ -105,29 +115,33 @@
 
       .layout {
         display: grid;
-        grid-template-columns: 1.1fr 1fr;
-        gap: 20px;
-        margin-top: 20px;
+        grid-template-columns: minmax(0, 1.9fr) minmax(330px, 0.78fr);
+        gap: 18px;
+        margin-top: 18px;
+        align-items: start;
       }
 
       .tools-panel {
-        margin-top: 20px;
+        margin-top: 14px;
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         gap: 14px;
         align-items: end;
+        padding: 16px;
       }
 
       .panel {
         background: var(--panel);
-        border: 1px solid rgba(15, 28, 51, 0.08);
-        border-radius: 24px;
-        box-shadow: 0 20px 40px rgba(15, 28, 51, 0.05);
+        border: 1px solid rgba(15, 28, 51, 0.1);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
       }
 
       .panel-head {
-        padding: 20px 22px 12px;
-        border-bottom: 1px solid var(--line);
+        padding: 18px 20px 12px;
+        border-bottom: 1px solid rgba(215, 222, 232, 0.8);
+        background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
       }
 
       .panel-head h2,
@@ -138,11 +152,11 @@
       .panel-sub {
         margin-top: 6px;
         color: var(--muted);
-        font-size: 14px;
+        font-size: 13px;
       }
 
       .panel-body {
-        padding: 18px 22px 22px;
+        padding: 16px 20px 20px;
       }
 
       label {
@@ -167,10 +181,19 @@
       textarea {
         width: 100%;
         border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 12px 14px;
+        border-radius: 12px;
+        padding: 11px 13px;
         background: #fff;
         color: var(--ink);
+        outline: none;
+        transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: rgba(47, 111, 236, 0.55);
+        box-shadow: 0 0 0 4px rgba(47, 111, 236, 0.1);
       }
 
       textarea {
@@ -180,20 +203,33 @@
 
       button {
         border: 0;
-        border-radius: 14px;
-        padding: 12px 16px;
+        border-radius: 12px;
+        padding: 11px 15px;
         cursor: pointer;
         font-weight: 800;
+        transition: transform 0.14s ease, box-shadow 0.14s ease, opacity 0.14s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      button:disabled {
+        opacity: 0.46;
+        cursor: not-allowed;
+        transform: none;
       }
 
       .btn-primary {
-        background: linear-gradient(135deg, var(--gold) 0%, #e4b95d 100%);
-        color: #111827;
+        background: linear-gradient(135deg, #d6a545 0%, #f0c66e 100%);
+        color: #121826;
+        box-shadow: 0 10px 20px rgba(200, 155, 60, 0.18);
       }
 
       .btn-secondary {
         background: #edf2f7;
         color: var(--ink);
+        border: 1px solid rgba(15, 28, 51, 0.08);
       }
 
       .btn-danger {
@@ -210,15 +246,15 @@
       .queue-summary {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 8px;
-        margin-bottom: 12px;
+        gap: 10px;
+        margin-bottom: 14px;
       }
 
       .metric-card {
-        border: 1px solid var(--line);
+        border: 1px solid rgba(215, 222, 232, 0.9);
         border-radius: 14px;
-        background: #fbfcfe;
-        padding: 10px 12px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        padding: 12px;
       }
 
       .metric-label {
@@ -239,8 +275,8 @@
         display: flex;
         gap: 8px;
         overflow-x: auto;
-        padding-bottom: 8px;
-        margin-bottom: 12px;
+        padding-bottom: 10px;
+        margin-bottom: 14px;
       }
 
       .tab-btn {
@@ -248,13 +284,15 @@
         background: #fff;
         color: var(--ink);
         white-space: nowrap;
-        padding: 9px 12px;
+        padding: 8px 12px;
         border-radius: 999px;
+        font-size: 13px;
       }
 
       .tab-btn.active {
-        border-color: rgba(200, 155, 60, 0.54);
-        background: var(--gold-soft);
+        border-color: rgba(47, 111, 236, 0.26);
+        background: #eaf1ff;
+        color: #1d4ed8;
       }
 
       .filter-grid {
@@ -344,21 +382,30 @@
       .request-list {
         display: grid;
         gap: 12px;
-        max-height: 860px;
+        max-height: calc(100vh - 430px);
+        min-height: 420px;
         overflow: auto;
+        padding-right: 4px;
       }
 
       .request-card {
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 14px 16px 16px;
-        background: #fbfcfe;
+        border: 1px solid rgba(215, 222, 232, 0.92);
+        border-radius: 16px;
+        padding: 15px 16px 16px;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
         cursor: pointer;
+        transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+      }
+
+      .request-card:hover {
+        transform: translateY(-1px);
+        border-color: rgba(47, 111, 236, 0.32);
+        box-shadow: 0 10px 26px rgba(15, 28, 51, 0.08);
       }
 
       .request-card.active {
-        border-color: rgba(47, 111, 236, 0.38);
-        box-shadow: 0 12px 28px rgba(47, 111, 236, 0.12);
+        border-color: rgba(47, 111, 236, 0.74);
+        box-shadow: 0 14px 32px rgba(47, 111, 236, 0.14);
         background: #ffffff;
       }
 
@@ -374,8 +421,45 @@
         padding: 6px 10px;
         font-size: 12px;
         font-weight: 800;
-        color: #fff;
-        background: var(--accent);
+        color: #1d4ed8;
+        background: #dbeafe;
+        white-space: nowrap;
+      }
+
+      .status-pending {
+        background: #fef3c7;
+        color: #b45309;
+      }
+
+      .status-awaiting-payment {
+        background: #f3e8ff;
+        color: #7e22ce;
+      }
+
+      .status-paid {
+        background: #d1fae5;
+        color: #047857;
+      }
+
+      .status-assigned {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+
+      .status-appointment-scheduled {
+        background: #ffedd5;
+        color: #c2410c;
+      }
+
+      .status-completed {
+        background: #dcfce7;
+        color: #15803d;
+      }
+
+      .status-cancelled,
+      .status-voided {
+        background: #fee2e2;
+        color: #b91c1c;
       }
 
       .meta {
@@ -388,13 +472,13 @@
       .detail-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
+        gap: 10px;
       }
 
       .info-box {
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        padding: 14px;
+        border: 1px solid rgba(215, 222, 232, 0.92);
+        border-radius: 14px;
+        padding: 13px;
         background: #fbfcfe;
       }
 
@@ -416,14 +500,14 @@
       .action-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
+        gap: 12px;
         margin-top: 16px;
       }
 
       .action-card {
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 16px;
+        border: 1px solid rgba(215, 222, 232, 0.92);
+        border-radius: 16px;
+        padding: 15px;
         background: #fff;
       }
 
@@ -433,7 +517,7 @@
 
       .action-card h4 {
         margin: 0 0 12px;
-        font-size: 16px;
+        font-size: 15px;
       }
 
       .stack {
@@ -442,7 +526,7 @@
       }
 
       .message {
-        margin-top: 16px;
+        margin-top: 12px;
         padding: 12px 14px;
         border-radius: 14px;
         font-weight: 700;
@@ -465,6 +549,11 @@
         padding: 28px;
         text-align: center;
         color: var(--muted);
+      }
+
+      .layout > .panel:last-child {
+        position: sticky;
+        top: 16px;
       }
 
       @media (max-width: 1100px) {
@@ -843,6 +932,28 @@
         }).format(date);
       }
 
+      function formatStatusLabel(status) {
+        const normalized = String(status || "pending").toLowerCase();
+        const labels = {
+          pending: "New",
+          awaiting_payment: "Awaiting payment",
+          paid: "Paid",
+          assigned: "Assigned",
+          appointment_scheduled: "Scheduled",
+          calling: "Calling",
+          in_progress: "In progress",
+          completed: "Completed",
+          closed: "Closed",
+          cancelled: "Cancelled",
+          voided: "Voided",
+        };
+        return labels[normalized] || normalized.replaceAll("_", " ");
+      }
+
+      function statusClass(status) {
+        return `status-${String(status || "pending").toLowerCase().replaceAll("_", "-")}`;
+      }
+
       function toIndiaDateTimeLocal(value) {
         if (!value) return "";
         const date = new Date(value);
@@ -949,7 +1060,8 @@
           ]
             .filter(Boolean)
             .join(" • ") || "Not available";
-        document.getElementById("detailStatus").textContent = item.status || "-";
+        document.getElementById("detailStatus").innerHTML =
+          `<span class="status-chip ${statusClass(item.status)}">${escapeHtml(formatStatusLabel(item.status))}</span>`;
         document.getElementById("detailLawyer").textContent =
           item.assigned_lawyer_name || "Not assigned";
         document.getElementById("detailAppointment").textContent =
@@ -983,6 +1095,7 @@
           const card = document.createElement("div");
           card.className = `request-card${item.id === state.selectedRequestId ? " active" : ""}`;
           const submittedAt = item.created_at ? formatDate(item.created_at) : "Date not available";
+          const readableStatus = formatStatusLabel(item.status);
           card.innerHTML = `
             <div class="row">
               <div>
@@ -992,7 +1105,7 @@
                 </div>
                 <div class="meta">${escapeHtml(item.customer_name || "Unknown client")}${item.customer_phone ? ` • ${escapeHtml(item.customer_phone)}` : ""}</div>
               </div>
-              <span class="status-chip">${escapeHtml(item.status || "pending")}</span>
+              <span class="status-chip ${statusClass(item.status)}">${escapeHtml(readableStatus)}</span>
             </div>
             <div class="meta" style="margin-top: 10px;">${escapeHtml(item.description || "No description")}</div>
             <div class="request-footer">
