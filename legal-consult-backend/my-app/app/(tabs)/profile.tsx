@@ -929,7 +929,7 @@
 // }
 
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -947,6 +947,8 @@ import {
   Platform,
   Keyboard,
   KeyboardAvoidingView,
+  PanResponder,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -979,7 +981,7 @@ const APP_SHARE_URL = PLAY_STORE_URL;
 const SUPPORT_EMAIL = "support@casefit.com";
 const WHATSAPP_E164 = "919807863007"; // country code + number (e.g., +91 9807863007)
 const RAZORPAY_SUPPORT_LINK = "https://razorpay.me/@casefittechnologiesprivatelim";
-const RAZORPAY_QR_IMAGE = require("../../assets/images/razorpay-support-qr.jpeg");
+const RAZORPAY_QR_IMAGE = require("../../assets/images/razorpay-support-qr.png");
 
 // API
 const PROFILE_GET = `${API_BASE}/auth/me`;
@@ -1071,6 +1073,7 @@ function Row({
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, token, setAuth, logout } = useAuth();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
   const [loading, setLoading] = useState<boolean>(!!token);
   const [saving, setSaving] = useState(false);
@@ -1090,6 +1093,54 @@ export default function ProfileScreen() {
 
   const scrollRef = useRef<ScrollView>(null);
   const supportPulse = useRef(new Animated.Value(1)).current;
+  const supportSheetY = useRef(new Animated.Value(0)).current;
+  const supportQrSize = Math.min(280, Math.max(240, windowWidth - 80));
+  const openSupportSheet = useCallback(() => {
+    supportSheetY.setValue(Math.max(560, windowHeight));
+    setSupportOpen(true);
+    requestAnimationFrame(() => {
+      Animated.spring(supportSheetY, {
+        toValue: 0,
+        useNativeDriver: true,
+        bounciness: 3,
+      }).start();
+    });
+  }, [supportSheetY, windowHeight]);
+
+  const closeSupportSheet = useCallback(() => {
+    Animated.timing(supportSheetY, {
+      toValue: Math.max(560, windowHeight),
+      duration: 180,
+      useNativeDriver: true,
+    }).start(() => {
+      setSupportOpen(false);
+    });
+  }, [supportSheetY, windowHeight]);
+
+  const supportSheetPan = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gesture) => gesture.dy > 8 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
+        onPanResponderMove: (_, gesture) => {
+          if (gesture.dy > 0) {
+            supportSheetY.setValue(gesture.dy);
+          }
+        },
+        onPanResponderRelease: (_, gesture) => {
+          if (gesture.dy > 92 || gesture.vy > 1.1) {
+            closeSupportSheet();
+            return;
+          }
+
+          Animated.spring(supportSheetY, {
+            toValue: 0,
+            useNativeDriver: true,
+            bounciness: 4,
+          }).start();
+        },
+      }),
+    [closeSupportSheet, supportSheetY]
+  );
 
   // single header: we rely on navigator header; do NOT render custom header here
   useEffect(() => {
@@ -1613,7 +1664,7 @@ export default function ProfileScreen() {
             icon={<Animated.Text style={{ fontSize: 22, transform: [{ scale: supportPulse }] }}>❤️</Animated.Text>}
             label="Support caseFit"
             subtitle="Help someone find justice faster"
-            onPress={() => setSupportOpen(true)}
+            onPress={openSupportSheet}
           />
           <Divider />
           <Row icon={<Feather name="help-circle" size={22} color={INK} />} label="Help" onPress={openSupportChooser} />
@@ -1939,20 +1990,33 @@ export default function ProfileScreen() {
         </KeyboardAvoidingView>
       </Modal>
 
-      <Modal visible={supportOpen} transparent animationType="slide" onRequestClose={() => setSupportOpen(false)}>
+      {supportOpen ? (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            zIndex: 50,
+            elevation: 50,
+          }}
+        >
         <Pressable
-          onPress={() => setSupportOpen(false)}
+          onPress={closeSupportSheet}
           style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.42)", justifyContent: "flex-end" }}
         >
-          <Pressable
-            onPress={(event) => event.stopPropagation()}
+          <Animated.View
+            {...supportSheetPan.panHandlers}
+            onStartShouldSetResponder={() => true}
             style={{
               backgroundColor: "#FFFFFF",
               borderTopLeftRadius: 28,
               borderTopRightRadius: 28,
-              padding: 18,
+              padding: 16,
               paddingBottom: Platform.OS === "ios" ? 30 : 22,
-              gap: 16,
+              gap: 14,
+              transform: [{ translateY: supportSheetY }],
             }}
           >
             <View style={{ alignItems: "center" }}>
@@ -1981,8 +2045,8 @@ export default function ProfileScreen() {
             >
               <View
                 style={{
-                  width: 210,
-                  height: 210,
+                  width: supportQrSize,
+                  height: supportQrSize,
                   borderRadius: 22,
                   borderWidth: 1,
                   borderColor: "#D7DEE9",
@@ -2005,38 +2069,22 @@ export default function ProfileScreen() {
               </Text>
             </View>
 
-            <View style={{ flexDirection: "row", gap: 10 }}>
-              <TouchableOpacity
-                onPress={openRazorpaySupport}
-                style={{
-                  flex: 1,
-                  backgroundColor: INK,
-                  borderRadius: 16,
-                  paddingVertical: 15,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800" }}>Open Razorpay Link</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => setSupportOpen(false)}
-                style={{
-                  paddingHorizontal: 18,
-                  borderRadius: 16,
-                  borderWidth: 1,
-                  borderColor: BORDER,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Text style={{ color: INK, fontSize: 16, fontWeight: "800" }}>Close</Text>
-              </TouchableOpacity>
-            </View>
-          </Pressable>
+            <TouchableOpacity
+              onPress={openRazorpaySupport}
+              style={{
+                backgroundColor: INK,
+                borderRadius: 16,
+                paddingVertical: 15,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800" }}>Pay via Link</Text>
+            </TouchableOpacity>
+          </Animated.View>
         </Pressable>
-      </Modal>
+        </View>
+      ) : null}
 
       <Modal visible={claimOpen} transparent animationType="slide" onRequestClose={() => setClaimOpen(false)}>
         <KeyboardAvoidingView
