@@ -1259,7 +1259,6 @@ export default function ProfileScreen() {
         area: merged.area || "",
       } as any);
       setEditing(false);
-      Alert.alert("Saved", "Your profile has been updated.");
     } catch (e: any) {
       Alert.alert("Profile could not be saved", friendlyErrorMessage(e, "Please try again in a moment."));
     } finally {
@@ -1557,26 +1556,8 @@ export default function ProfileScreen() {
             <View style={{ gap: 14 }}>
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
                 <View style={{ flex: 1, gap: 8 }}>
-                  <View
-                    style={{
-                      alignSelf: "flex-start",
-                      backgroundColor: "rgba(255,255,255,0.12)",
-                      borderWidth: 1,
-                      borderColor: "rgba(255,255,255,0.15)",
-                      borderRadius: 999,
-                      paddingHorizontal: 10,
-                      paddingVertical: 6,
-                    }}
-                  >
-                    <Text style={{ color: "#F8E9BF", fontSize: 11, fontWeight: "900", letterSpacing: 1 }}>
-                      GUEST ACCESS
-                    </Text>
-                  </View>
                   <Text style={{ color: "#FFFFFF", fontSize: 22, lineHeight: 28, fontWeight: "800" }}>
                     Secure this case with your mobile number
-                  </Text>
-                  <Text style={{ color: "rgba(255,255,255,0.74)", fontSize: 14, lineHeight: 20 }}>
-                    Claim this guest account once and keep the same consultation history every time you log in.
                   </Text>
                 </View>
 
@@ -1606,14 +1587,14 @@ export default function ProfileScreen() {
                   justifyContent: "center",
                 }}
               >
-                <Text style={{ color: INK, fontSize: 16, fontWeight: "800" }}>Secure with Mobile OTP</Text>
+                <Text style={{ color: INK, fontSize: 16, fontWeight: "800" }}>Verify Account</Text>
               </TouchableOpacity>
             </View>
           </LinearGradient>
         ) : null}
 
-        {/* Community */}
-        <Section title="Community">
+        {/* Community & Support */}
+        <Section title="Community & Support">
           <Row icon={<Feather name="gift" size={22} color={INK} />} label="Refer a Friend" onPress={handleShare} />
           <Divider />
           <Row
@@ -1624,68 +1605,19 @@ export default function ProfileScreen() {
           <Divider />
           <Row
             icon={<Feather name="star" size={22} color={INK} />}
-            label="Rate this App"
+            label="Rate caseFit"
             onPress={openRateApp}
           />
+          <Divider />
+          <Row
+            icon={<Animated.Text style={{ fontSize: 22, transform: [{ scale: supportPulse }] }}>❤️</Animated.Text>}
+            label="Support caseFit"
+            subtitle="Help someone find justice faster"
+            onPress={() => setSupportOpen(true)}
+          />
+          <Divider />
+          <Row icon={<Feather name="help-circle" size={22} color={INK} />} label="Help" onPress={openSupportChooser} />
         </Section>
-
-        {/* Help */}
-        <Section title="Preferences & Help">
-          <Row icon={<Feather name="help-circle" size={22} color={INK} />} label="Help & Support" onPress={openSupportChooser} />
-        </Section>
-
-        {/* Donate */}
-        <Pressable
-          onPress={() => setSupportOpen(true)}
-          style={({ pressed }) => [
-            {
-              borderRadius: 22,
-              overflow: "hidden",
-              opacity: pressed ? 0.9 : 1,
-              transform: [{ scale: pressed ? 0.99 : 1 }],
-              backgroundColor: CARD,
-              borderWidth: 1,
-              borderColor: "#E8EDF5",
-              shadowColor: "#000",
-              shadowOpacity: 0.07,
-              shadowRadius: 14,
-              shadowOffset: { width: 0, height: 7 },
-              elevation: 3,
-            },
-          ]}
-        >
-          <View
-            style={{
-              paddingHorizontal: 16,
-              paddingVertical: 16,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 14,
-            }}
-          >
-            <View
-              style={{
-                width: 34,
-                height: 34,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Animated.Text style={{ fontSize: 24, transform: [{ scale: supportPulse }] }}>❤️</Animated.Text>
-            </View>
-
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: INK, fontSize: 16, lineHeight: 21, fontWeight: "700" }}>
-                Support caseFit
-              </Text>
-              <Text style={{ color: MUTED, fontSize: 13, lineHeight: 19, marginTop: 2 }}>
-                Help someone find justice faster
-              </Text>
-            </View>
-
-            <Feather name="chevron-right" size={20} color="#9CA3AF" />
-          </View>
-        </Pressable>
 
         {/* Inline EDIT FORM */}
         {editing && (
@@ -1794,7 +1726,7 @@ export default function ProfileScreen() {
                 disabled={saving}
                 style={{
                   flex: 1,
-                  backgroundColor: saving ? "#93C5FD" : INK,
+                  backgroundColor: saving ? "#D1D5DB" : INK,
                   paddingVertical: 14,
                   borderRadius: 12,
                   alignItems: "center",

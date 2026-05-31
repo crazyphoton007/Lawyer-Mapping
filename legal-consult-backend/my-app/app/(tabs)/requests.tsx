@@ -15,6 +15,7 @@ import { API_BASE } from "../../constants/config";
 import { useAuth } from "../../context/auth";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import PremiumErrorState from "@/components/PremiumErrorState";
 import { friendlyErrorMessage } from "@/utils/errorMessages";
 
@@ -30,7 +31,7 @@ type Req = {
   assigned_lawyer?: string | null;
 };
 
-const BG = "#F7F8FA";
+const BG = "#DCE4EE";
 const INK = "#0B1220";
 const CARD = "#FFFFFF";
 const BORDER = "#E5E7EB";
@@ -209,6 +210,7 @@ export default function RequestsScreen() {
   const [myPhone, setMyPhone] = useState<string>("");
   const hasLoadedOnce = useRef(false);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const emptyFloat = useRef(new Animated.Value(0)).current;
 
   const reloadPhone = useCallback(async () => {
     const rawPhone = await SecureStore.getItemAsync("user_mobile");
@@ -322,6 +324,27 @@ export default function RequestsScreen() {
     setRefreshing(false);
   }, [reloadPhone, load]);
 
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(emptyFloat, {
+          toValue: 1,
+          duration: 1600,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(emptyFloat, {
+          toValue: 0,
+          duration: 1600,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [emptyFloat]);
+
   if (!authToken) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
@@ -398,70 +421,199 @@ export default function RequestsScreen() {
     );
   }
 
-  const EmptyState = () => (
-    <View
-      style={{
-        paddingHorizontal: 24,
-        paddingVertical: 40,
-        alignItems: "center",
-        gap: 14,
-      }}
-    >
+  const EmptyState = () => {
+    const iconTranslateY = emptyFloat.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, -7],
+    });
+    const iconScale = emptyFloat.interpolate({
+      inputRange: [0, 1],
+      outputRange: [1, 1.04],
+    });
+
+    return (
       <View
         style={{
-          width: 88,
-          height: 88,
-          borderRadius: 44,
-          backgroundColor: "#111",
+          paddingHorizontal: 4,
+          paddingVertical: 8,
           alignItems: "center",
-          justifyContent: "center",
         }}
       >
-        <Feather name="file-text" size={36} color="#fff" />
-      </View>
+        <LinearGradient
+          colors={["#FFFFFF", "#F8FAFC", "#EEF3F8"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            width: "100%",
+            borderRadius: 30,
+            borderWidth: 1,
+            borderColor: "#E2E8F0",
+            paddingHorizontal: 16,
+            paddingVertical: 17,
+            alignItems: "center",
+            shadowColor: "#0B1220",
+            shadowOpacity: 0.08,
+            shadowRadius: 24,
+            shadowOffset: { width: 0, height: 12 },
+            elevation: 4,
+          }}
+        >
+          <View
+            style={{
+              position: "absolute",
+              top: 14,
+              left: 18,
+              right: 18,
+              height: 1,
+              backgroundColor: "rgba(255,255,255,0.9)",
+            }}
+          />
+          <Animated.View
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 24,
+              backgroundColor: "#FFFFFF",
+              borderWidth: 1,
+              borderColor: "#E2E8F0",
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: "#0B1220",
+              shadowOpacity: 0.08,
+              shadowRadius: 14,
+              shadowOffset: { width: 0, height: 8 },
+              transform: [{ translateY: iconTranslateY }, { scale: iconScale }],
+            }}
+          >
+            <View
+              style={{
+                width: 46,
+                height: 46,
+                borderRadius: 18,
+                backgroundColor: INK,
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.14)",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Feather name="file-text" size={23} color="#FFFFFF" />
+            </View>
+          </Animated.View>
 
-      <Text style={{ fontSize: 20, fontWeight: "800", color: INK, marginTop: 4 }}>
-        No requests yet
-      </Text>
-      <Text style={{ color: MUTED, textAlign: "center", lineHeight: 20 }}>
-        Book a quick paid consult with a verified lawyer.{"\n"}
-        Your requests will appear here.
-      </Text>
+          <Text style={{ fontSize: 21, fontWeight: "900", color: INK, marginTop: 12 }}>
+            No requests yet
+          </Text>
+          <Text style={{ color: MUTED, textAlign: "center", lineHeight: 19, marginTop: 6, fontSize: 13 }}>
+            Verified legal guidance, organized and tracked here.
+          </Text>
 
-      <View style={{ marginTop: 6, width: "100%", gap: 8 }}>
-        {[
-          { icon: "phone", text: "Tell us your legal issue" },
-          { icon: "credit-card", text: "Pay securely inside the app" },
-          { icon: "calendar", text: "Get your appointment scheduled" },
-        ].map((s, i) => (
-          <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Feather name={s.icon as any} size={16} color={INK} />
-            <Text style={{ color: INK, fontWeight: "600" }}>{s.text}</Text>
+          <View style={{ marginTop: 16, width: "100%", gap: 8 }}>
+            {[
+              { icon: "edit-3", text: "Briefly describe your issue", accent: INK },
+              { icon: "credit-card", text: "Securely pay in-app", accent: "#0F766E" },
+              { icon: "clock", text: "Auto-schedule your session", accent: INK },
+            ].map((s, i) => (
+              <View
+                key={i}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                  backgroundColor: "rgba(255,255,255,0.78)",
+                  borderWidth: 1,
+                  borderColor: "#E6EAF1",
+                  borderRadius: 14,
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  shadowColor: "#0B1220",
+                  shadowOpacity: 0.03,
+                  shadowRadius: 8,
+                  shadowOffset: { width: 0, height: 4 },
+                }}
+              >
+                <View
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 9,
+                    backgroundColor: i === 1 ? "#ECFDF5" : "#F8FAFC",
+                    borderWidth: 1,
+                    borderColor: i === 1 ? "#BBF7D0" : "#E5E7EB",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Feather name={s.icon as any} size={16} color={s.accent} />
+                </View>
+                <Text style={{ color: INK, fontWeight: "700", flex: 1, fontSize: 14 }}>{s.text}</Text>
+              </View>
+            ))}
           </View>
-        ))}
+
+          <TouchableOpacity
+            activeOpacity={0.86}
+            onPress={() => router.push("/consult")}
+            style={{
+              marginTop: 16,
+              backgroundColor: INK,
+              paddingVertical: 14,
+              paddingHorizontal: 18,
+              borderRadius: 16,
+              alignItems: "center",
+              alignSelf: "stretch",
+              shadowColor: INK,
+              shadowOpacity: 0.16,
+              shadowRadius: 14,
+              shadowOffset: { width: 0, height: 8 },
+              elevation: 3,
+            }}
+          >
+            <Text style={{ color: "#FFFFFF", fontWeight: "900", fontSize: 15 }}>Start a consult</Text>
+          </TouchableOpacity>
+        </LinearGradient>
       </View>
-
-      <TouchableOpacity
-        onPress={() => router.push("/consult")}
-        style={{
-          marginTop: 14,
-          backgroundColor: INK,
-          paddingVertical: 14,
-          paddingHorizontal: 18,
-          borderRadius: 14,
-          alignItems: "center",
-          alignSelf: "stretch",
-        }}
-      >
-        <Text style={{ color: "#fff", fontWeight: "800" }}>Start a consult</Text>
-      </TouchableOpacity>
-
-    </View>
-  );
+    );
+  };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: BG }}>
-      <View style={{ paddingHorizontal: 18, paddingTop: 14, paddingBottom: 12 }}>
+    <LinearGradient
+      colors={["#DCE4EE", "#F7FAFD", "#C7D3E1"]}
+      locations={[0, 0.48, 1]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={{ flex: 1, backgroundColor: "transparent" }}>
+      <LinearGradient
+        colors={["rgba(255,255,255,0)", "rgba(255,255,255,0.96)", "rgba(255,255,255,0.38)", "rgba(255,255,255,0)"]}
+        locations={[0, 0.36, 0.62, 1]}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+        style={{
+          position: "absolute",
+          top: 18,
+          left: -180,
+          width: 820,
+          height: 330,
+          transform: [{ rotate: "-16deg" }],
+        }}
+      />
+      <LinearGradient
+        colors={["rgba(255,255,255,0)", "rgba(226,232,240,0.72)", "rgba(255,255,255,0)"]}
+        locations={[0, 0.52, 1]}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+        style={{
+          position: "absolute",
+          top: 180,
+          left: -160,
+          width: 760,
+          height: 260,
+          transform: [{ rotate: "18deg" }],
+        }}
+      />
+      <View style={{ paddingHorizontal: 18, paddingTop: 0, paddingBottom: 10 }}>
         <View>
           <Text style={{ fontSize: 34, fontWeight: "900", color: INK, letterSpacing: 0 }}>
             CaseBoard
@@ -476,11 +628,12 @@ export default function RequestsScreen() {
       </View>
 
       <FlatList
+        style={{ backgroundColor: "transparent" }}
         data={items}
         keyExtractor={(it) => String(it.id)}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-        contentContainerStyle={{ padding: 18, paddingTop: 22, paddingBottom: 24, flexGrow: 1 }}
+        contentContainerStyle={{ padding: 18, paddingTop: 12, paddingBottom: 24, flexGrow: 1 }}
         ListEmptyComponent={<EmptyState />}
         renderItem={({ item, index }) => {
           const status = (item.status || "pending").toLowerCase();
@@ -648,6 +801,7 @@ export default function RequestsScreen() {
           );
         }}
       />
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
