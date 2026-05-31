@@ -1787,16 +1787,15 @@ export default function ProfileScreen() {
             <Pressable
               onPress={(event) => event.stopPropagation()}
               style={{
-                backgroundColor: "#fff",
-                borderTopLeftRadius: 24,
-                borderTopRightRadius: 24,
-                padding: 16,
-                paddingBottom: Platform.OS === "ios" ? 28 : 20,
-                gap: 12,
+                backgroundColor: "#FFFFFF",
+                borderTopLeftRadius: 30,
+                borderTopRightRadius: 30,
+                padding: 18,
+                paddingBottom: Platform.OS === "ios" ? 30 : 22,
                 shadowColor: "#000",
-                shadowOpacity: 0.14,
-                shadowRadius: 18,
-                shadowOffset: { width: 0, height: -6 },
+                shadowOpacity: 0.16,
+                shadowRadius: 24,
+                shadowOffset: { width: 0, height: -10 },
                 elevation: 12,
               }}
             >
@@ -1806,13 +1805,13 @@ export default function ProfileScreen() {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ gap: 12 }}
               >
-                <View style={{ alignItems: "center", gap: 12 }}>
+                <View style={{ alignItems: "center", gap: 14 }}>
                   <View
                     style={{
-                      width: 44,
+                      width: 46,
                       height: 5,
                       borderRadius: 999,
-                      backgroundColor: "#D1D5DB",
+                      backgroundColor: "#CBD5E1",
                     }}
                   />
                   <View
@@ -1820,53 +1819,67 @@ export default function ProfileScreen() {
                       width: "100%",
                       flexDirection: "row",
                       alignItems: "center",
-                      justifyContent: "space-between",
+                      gap: 12,
                     }}
                   >
-                    <View style={{ flex: 1, paddingRight: 12 }}>
-                      <Text style={{ fontSize: 18, fontWeight: "700", color: INK }}>Leave Feedback</Text>
-                      <Text style={{ fontSize: 14, color: MUTED, marginTop: 4, lineHeight: 20 }}>
-                        Tell us what felt smooth, what felt confusing, or what deserves a sharper finish.
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => {
-                        Keyboard.dismiss();
-                        setFbOpen(false);
-                      }}
+                    <LinearGradient
+                      colors={["#0B1220", "#1F2937"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
                       style={{
-                        paddingHorizontal: 12,
-                        paddingVertical: 8,
-                        borderRadius: 999,
-                        borderWidth: 1,
-                        borderColor: BORDER,
-                        backgroundColor: "#fff",
+                        width: 46,
+                        height: 46,
+                        borderRadius: 17,
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
-                      <Text style={{ color: INK, fontWeight: "700" }}>Close</Text>
-                    </TouchableOpacity>
+                      <Feather name="message-square" size={21} color="#FFFFFF" />
+                    </LinearGradient>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 22, lineHeight: 27, fontWeight: "800", color: INK }}>
+                        Leave Feedback
+                      </Text>
+                      <Text style={{ fontSize: 14, color: MUTED, marginTop: 4, lineHeight: 20 }}>
+                        Tell us what felt smooth or what deserves a sharper finish.
+                      </Text>
+                    </View>
                   </View>
                 </View>
 
-                <TextInput
-                  value={fbText}
-                  onChangeText={setFbText}
-                  placeholder="Write your note here…"
-                  multiline
-                  returnKeyType="default"
-                  blurOnSubmit={false}
+                <View
                   style={{
-                    minHeight: 180,
                     borderWidth: 1,
-                    borderColor: BORDER,
-                    borderRadius: 16,
-                    padding: 14,
-                    textAlignVertical: "top",
-                    backgroundColor: "#FAFAFA",
-                    fontSize: 16,
-                    lineHeight: 22,
+                    borderColor: "#E2E8F0",
+                    borderRadius: 20,
+                    backgroundColor: "#F8FAFC",
+                    padding: 4,
+                    shadowColor: "#0B1220",
+                    shadowOpacity: 0.04,
+                    shadowRadius: 10,
+                    shadowOffset: { width: 0, height: 4 },
                   }}
-                />
+                >
+                  <TextInput
+                    value={fbText}
+                    onChangeText={setFbText}
+                    placeholder="Write your note here..."
+                    placeholderTextColor="#94A3B8"
+                    multiline
+                    returnKeyType="default"
+                    blurOnSubmit={false}
+                    style={{
+                      minHeight: 170,
+                      borderRadius: 16,
+                      padding: 14,
+                      textAlignVertical: "top",
+                      backgroundColor: "#FFFFFF",
+                      color: INK,
+                      fontSize: 16,
+                      lineHeight: 22,
+                    }}
+                  />
+                </View>
 
                 <Text
                   style={{
@@ -1879,61 +1892,47 @@ export default function ProfileScreen() {
                   {fbText.trim().length}/5000
                 </Text>
 
-                <View style={{ flexDirection: "row", gap: 10 }}>
-                  <TouchableOpacity
-                    onPress={async () => {
-                      const payload = {
-                        message: fbText.trim(),
-                        user_id: form.id ?? user?.id ?? null,
-                        phone: form.phone ?? user?.phone ?? null,
-                        platform: Platform.OS,
-                        at: new Date().toISOString(),
-                      };
+                <TouchableOpacity
+                  activeOpacity={0.86}
+                  onPress={async () => {
+                    const payload = {
+                      message: fbText.trim(),
+                      user_id: form.id ?? user?.id ?? null,
+                      phone: form.phone ?? user?.phone ?? null,
+                      platform: Platform.OS,
+                      at: new Date().toISOString(),
+                    };
 
-                      if (!payload.message) return Alert.alert("Please add feedback text.");
+                    if (!payload.message) return Alert.alert("Please add feedback text.");
 
-                      const posted = await postFeedback(payload);
+                    const posted = await postFeedback(payload);
 
-                      Keyboard.dismiss();
-                      setFbOpen(false);
-                      setFbText("");
-                      if (posted) {
-                        setFbSuccessOpen(true);
-                      } else {
-                        Alert.alert(
-                          "Not sent",
-                          "We couldn’t submit your feedback right now. Please try again in a moment."
-                        );
-                      }
-                    }}
-                    style={{
-                      flex: 1,
-                      backgroundColor: INK,
-                      paddingVertical: 14,
-                      borderRadius: 12,
-                      alignItems: "center",
-                    }}
-                  >
-                    <Text style={{ color: "#fff", fontWeight: "700" }}>Send</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={() => {
-                      Keyboard.dismiss();
-                      setFbOpen(false);
-                    }}
-                    style={{
-                      paddingVertical: 14,
-                      paddingHorizontal: 16,
-                      borderRadius: 12,
-                      borderColor: BORDER,
-                      borderWidth: 1,
-                      backgroundColor: "#fff",
-                    }}
-                  >
-                    <Text style={{ color: INK, fontWeight: "700" }}>Cancel</Text>
-                  </TouchableOpacity>
-                </View>
+                    Keyboard.dismiss();
+                    setFbOpen(false);
+                    setFbText("");
+                    if (posted) {
+                      setFbSuccessOpen(true);
+                    } else {
+                      Alert.alert(
+                        "Not sent",
+                        "We couldn’t submit your feedback right now. Please try again in a moment."
+                      );
+                    }
+                  }}
+                  style={{
+                    backgroundColor: INK,
+                    paddingVertical: 15,
+                    borderRadius: 16,
+                    alignItems: "center",
+                    shadowColor: INK,
+                    shadowOpacity: 0.14,
+                    shadowRadius: 14,
+                    shadowOffset: { width: 0, height: 8 },
+                    elevation: 3,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontSize: 16, fontWeight: "800" }}>Send Feedback</Text>
+                </TouchableOpacity>
               </ScrollView>
             </Pressable>
           </Pressable>

@@ -615,8 +615,9 @@ export default function RequestsScreen() {
       />
       <View style={{ paddingHorizontal: 18, paddingTop: 0, paddingBottom: 10 }}>
         <View>
-          <Text style={{ fontSize: 34, fontWeight: "900", color: INK, letterSpacing: 0 }}>
-            CaseBoard
+          <Text style={{ fontSize: 34, color: INK, letterSpacing: 0 }}>
+            <Text style={{ fontWeight: "900" }}>Case</Text>
+            <Text style={{ fontWeight: "400" }}>Board</Text>
           </Text>
           <View style={{ marginTop: 8, flexDirection: "row", alignItems: "center" }}>
             <Feather name="shield" size={17} color={BLUE} />
