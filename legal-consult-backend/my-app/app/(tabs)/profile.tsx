@@ -935,7 +935,9 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
+  Animated,
   Alert,
+  Image,
   ScrollView,
   Switch,
   Pressable,
@@ -972,9 +974,14 @@ const MUTED = "#6B7280";
 const BORDER = "#E5E7EB";
 
 // 🔗 Share / Support (edit as you like)
-const APP_SHARE_URL = "https://thecasefit.com/app"; // <-- update when you have the real store link
+const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.thecasefit.app";
+const APP_STORE_URL = "";
+const APP_SHARE_URL = PLAY_STORE_URL;
 const SUPPORT_EMAIL = "support@casefit.com";
 const WHATSAPP_E164 = "919807863007"; // country code + number (e.g., +91 9807863007)
+const NOTIFICATION_PREF_KEY = "casefit_notifications_enabled";
+const RAZORPAY_SUPPORT_LINK = "https://razorpay.me/@casefittechnologiesprivatelim";
+const RAZORPAY_QR_IMAGE = require("../../assets/images/razorpay-support-qr.jpeg");
 
 // API
 const PROFILE_GET = `${API_BASE}/auth/me`;
@@ -1077,6 +1084,7 @@ export default function ProfileScreen() {
   const [fbOpen, setFbOpen] = useState(false);
   const [fbText, setFbText] = useState("");
   const [fbSuccessOpen, setFbSuccessOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
   const [claimOpen, setClaimOpen] = useState(false);
   const [claimPhone, setClaimPhone] = useState("");
   const [claimCode, setClaimCode] = useState("");
@@ -1084,6 +1092,7 @@ export default function ProfileScreen() {
   const [claimLoading, setClaimLoading] = useState(false);
 
   const scrollRef = useRef<ScrollView>(null);
+  const supportPulse = useRef(new Animated.Value(1)).current;
 
   // single header: we rely on navigator header; do NOT render custom header here
   useEffect(() => {
@@ -1189,6 +1198,40 @@ export default function ProfileScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
+  useEffect(() => {
+    SecureStore.getItemAsync(NOTIFICATION_PREF_KEY)
+      .then((value) => {
+        if (value === "0" || value === "1") {
+          setNotif(value === "1");
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(supportPulse, {
+          toValue: 0.9,
+          duration: 520,
+          useNativeDriver: true,
+        }),
+        Animated.timing(supportPulse, {
+          toValue: 1.28,
+          duration: 120,
+          useNativeDriver: true,
+        }),
+        Animated.timing(supportPulse, {
+          toValue: 1,
+          duration: 240,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [supportPulse]);
+
   function validate(): string | null {
     if (!form.name || form.name.trim().length < 2) return "Please enter your full name.";
     if (form.gender && !["Male", "Female", "Other"].includes(String(form.gender)))
@@ -1246,6 +1289,43 @@ export default function ProfileScreen() {
         title: "caseFit",
       });
     } catch {}
+  }
+
+  async function openRateApp() {
+    const url = Platform.OS === "ios" && APP_STORE_URL ? APP_STORE_URL : PLAY_STORE_URL;
+    try {
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert("Rate caseFit", `Open this link after the store listing is live:\n${url}`);
+    }
+  }
+
+  async function handleNotificationToggle(value: boolean) {
+    setNotif(value);
+    try {
+      await SecureStore.setItemAsync(NOTIFICATION_PREF_KEY, value ? "1" : "0");
+    } catch {}
+
+    Alert.alert(
+      value ? "Notifications on" : "Notifications off",
+      "Your preference is saved on this phone. Push alerts will start working after the notification service is connected."
+    );
+  }
+
+  async function openRazorpaySupport() {
+    if (!RAZORPAY_SUPPORT_LINK) {
+      Alert.alert(
+        "Razorpay link needed",
+        "Add your real Razorpay payment link in the app before launch so users can support caseFit safely."
+      );
+      return;
+    }
+
+    try {
+      await Linking.openURL(RAZORPAY_SUPPORT_LINK);
+    } catch {
+      Alert.alert("Support caseFit", RAZORPAY_SUPPORT_LINK);
+    }
   }
 
   // Help & Support chooser
@@ -1570,7 +1650,7 @@ export default function ProfileScreen() {
           <Row
             icon={<Feather name="star" size={22} color={INK} />}
             label="Rate this App"
-            onPress={() => Alert.alert("Coming soon", "Store link will be added for ratings.")}
+            onPress={openRateApp}
           />
         </Section>
 
@@ -1579,21 +1659,65 @@ export default function ProfileScreen() {
           <Row
             icon={<Feather name="bell" size={22} color={INK} />}
             label="Notifications"
-            right={<Switch value={notif} onValueChange={setNotif} />}
+            subtitle="Saves your alert preference on this phone"
+            right={<Switch value={notif} onValueChange={handleNotificationToggle} />}
           />
           <Divider />
           <Row icon={<Feather name="help-circle" size={22} color={INK} />} label="Help & Support" onPress={openSupportChooser} />
         </Section>
 
         {/* Donate */}
-        <Section title="Support caseFit">
-          <Row
-            icon={<Feather name="heart" size={22} color={INK} />}
-            label="Support caseFit"
-            subtitle="Help us serve more people"
-            onPress={() => Alert.alert("Coming soon", "Donation flow will be added.")}
-          />
-        </Section>
+        <Pressable
+          onPress={() => setSupportOpen(true)}
+          style={({ pressed }) => [
+            {
+              borderRadius: 22,
+              overflow: "hidden",
+              opacity: pressed ? 0.9 : 1,
+              transform: [{ scale: pressed ? 0.99 : 1 }],
+              backgroundColor: CARD,
+              borderWidth: 1,
+              borderColor: "#E8EDF5",
+              shadowColor: "#000",
+              shadowOpacity: 0.07,
+              shadowRadius: 14,
+              shadowOffset: { width: 0, height: 7 },
+              elevation: 3,
+            },
+          ]}
+        >
+          <View
+            style={{
+              paddingHorizontal: 16,
+              paddingVertical: 16,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 14,
+            }}
+          >
+            <View
+              style={{
+                width: 34,
+                height: 34,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Animated.Text style={{ fontSize: 24, transform: [{ scale: supportPulse }] }}>❤️</Animated.Text>
+            </View>
+
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: INK, fontSize: 16, lineHeight: 21, fontWeight: "700" }}>
+                Support caseFit
+              </Text>
+              <Text style={{ color: MUTED, fontSize: 13, lineHeight: 19, marginTop: 2 }}>
+                Help someone find justice faster
+              </Text>
+            </View>
+
+            <Feather name="chevron-right" size={20} color="#9CA3AF" />
+          </View>
+        </Pressable>
 
         {/* Inline EDIT FORM */}
         {editing && (
@@ -1914,6 +2038,105 @@ export default function ProfileScreen() {
             </Pressable>
           </Pressable>
         </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal visible={supportOpen} transparent animationType="slide" onRequestClose={() => setSupportOpen(false)}>
+        <Pressable
+          onPress={() => setSupportOpen(false)}
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.42)", justifyContent: "flex-end" }}
+        >
+          <Pressable
+            onPress={(event) => event.stopPropagation()}
+            style={{
+              backgroundColor: "#FFFFFF",
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+              padding: 18,
+              paddingBottom: Platform.OS === "ios" ? 30 : 22,
+              gap: 16,
+            }}
+          >
+            <View style={{ alignItems: "center" }}>
+              <View style={{ width: 44, height: 5, borderRadius: 999, backgroundColor: "#D1D5DB" }} />
+            </View>
+
+            <View style={{ gap: 8 }}>
+              <Text style={{ color: INK, fontSize: 26, lineHeight: 32, fontWeight: "800" }}>
+                ❤️ Support caseFit
+              </Text>
+              <Text style={{ color: MUTED, fontSize: 15, lineHeight: 22 }}>
+                Your support helps us keep legal help simpler, faster, and accessible for more people.
+              </Text>
+            </View>
+
+            <View
+              style={{
+                borderRadius: 22,
+                borderWidth: 1,
+                borderColor: BORDER,
+                backgroundColor: "#F8FAFC",
+                padding: 16,
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <View
+                style={{
+                  width: 210,
+                  height: 210,
+                  borderRadius: 22,
+                  borderWidth: 1,
+                  borderColor: "#D7DEE9",
+                  backgroundColor: "#FFFFFF",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 8,
+                  overflow: "hidden",
+                }}
+              >
+                <Image
+                  source={RAZORPAY_QR_IMAGE}
+                  resizeMode="contain"
+                  style={{ width: "100%", height: "100%" }}
+                />
+              </View>
+
+              <Text style={{ color: MUTED, fontSize: 13, lineHeight: 19, textAlign: "center" }}>
+                Scan the QR code or use the secure Razorpay payment link.
+              </Text>
+            </View>
+
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <TouchableOpacity
+                onPress={openRazorpaySupport}
+                style={{
+                  flex: 1,
+                  backgroundColor: INK,
+                  borderRadius: 16,
+                  paddingVertical: 15,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800" }}>Open Razorpay Link</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setSupportOpen(false)}
+                style={{
+                  paddingHorizontal: 18,
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderColor: BORDER,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={{ color: INK, fontSize: 16, fontWeight: "800" }}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
       </Modal>
 
       <Modal visible={claimOpen} transparent animationType="slide" onRequestClose={() => setClaimOpen(false)}>
