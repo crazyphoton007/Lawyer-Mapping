@@ -26,6 +26,9 @@ JWT_EXPIRES_MIN = int(os.getenv("JWT_EXPIRES_MIN", "43200"))  # 30 days default
 OTP_EXPIRES_SECONDS = int(os.getenv("OTP_EXPIRES_SECONDS", "300"))
 OTP_RATE_LIMIT_COUNT = int(os.getenv("OTP_RATE_LIMIT_COUNT", "2"))
 OTP_RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("OTP_RATE_LIMIT_WINDOW_SECONDS", "3600"))
+REVIEWER_LOGIN_ENABLED = os.getenv("REVIEWER_LOGIN_ENABLED", "0").strip() == "1"
+REVIEWER_TEST_PHONE = os.getenv("REVIEWER_TEST_PHONE", "").strip()
+REVIEWER_TEST_OTP = os.getenv("REVIEWER_TEST_OTP", "").strip()
 ADMIN_BOOTSTRAP_KEY = os.getenv("ADMIN_BOOTSTRAP_KEY")
 TEAM_ROLES = {"user", "lawyer", "admin"}
 
@@ -133,6 +136,22 @@ def _normalize_phone_key(phone: str) -> str:
     return digits or phone.strip()
 
 
+def _is_reviewer_phone(phone: str) -> bool:
+    if not REVIEWER_LOGIN_ENABLED or not REVIEWER_TEST_PHONE:
+        return False
+
+    phone_digits = _normalize_phone_key(phone)
+    reviewer_digits = _normalize_phone_key(REVIEWER_TEST_PHONE)
+    if not reviewer_digits:
+        return False
+
+    return phone_digits == reviewer_digits or phone_digits.endswith(reviewer_digits)
+
+
+def _is_reviewer_code(phone: str, code: str) -> bool:
+    return _is_reviewer_phone(phone) and bool(REVIEWER_TEST_OTP) and code == REVIEWER_TEST_OTP
+
+
 def _check_otp_rate_limit(phone: str) -> None:
     now = time.time()
     cutoff = now - OTP_RATE_LIMIT_WINDOW_SECONDS
@@ -160,6 +179,14 @@ def _check_otp_rate_limit(phone: str) -> None:
 
 @router.post("/request-code")
 def request_code(inp: RequestCodeIn, db: Session = Depends(get_db)):
+    if _is_reviewer_phone(inp.phone):
+        _otp[inp.phone] = (
+            REVIEWER_TEST_OTP,
+            time.time() + OTP_EXPIRES_SECONDS,
+            "reviewer",
+        )
+        return {"ok": True, "delivery_channel": "reviewer"}
+
     _check_otp_rate_limit(inp.phone)
     code = f"{random.randint(100000, 999999)}"
     expires_at = time.time() + OTP_EXPIRES_SECONDS
@@ -185,7 +212,9 @@ def request_code(inp: RequestCodeIn, db: Session = Depends(get_db)):
 @router.post("/verify")
 def verify(inp: VerifyCodeIn, db: Session = Depends(get_db)):
     rec = _otp.get(inp.phone)
-    if rec and rec[2] == "msg91" and is_msg91_managed_otp():
+    if _is_reviewer_code(inp.phone, inp.code):
+        pass
+    elif rec and rec[2] == "msg91" and is_msg91_managed_otp():
         if not rec or rec[1] < time.time() or not verify_msg91_otp(inp.phone, inp.code):
             raise HTTPException(status_code=400, detail="Invalid or expired code")
     elif not rec or rec[0] != inp.code or rec[1] < time.time():
