@@ -1,0 +1,119 @@
+<svg width="1500" height="420" viewBox="0 0 1500 420" role="img" xmlns="http://www.w3.org/2000/svg">
+  <title>Matching engine request execution flow</title>
+  <desc>Horizontal execution flow showing how a legal consultation request is filtered, scored, optimized, and assigned.</desc>
+
+  <defs>
+    <style>
+      .page { fill: #ffffff; }
+      .frame { fill: none; stroke: #cbd5e1; stroke-width: 2; }
+      .titleBox { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.2; }
+      .title { font: 700 18px Arial, Helvetica, sans-serif; fill: #111827; }
+      .stepTitle { font: 700 15px Arial, Helvetica, sans-serif; fill: #111827; }
+      .stepSub { font: 400 11px Arial, Helvetica, sans-serif; fill: #64748b; }
+      .badge { font: 700 10px Arial, Helvetica, sans-serif; fill: #475569; letter-spacing: .4px; }
+      .arrow { stroke: #334155; stroke-width: 2.2; fill: none; marker-end: url(#arrow); }
+      .note { font: 600 10px Arial, Helvetica, sans-serif; fill: #475569; }
+      .icon { fill: none; stroke: #fff; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M1.5 1.5 L8.5 5 L1.5 8.5" fill="none" stroke="#334155" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <filter id="shadow" x="-15%" y="-25%" width="130%" height="150%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#0f172a" flood-opacity=".16"/>
+    </filter>
+  </defs>
+
+  <rect class="page" x="0" y="0" width="1500" height="420"/>
+  <rect class="frame" x="18" y="18" width="1464" height="384" rx="8"/>
+
+  <rect class="titleBox" x="500" y="34" width="500" height="34" rx="6"/>
+  <text class="title" x="750" y="57" text-anchor="middle">Matching Engine - Request Execution Flow</text>
+
+  <!-- Subtle phase rail -->
+  <rect x="82" y="96" width="330" height="28" rx="14" fill="#fee2e2"/>
+  <rect x="432" y="96" width="328" height="28" rx="14" fill="#e0e7ff"/>
+  <rect x="780" y="96" width="330" height="28" rx="14" fill="#ccfbf1"/>
+  <rect x="1130" y="96" width="288" height="28" rx="14" fill="#dcfce7"/>
+  <text class="badge" x="247" y="115" text-anchor="middle">REQUEST</text>
+  <text class="badge" x="596" y="115" text-anchor="middle">FEATURES</text>
+  <text class="badge" x="945" y="115" text-anchor="middle">OPTIMIZATION</text>
+  <text class="badge" x="1274" y="115" text-anchor="middle">ASSIGNMENT</text>
+
+  <!-- Step cards -->
+  <g filter="url(#shadow)">
+    <rect x="82" y="156" width="160" height="154" rx="12" fill="#fff1f2" stroke="#ef4444" stroke-width="1.5"/>
+    <rect x="292" y="156" width="160" height="154" rx="12" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+    <rect x="502" y="156" width="160" height="154" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+    <rect x="712" y="156" width="160" height="154" rx="12" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5"/>
+    <rect x="922" y="156" width="160" height="154" rx="12" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.5"/>
+    <rect x="1132" y="156" width="160" height="154" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  </g>
+
+  <!-- Icon squares -->
+  <g filter="url(#shadow)">
+    <rect x="127" y="176" width="70" height="70" rx="14" fill="#ef4444"/>
+    <rect x="337" y="176" width="70" height="70" rx="14" fill="#7c3aed"/>
+    <rect x="547" y="176" width="70" height="70" rx="14" fill="#2563eb"/>
+    <rect x="757" y="176" width="70" height="70" rx="14" fill="#0891b2"/>
+    <rect x="967" y="176" width="70" height="70" rx="14" fill="#4f46e5"/>
+    <rect x="1177" y="176" width="70" height="70" rx="14" fill="#16a34a"/>
+  </g>
+
+  <!-- Icons -->
+  <g>
+    <circle class="icon" cx="162" cy="203" r="9"/>
+    <path class="icon" d="M145 229c3-14 10-21 17-21s14 7 17 21"/>
+
+    <path class="icon" d="M356 205h34M362 219h22M368 233h10"/>
+
+    <rect class="icon" x="570" y="198" width="24" height="32" rx="3"/>
+    <path class="icon" d="M576 207h12M576 216h12M576 225h8"/>
+
+    <rect class="icon" x="772" y="197" width="40" height="40" rx="3"/>
+    <path class="icon" d="M772 210h40M772 224h40M785 197v40M799 197v40"/>
+
+    <circle class="icon" cx="1002" cy="216" r="13"/>
+    <path class="icon" d="M996 216l5 5 10-13"/>
+
+    <circle class="icon" cx="1202" cy="205" r="8"/>
+    <path class="icon" d="M1187 229c3-13 9-19 15-19s12 6 15 19M1222 201v12M1216 207h12"/>
+  </g>
+
+  <!-- Labels -->
+  <text class="stepTitle" x="162" y="268" text-anchor="middle">Client Request</text>
+  <text class="stepSub" x="162" y="287" text-anchor="middle">incoming consultation</text>
+  <text class="stepSub" x="162" y="303" text-anchor="middle">query</text>
+
+  <text class="stepTitle" x="372" y="268" text-anchor="middle">Lawyer Filtering</text>
+  <text class="stepSub" x="372" y="287" text-anchor="middle">availability, expertise</text>
+  <text class="stepSub" x="372" y="303" text-anchor="middle">and location</text>
+
+  <text class="stepTitle" x="582" y="268" text-anchor="middle">Feature Extraction</text>
+  <text class="stepSub" x="582" y="287" text-anchor="middle">rating, workload</text>
+  <text class="stepSub" x="582" y="303" text-anchor="middle">and response time</text>
+
+  <text class="stepTitle" x="792" y="268" text-anchor="middle">Cost Matrix</text>
+  <text class="stepTitle" x="792" y="286" text-anchor="middle">Generation</text>
+  <text class="stepSub" x="792" y="304" text-anchor="middle">N x M assignment grid</text>
+
+  <text class="stepTitle" x="1002" y="268" text-anchor="middle">Hungarian</text>
+  <text class="stepTitle" x="1002" y="286" text-anchor="middle">Algorithm</text>
+  <text class="stepSub" x="1002" y="304" text-anchor="middle">optimal assignment</text>
+
+  <text class="stepTitle" x="1212" y="268" text-anchor="middle">Best Lawyer</text>
+  <text class="stepTitle" x="1212" y="286" text-anchor="middle">Selected</text>
+  <text class="stepSub" x="1212" y="304" text-anchor="middle">ranked recommendation</text>
+
+  <!-- Arrows -->
+  <path class="arrow" d="M242 233 H288"/>
+  <path class="arrow" d="M452 233 H498"/>
+  <path class="arrow" d="M662 233 H708"/>
+  <path class="arrow" d="M872 233 H918"/>
+  <path class="arrow" d="M1082 233 H1128"/>
+
+  <!-- Data hint -->
+  <rect x="328" y="344" width="846" height="38" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="7 6"/>
+  <text class="note" x="751" y="368" text-anchor="middle">
+    Matching inputs: lawyer profile data, availability slots, practice area, city, workload, quality rating, and response-time history
+  </text>
+</svg>

@@ -1,0 +1,239 @@
+<svg width="1800" height="720" viewBox="0 0 1800 720" role="img" xmlns="http://www.w3.org/2000/svg">
+  <title>Runtime request execution pipeline</title>
+  <desc>IEEE-paper friendly left-to-right runtime flow for a legal consultation request through the platform.</desc>
+
+  <defs>
+    <style>
+      .bg { fill: #ffffff; }
+      .frame { fill: none; stroke: #1f2937; stroke-width: 2; }
+      .title { font: 700 24px Arial, Helvetica, sans-serif; fill: #111827; }
+      .phase { font: 700 11px Arial, Helvetica, sans-serif; letter-spacing: .8px; text-transform: uppercase; }
+      .label { font: 700 15px Arial, Helvetica, sans-serif; fill: #111827; }
+      .sub { font: 400 11px Arial, Helvetica, sans-serif; fill: #475569; }
+      .small { font: 600 10px Arial, Helvetica, sans-serif; fill: #334155; }
+      .arrow { stroke: #334155; stroke-width: 2.2; fill: none; marker-end: url(#arrow); }
+      .arrow-soft { stroke: #64748b; stroke-width: 1.8; fill: none; marker-end: url(#arrow); }
+      .arrow-red { stroke: #dc2626; stroke-width: 2; fill: none; marker-end: url(#arrow-red); }
+      .dash { stroke-dasharray: 7 6; }
+      .block { stroke-width: 1.6; rx: 9; }
+      .icon { fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; opacity: .28; }
+      .legend { font: 600 10px Arial, Helvetica, sans-serif; fill: #475569; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1.5 1.5 L8.5 5 L1.5 8.5" fill="none" stroke="#334155" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1.5 1.5 L8.5 5 L1.5 8.5" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-20%" width="120%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#0f172a" flood-opacity=".12"/>
+    </filter>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1800" height="720"/>
+  <rect class="frame" x="24" y="24" width="1752" height="672" rx="4"/>
+  <text class="title" x="54" y="64">Request Execution Pipeline</text>
+  <text class="legend" x="54" y="86">Runtime lifecycle for AI-assisted lawyer allocation and consultation fulfillment</text>
+
+  <!-- Phase bands -->
+  <rect x="54" y="112" width="430" height="46" rx="6" fill="#eff6ff" stroke="#bfdbfe"/>
+  <text class="phase" x="269" y="141" text-anchor="middle" fill="#1d4ed8">Request Ingestion</text>
+
+  <rect x="510" y="112" width="552" height="46" rx="6" fill="#ecfdf5" stroke="#a7f3d0"/>
+  <text class="phase" x="786" y="141" text-anchor="middle" fill="#047857">Matching and Optimization</text>
+
+  <rect x="1088" y="112" width="178" height="46" rx="6" fill="#fff7ed" stroke="#fed7aa"/>
+  <text class="phase" x="1177" y="141" text-anchor="middle" fill="#c2410c">Decision</text>
+
+  <rect x="1292" y="112" width="430" height="46" rx="6" fill="#fef2f2" stroke="#fecaca"/>
+  <text class="phase" x="1507" y="141" text-anchor="middle" fill="#b91c1c">Fulfillment</text>
+
+  <!-- Helper: top-row blocks -->
+  <g filter="url(#shadow)">
+    <rect class="block" x="62" y="190" width="98" height="70" fill="#f8fafc" stroke="#64748b"/>
+    <rect class="block" x="182" y="190" width="122" height="70" fill="#dbeafe" stroke="#2563eb"/>
+    <rect class="block" x="326" y="190" width="142" height="70" fill="#dbeafe" stroke="#2563eb"/>
+    <rect class="block" x="490" y="190" width="154" height="70" fill="#dbeafe" stroke="#2563eb"/>
+    <rect class="block" x="666" y="190" width="138" height="70" fill="#d1fae5" stroke="#059669"/>
+    <rect class="block" x="826" y="190" width="154" height="70" fill="#ccfbf1" stroke="#0f766e"/>
+    <rect class="block" x="1002" y="190" width="154" height="70" fill="#ccfbf1" stroke="#0f766e"/>
+    <polygon points="1190,180 1248,225 1190,270 1132,225" fill="#ffedd5" stroke="#ea580c" stroke-width="1.8"/>
+    <rect class="block" x="1292" y="190" width="142" height="70" fill="#fee2e2" stroke="#dc2626"/>
+    <rect class="block" x="1456" y="190" width="150" height="70" fill="#fef3c7" stroke="#d97706"/>
+    <rect class="block" x="1628" y="190" width="118" height="70" fill="#dcfce7" stroke="#16a34a"/>
+  </g>
+
+  <!-- Top-row labels -->
+  <text class="label" x="111" y="224" text-anchor="middle">User</text>
+  <text class="sub" x="111" y="243" text-anchor="middle">Client</text>
+
+  <text class="label" x="243" y="216" text-anchor="middle">Mobile App</text>
+  <text class="sub" x="243" y="235" text-anchor="middle">React Native</text>
+  <text class="sub" x="243" y="250" text-anchor="middle">iOS / Android</text>
+
+  <text class="label" x="397" y="216" text-anchor="middle">Request</text>
+  <text class="label" x="397" y="234" text-anchor="middle">Gateway</text>
+  <text class="sub" x="397" y="250" text-anchor="middle">FastAPI auth</text>
+
+  <text class="label" x="567" y="216" text-anchor="middle">Request Intake</text>
+  <text class="sub" x="567" y="235" text-anchor="middle">validate case</text>
+  <text class="sub" x="567" y="250" text-anchor="middle">persist request</text>
+
+  <text class="label" x="735" y="216" text-anchor="middle">Matching</text>
+  <text class="label" x="735" y="234" text-anchor="middle">Engine</text>
+  <text class="sub" x="735" y="250" text-anchor="middle">rank candidates</text>
+
+  <text class="label" x="903" y="216" text-anchor="middle">Cost Matrix</text>
+  <text class="label" x="903" y="234" text-anchor="middle">Builder</text>
+  <text class="sub" x="903" y="250" text-anchor="middle">multi-factor grid</text>
+
+  <text class="label" x="1079" y="216" text-anchor="middle">Hungarian</text>
+  <text class="label" x="1079" y="234" text-anchor="middle">Optimizer</text>
+  <text class="sub" x="1079" y="250" text-anchor="middle">global assignment</text>
+
+  <text class="label" x="1190" y="218" text-anchor="middle">Accept?</text>
+  <text class="sub" x="1190" y="239" text-anchor="middle">lawyer decision</text>
+
+  <text class="label" x="1363" y="216" text-anchor="middle">Appointment</text>
+  <text class="label" x="1363" y="234" text-anchor="middle">Scheduler</text>
+  <text class="sub" x="1363" y="250" text-anchor="middle">calendar slot</text>
+
+  <text class="label" x="1531" y="216" text-anchor="middle">Payment</text>
+  <text class="label" x="1531" y="234" text-anchor="middle">Service</text>
+  <text class="sub" x="1531" y="250" text-anchor="middle">gateway verify</text>
+
+  <text class="label" x="1687" y="216" text-anchor="middle">Consult</text>
+  <text class="sub" x="1687" y="235" text-anchor="middle">manage</text>
+  <text class="sub" x="1687" y="250" text-anchor="middle">session</text>
+
+  <!-- Top-row arrows -->
+  <path class="arrow-soft" d="M160 225 H178"/>
+  <path class="arrow" d="M304 225 H322"/>
+  <path class="arrow" d="M468 225 H486"/>
+  <path class="arrow" d="M644 225 H662"/>
+  <path class="arrow" d="M804 225 H822"/>
+  <path class="arrow" d="M980 225 H998"/>
+  <path class="arrow" d="M1156 225 H1134"/>
+  <path class="arrow" d="M1248 225 H1288"/>
+  <path class="arrow" d="M1434 225 H1452"/>
+  <path class="arrow" d="M1606 225 H1624"/>
+
+  <!-- Icons, intentionally simple line icons for print reliability -->
+  <g color="#475569">
+    <circle class="icon" cx="111" cy="207" r="8"/>
+    <path class="icon" d="M95 232c2-13 9-20 16-20s14 7 16 20"/>
+  </g>
+  <g color="#2563eb">
+    <rect class="icon" x="232" y="202" width="22" height="34" rx="4"/>
+    <path class="icon" d="M238 230h10"/>
+  </g>
+  <g color="#2563eb">
+    <path class="icon" d="M382 205h30v30h-30z"/>
+    <path class="icon" d="M388 213h18M388 221h18M388 229h12"/>
+  </g>
+  <g color="#2563eb">
+    <path class="icon" d="M552 204h30v34h-30z"/>
+    <path class="icon" d="M558 213h18M558 222h18M558 231h12"/>
+  </g>
+  <g color="#059669">
+    <circle class="icon" cx="735" cy="217" r="15"/>
+    <path class="icon" d="M746 228l12 12M728 217h14M735 210v14"/>
+  </g>
+  <g color="#0f766e">
+    <rect class="icon" x="889" y="204" width="28" height="28" rx="3"/>
+    <path class="icon" d="M889 213h28M898 204v28M907 204v28"/>
+  </g>
+  <g color="#0f766e">
+    <path class="icon" d="M1066 237l26-26M1065 211h28v28h-28z"/>
+  </g>
+  <g color="#dc2626">
+    <path class="icon" d="M1350 218h26M1350 226h26M1350 234h16"/>
+  </g>
+  <g color="#d97706">
+    <rect class="icon" x="1517" y="204" width="28" height="28" rx="3"/>
+    <path class="icon" d="M1517 213h28M1523 239h16"/>
+  </g>
+  <g color="#16a34a">
+    <path class="icon" d="M1674 224l8 8 18-20"/>
+  </g>
+
+  <!-- Matching component group -->
+  <rect x="500" y="330" width="560" height="280" rx="12" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1.8" stroke-dasharray="8 7"/>
+  <text class="label" x="780" y="360" text-anchor="middle" fill="#0f766e">Matching Components</text>
+  <text class="sub" x="780" y="379" text-anchor="middle">queried in parallel before candidate ranking</text>
+  <path class="arrow-soft dash" d="M735 260 V326"/>
+
+  <!-- Component boxes -->
+  <g filter="url(#shadow)">
+    <rect x="528" y="402" width="118" height="56" rx="6" fill="#e0f2fe" stroke="#0284c7"/>
+    <rect x="662" y="402" width="118" height="56" rx="6" fill="#dcfce7" stroke="#16a34a"/>
+    <rect x="796" y="402" width="118" height="56" rx="6" fill="#ede9fe" stroke="#7c3aed"/>
+    <rect x="930" y="402" width="100" height="56" rx="6" fill="#fef3c7" stroke="#d97706"/>
+    <rect x="528" y="488" width="118" height="56" rx="6" fill="#fee2e2" stroke="#dc2626"/>
+    <rect x="662" y="488" width="118" height="56" rx="6" fill="#fce7f3" stroke="#db2777"/>
+    <rect x="796" y="488" width="118" height="56" rx="6" fill="#e0e7ff" stroke="#4f46e5"/>
+    <rect x="930" y="488" width="100" height="56" rx="6" fill="#f1f5f9" stroke="#64748b"/>
+  </g>
+
+  <text class="small" x="587" y="425" text-anchor="middle">Availability</text>
+  <text class="sub" x="587" y="442" text-anchor="middle">slots store</text>
+  <text class="small" x="721" y="425" text-anchor="middle">Profiles</text>
+  <text class="sub" x="721" y="442" text-anchor="middle">lawyer DB</text>
+  <text class="small" x="855" y="425" text-anchor="middle">Expertise</text>
+  <text class="sub" x="855" y="442" text-anchor="middle">scoring</text>
+  <text class="small" x="980" y="425" text-anchor="middle">Workload</text>
+  <text class="sub" x="980" y="442" text-anchor="middle">active cases</text>
+
+  <text class="small" x="587" y="511" text-anchor="middle">Rating</text>
+  <text class="sub" x="587" y="528" text-anchor="middle">quality score</text>
+  <text class="small" x="721" y="511" text-anchor="middle">Location</text>
+  <text class="sub" x="721" y="528" text-anchor="middle">geo rank</text>
+  <text class="small" x="855" y="511" text-anchor="middle">Response Time</text>
+  <text class="sub" x="855" y="528" text-anchor="middle">predictor</text>
+  <text class="small" x="980" y="511" text-anchor="middle">Redis</text>
+  <text class="sub" x="980" y="528" text-anchor="middle">hot cache</text>
+
+  <!-- Database cylinder hint inside matching group -->
+  <g>
+    <ellipse cx="780" cy="583" rx="112" ry="16" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.5"/>
+    <rect x="668" y="583" width="224" height="34" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.5"/>
+    <ellipse cx="780" cy="617" rx="112" ry="16" fill="#99f6e4" stroke="#0f766e" stroke-width="1.5"/>
+    <text class="small" x="780" y="607" text-anchor="middle">lawyer/request feature data</text>
+  </g>
+
+  <!-- Accept/reject labels and loop -->
+  <text class="small" x="1268" y="211" fill="#15803d">accept</text>
+  <text class="small" x="1190" y="302" text-anchor="middle" fill="#dc2626">reject</text>
+  <path class="arrow-red" d="M1190 270 V304 H735 V264"/>
+
+  <!-- Fulfillment second row -->
+  <g filter="url(#shadow)">
+    <rect class="block" x="1292" y="342" width="142" height="70" fill="#fef3c7" stroke="#d97706"/>
+    <rect class="block" x="1456" y="342" width="150" height="70" fill="#dcfce7" stroke="#16a34a"/>
+    <rect class="block" x="1628" y="342" width="118" height="70" fill="#f8fafc" stroke="#64748b"/>
+  </g>
+  <text class="label" x="1363" y="368" text-anchor="middle">Status Update</text>
+  <text class="label" x="1363" y="386" text-anchor="middle">Service</text>
+  <text class="sub" x="1363" y="402" text-anchor="middle">timeline event</text>
+
+  <text class="label" x="1531" y="368" text-anchor="middle">User</text>
+  <text class="label" x="1531" y="386" text-anchor="middle">Notification</text>
+  <text class="sub" x="1531" y="402" text-anchor="middle">push / SMS</text>
+
+  <text class="label" x="1687" y="368" text-anchor="middle">Request</text>
+  <text class="label" x="1687" y="386" text-anchor="middle">Completed</text>
+  <text class="sub" x="1687" y="402" text-anchor="middle">closed lifecycle</text>
+
+  <path class="arrow" d="M1687 260 V316 H1363 V338"/>
+  <path class="arrow" d="M1434 377 H1452"/>
+  <path class="arrow" d="M1606 377 H1624"/>
+
+  <!-- External integration callouts -->
+  <rect x="1266" y="496" width="450" height="92" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="8 6"/>
+  <text class="label" x="1491" y="523" text-anchor="middle">External Runtime Integrations</text>
+  <text class="sub" x="1491" y="546" text-anchor="middle">payment gateway verification · OTP/SMS/email notification providers · admin workflow events</text>
+  <path class="arrow-soft dash" d="M1531 412 V492"/>
+
+  <!-- Footer -->
+  <text class="legend" x="900" y="674" text-anchor="middle">Technical Design Doc: AI Lawyer Allocation Platform</text>
+</svg>
